@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Every exclusion needs a reason in a comment above it (JAVA-TOOL-12). -->
+<FindBugsFilter>
+    <!-- Records and constructor-injected collaborators are shared by design. -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+</FindBugsFilter>

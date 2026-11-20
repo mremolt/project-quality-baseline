@@ -18,7 +18,7 @@
     "angular-material-design": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "71b780acd4f275a7a05a54a034a2312d2e6ffedc85a1f4536c0274b8001f0e9d"
+      "computedHash": "b250106154e8acf8f2fd7e080ffecc04cde6955959b9d6c849437a7a3317f847"
     },
     "angular-new-app": {
       "source": "angular/skills",
@@ -30,22 +30,44 @@
     "baseline-angular": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "696e54610faa0f368ac0fa46cdf5eb91fcecca1d0bb3ab98fc24590dd65479f6"
+      "computedHash": "4f58c02c625a3c4599c87403d1d6e3ac41b2a766c25d12aa2aaeb20c8f05e09d"
+    },
+    "baseline-i18n": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "dd0de6670ff51a3a336ae64567c81b9ebdcd13acfe8caccbafee273fd92020a4"
     },
     "baseline-ide-setup": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "16822feb4a2d4897edb0081149c45fb2715594cfbbe14b9237afc55ab61e80f6"
+      "computedHash": "91a51d23183be47d79c4e80063e7c818507d5a45a77ec482b3f59c930e325e19"
+    },
+    "baseline-security": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "4bcc1b837c3910d73e931bcf31dd220286fd71d00a0fc1d1c62d72900e8f30ed"
+    },
+    "baseline-spring": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "4c154ab06b28186e2602a599105b6374cb36fdc8bca92465e1458f90a0ce1ca7"
     },
     "baseline-tdd": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "bae77969e78b5e828fac7c9e25cf2f8ae9830d0d0350bf45ff7c9f0977ce48c1"
+      "computedHash": "952490c79c3a2ea2b34535379d8f29d2da013a120e7713061abc93f3a840c3d6"
+    },
+    "java-hibernate-jpa": {
+      "source": "github/awesome-copilot",
+      "commit": "f10fdb8b2660ce85c98f220b2f1ca24653768a5c",
+      "sourceType": "github",
+      "skillPath": "skills/java-hibernate-jpa/SKILL.md",
+      "computedHash": "12c3a77543bd283b7c0fd68af40babccc782014d89ace21aa32dfc9cb51143ea"
     },
     "ngrx-signals": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "c8e1da2072c302109d6d7d0fb998236f35e2edbafa0f1b7668f58b4cc564a18d"
+      "computedHash": "b7a6f71855156c002ed3ba171c424b34946135f6452d00d901ef743e648a19bc"
     },
     "orval": {
       "source": "orval-labs/orval",
@@ -67,6 +89,27 @@
       "sourceType": "github",
       "skillPath": "skills/playwright-cli/SKILL.md",
       "computedHash": "54c3f1e47b2566ecc3a2c1515823f77f4609edfe8029351924311dafc0d2ba66"
+    },
+    "spring-boot-testing": {
+      "source": "github/awesome-copilot",
+      "commit": "f10fdb8b2660ce85c98f220b2f1ca24653768a5c",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-testing/SKILL.md",
+      "computedHash": "00b15f274b55e37a903c037e9919c359c703d26a7f474017febde24025079c23"
+    },
+    "spring-observability": {
+      "source": "github/awesome-copilot",
+      "commit": "f10fdb8b2660ce85c98f220b2f1ca24653768a5c",
+      "sourceType": "github",
+      "skillPath": "skills/spring-observability/SKILL.md",
+      "computedHash": "ae365558cd6c33816e7dd2fdd00c456291415db0087e705aeed8602d6197eac2"
+    },
+    "spring-security": {
+      "source": "github/awesome-copilot",
+      "commit": "f10fdb8b2660ce85c98f220b2f1ca24653768a5c",
+      "sourceType": "github",
+      "skillPath": "skills/spring-security/SKILL.md",
+      "computedHash": "c1fa8c28347cfc1c8bc5449b08ec4a101bbe8ca5e075ac3b647f6f0b9213f7dd"
     },
     "vitest": {
       "source": "antfu/skills",

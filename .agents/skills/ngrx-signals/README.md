@@ -8,11 +8,11 @@ Adapted from [danielsogl/skills](https://github.com/danielsogl/skills), path `sk
 
 ## What changed
 
-The API knowledge (`references/api-reference.md`, `entities.md`, `custom-features.md`) is kept close to upstream. The architecture advice follows `docs/angular/state-management.md`, which wins on conflict:
+The API knowledge (`references/api-reference.md`, `entities.md`, `custom-features.md`) is kept close to upstream. The architecture advice follows `docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md`, which wins on conflict:
 
 | Upstream | Here |
 |---|---|
-| Store holds state + orchestration and injects an API service that does HTTP | Store is view state of the UI adapter (`features/<f>/adapter/in/ui/<f>-store.ts`) and injects use-case contracts via tokens from `<f>.providers.ts` (NG-STATE-01/02) |
+| Store holds state + orchestration and injects an API service that does HTTP | Store is view state of the UI adapter (`features/<f>/adapter/in/ui/<f>-store.ts`) and injects use-case contracts via tokens from `<f>.tokens.ts` (NG-STATE-01/02) |
 | `providedIn: 'root'` in the scaffold | Component/route providers by default; root only for app-wide state in `src/platform` (NG-STATE-12) |
 | `type FooState = {…}` | `interface` with `readonly` fields; domain values, never DTOs (NG-STATE-04/05) |
 | Rules may live in the store | Pure domain functions, called from `withComputed` (NG-STATE-07) |

@@ -5,22 +5,24 @@ description: Test-driven development the way the quality baseline defines it - r
 
 # TDD in the quality baseline
 
-Rules: `docs/shared/testing/tdd.md` (`TEST-TDD-*`) and `docs/shared/testing/testing-by-architecture-element.md` (`TEST-ARCH-*`), paths from the project root. Stack details: `docs/typescript/testing.md`, `docs/angular/testing.md`, `docs/spring/architecture.md#testing`. The docs win over this skill.
+Rules: `docs/baseline/08-crosscutting-concepts/testing/tdd.md` (`TEST-TDD-*`) and `docs/baseline/08-crosscutting-concepts/testing/testing-by-architecture-element.md` (`TEST-ARCH-*`), paths from the project root. Stack details: `docs/baseline/08-crosscutting-concepts/testing/typescript.md`, `docs/baseline/08-crosscutting-concepts/testing/typescript-e2e.md`, `docs/baseline/08-crosscutting-concepts/testing/angular.md`, `docs/baseline/08-crosscutting-concepts/testing/spring.md`. The docs win over this skill.
 
 ## Before the first test
 
 1. Identify the architecture element you are about to change (domain, use case, incoming adapter, outgoing adapter, main path).
-2. Pick the test type and style from this table (TEST-TDD-15) and say which one you use:
+2. Look up test type, style and doubles in the element table of `testing-by-architecture-element.md` (section "Test type, style and doubles per element", TEST-TDD-15) and say which one you use. In short: Chicago for domain, pure code and outgoing adapters (against the real technology); London for use cases and incoming adapters; outside-in for main paths. The setup per stack:
 
-| Element | Test type | Style | Doubles |
-|---|---|---|---|
-| Domain entity / value object / pure function | Unit | Chicago | none |
-| Use case | Unit | London | outgoing ports |
-| Controller, listener, component, page, Signal Store | Integration in the framework | London | incoming port / use-case contract |
-| Outgoing adapter (HTTP, DB, messaging) | Integration with real technology (MSW, Testcontainers) | Chicago | none inside the adapter |
-| Main user path | Acceptance (system / E2E) | outside-in | third-party systems only |
+| Element | TypeScript / Angular | Java / Spring |
+|---|---|---|
+| Domain, pure functions | Vitest, `environment: 'node'` | JUnit + AssertJ, no Spring context |
+| Use case | Vitest + `mock<Port>()` | JUnit + Mockito on the port |
+| Controller, listener, component, page, Signal Store | TestBed + Testing Library, use-case contract mocked | `@WebMvcTest` + `@MockitoBean` for the incoming port |
+| Outgoing adapter (HTTP, DB, messaging) | MSW with Orval handlers | Testcontainers, WireMock / `MockRestServiceServer` |
+| Main path, frontend | Frontend system test: Playwright, backend stubbed from the contract (`npm run e2e`) | n/a |
+| Main path, API only | n/a | System test: `@SpringBootTest` + `RestTestClient`, third parties stubbed |
+| Critical path across both | Full-stack system test: Playwright smoke (`npm run e2e:smoke`) against the real backend | (same test) |
 
-3. For a feature on a main path, start with a failing acceptance test (double loop, TEST-TDD-06).
+3. For a feature on a main path, start with a failing acceptance test (double loop, TEST-TDD-06): the frontend system test for a UI path, the backend system test for an API-only path. Not the full-stack smoke test.
 4. Write a short test list of behaviors. Don't write the tests yet (TEST-TDD-05).
 
 ## The cycle (one behavior at a time)
@@ -45,6 +47,8 @@ Show each step to the user (TEST-TDD-14):
 - Expected values come from a literal, a worked example, or the spec, never recomputed like the code does (TEST-TDD-11).
 - Names state behavior in domain language (TEST-TDD-12).
 - Bug fix: reproduce with a failing test first (TEST-TDD-13).
+- Test data from builders with valid defaults; clock and ids injected and fixed in the test; seeds fixed and logged; never production data (TEST-TDD-16).
+- Fakers (`@faker-js/faker`, Datafaker, Instancio) only for seed data, volume and realistic shapes, always seeded; values a test asserts on are literals. Property-based tests: `fast-check`, jqwik (TEST-TDD-17).
 - Tests must survive refactoring: no private access, no assertions on internals (TEST-ARCH-08).
 
 ## Commands
@@ -52,4 +56,4 @@ Show each step to the user (TEST-TDD-14):
 | Stack | Run |
 |---|---|
 | TypeScript / Angular | `npm test -- <file>` (watch mode while cycling), `npm run e2e -- <spec>` for acceptance tests |
-| Java / Spring | `./mvnw test -Dtest=<Class>` or `./gradlew test --tests <Class>` |
+| Java / Spring | `cd backend && ./mvnw test -Dtest=<Class>` (unit and slice tests); `./mvnw verify` for integration tests (`*IT`) |

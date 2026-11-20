@@ -5,11 +5,11 @@ description: Configures VS Code and IntelliJ IDEA Ultimate for a project that us
 
 # Baseline IDE setup
 
-Rules: `docs/shared/tooling/ide-setup.md` (project root) (`TOOL-IDE-*`). The docs win over this skill.
+Rules: `docs/baseline/08-crosscutting-concepts/development/ide-setup.md` (project root) (`TOOL-IDE-*`). The docs win over this skill.
 
 ## Steps
 
-1. **Check prerequisites.** The project should already have its formatter and linter configs (`.prettierrc*`, `eslint.config.*`, a Java formatter in the build if it has Java). The IDE settings only point at them (TOOL-IDE-01). If one is missing, say so and propose adding it per `docs/typescript/tooling.md`, instead of encoding a style in IDE settings.
+1. **Check prerequisites.** The project should already have its formatter and linter configs (`.prettierrc*`, `eslint.config.*`, a Java formatter in the build if it has Java). The IDE settings only point at them (TOOL-IDE-01). If one is missing, say so and propose adding it per `docs/baseline/08-crosscutting-concepts/development/typescript-tooling.md`, instead of encoding a style in IDE settings.
 2. **Run the script** from the repository root. In a product repo with component folders (`backend/`, `frontend/`, REPO-LAY-03) that is the root, never a component folder (TOOL-IDE-07):
    ```bash
    # Linux, macOS, Git Bash
@@ -38,7 +38,7 @@ Rules: `docs/shared/tooling/ide-setup.md` (project root) (`TOOL-IDE-*`). The doc
 | ESLint fix on save | `source.fixAll.eslint`; Angular templates validated (`html`) | `.idea/jsLinters/eslint.xml`: fix on save |
 | Import order | from ESLint (`simple-import-sort`); `source.organizeImports` off | keep "Optimize imports" off for TS (printed as one-time step) |
 | TypeScript version | `typescript.tsdk` = workspace | one-time step |
-| Java | organize imports on save; format on save only with a shared formatter both IDEs can use | formatter plugin (google/palantir) required + enabled when the build uses it via Spotless |
+| Java | organize imports on save; no format on save (no maintained palantir integration): format with `./mvnw spotless:apply` (TOOL-IDE-02 exception) | formatter plugin (google/palantir) required + enabled when the build uses it via Spotless |
 
 ## Extending the skill
 

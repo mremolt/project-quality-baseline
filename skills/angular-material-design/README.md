@@ -1,7 +1,7 @@
 # angular-material-design
 
 Our agent skill for building Angular UIs with Angular Material that follow Material Design 3 and the
-baseline rules in `docs/angular/ui-material.md` (NG-UI-*) and `docs/shared/accessibility/wcag.md` (A11Y-*).
+baseline rules in `docs/baseline/08-crosscutting-concepts/ui/angular-material.md` (NG-UI-*) and `docs/baseline/10-quality-requirements/accessibility.md` (A11Y-*).
 
 ## Origin
 
@@ -21,7 +21,8 @@ Adapted from the `material-3` skill by CWTI Ltd (MIT):
   reduced to a note on what Angular Material supports.
 - **Added** our rules on top: rule-id citations, gap components in `src/shared/ui/` (NG-UI-02), high
   contrast via the theme-color schematic, WCAG 2.2 AA + adopted AAA checks in the audit, reduced motion,
-  keyboard journey tests.
+  keyboard journey tests, and `references/screen-readers.md` (code for the announcer, route focus, form errors,
+  screen reader tests; our own, no upstream counterpart).
 - **Restructured** references: `color-and-theming.md`, `typography-shape-motion.md`,
   `layout-and-navigation.md`, `component-catalog.md` (upstream had six files, ~4000 lines).
 

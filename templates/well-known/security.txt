@@ -1,0 +1,10 @@
+# RFC 9116 security.txt (SEC-INC-02). Served at https://<your-domain>/.well-known/security.txt.
+# In a product repository it lives in the frontend's static folder (frontend/public/.well-known/security.txt)
+# and is served with the SPA by the BFF. Replace the placeholders; Contact and Expires are required.
+# Expires must be less than a year ahead: renew it before it passes. The security date check (SEC-CI-08) fails 30 days before.
+Contact: mailto:<security@example.com>
+Expires: <YYYY-MM-DDT00:00:00Z>
+Preferred-Languages: en, de
+Canonical: https://<your-domain>/.well-known/security.txt
+Policy: https://<link to SECURITY.md in the repository or a public policy page>
+# Optional: Encryption: https://<your-domain>/pgp-key.txt

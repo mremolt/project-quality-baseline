@@ -1,0 +1,129 @@
+# Implementing Use Cases
+
+How to build the application core: one use case at a time, with its own input and output models, and with clear places for validation.
+
+## Anatomy of a use case
+
+1. **Take input.** A command (state-changing) or query object, received through an incoming port, together with the caller (who triggered it).
+2. **Authorize.** Decide with the caller whether this caller may do this to this object (ARCH-UC-15).
+3. **Check business rules.** Together with the domain entities.
+4. **Change model state.** Call domain behaviour, then hand the new state to outgoing ports.
+5. **Return output.** A use-case-specific result, as small as possible.
+
+Input validation is deliberately **not** a step of the use case. It happens before the use case runs (see below). Authentication is not a step either: the incoming adapter authenticates and builds the caller ([adapters.md](adapters.md)).
+
+### Naming
+
+| Type | Name | Lives in |
+|---|---|---|
+| Incoming port | `<Verb><Noun>UseCase` (`TransferFundsUseCase`, `GetBalanceUseCase`) | `ports/in` |
+| Input | `<Verb><Noun>Command` (state-changing) or `<Verb><Noun>Query` (read-only) | `ports/in` |
+| Output | `<Verb><Noun>Result` | `ports/in` |
+| Implementation | `<Verb><Noun>Service` | `application` |
+
+## Rules
+
+### Slicing
+
+- **ARCH-UC-01: One application service per use case.** Classes like `UserService` that serve many use cases are not allowed.
+  *Why:* narrow services have few dependencies, are easy to find and test, and avoid merge conflicts when people work in parallel.
+- **ARCH-UC-02: Each use case is reachable only through its incoming port** (an interface/contract in `ports/in`). The only exception is ARCH-SC-07 in [conscious-shortcuts.md](../11-risks-and-technical-debt/conscious-shortcuts.md) (default D1).
+- **ARCH-UC-03: Keep queries separate from commands.** Read-only operations get their own query port and query service (Command-Query Separation). They skip steps 3–4, never step 2.
+
+### Input and output models
+
+- **ARCH-UC-04: Every use case has its own input model** (`SendMoneyCommand`, `RegisterAccountCommand`). Use cases MUST NOT share input models unless they share the same requirement and must change together.
+  *Why:* shared models gain optional/null fields "for the other use case", which blurs validation and couples the use cases.
+- **ARCH-UC-05: Input models validate themselves when constructed and are immutable.** An invalid command cannot exist, so the use case never re-checks syntax.
+  *Why:* every incoming adapter benefits automatically, and none can forget the checks. This forms a thin anti-corruption screen around the core.
+- **ARCH-UC-06: Prefer complete constructors (or the language's equivalent) over builders for input models.**
+  *Why:* when a field is added, the compiler/type-checker points to every call site. A builder fails only at runtime.
+- **ARCH-UC-07: Output models are use-case specific and minimal.** Return only what the caller actually needs. When in doubt, return less. Avoid returning domain entities (they then change for UI reasons). Exceptions: queries that use the *no mapping* strategy return annotation-free domain types (ARCH-MAP-03); frontends follow TS-ARCH-16 ([typescript.md](typescript.md)).
+- **ARCH-UC-08: `null` is not a valid "not applicable" value in an input model.** If a field is meaningless for a use case, the use case needs its own model.
+
+### Validation placement
+
+| Kind | Question | Where |
+|---|---|---|
+| **Input validation** (syntactic) | Can it be checked *without* the current model state? (not null, positive amount, format) | Constructor of the input model in `ports/in` |
+| **Business rule** (semantic) | Does it need the *current model state*? (account not overdrawn, target exists) | Preferably in the **domain entity** that owns the state. Otherwise in the use case, before it changes anything. |
+
+- **ARCH-UC-09: Use the question above to decide where a rule goes.** It makes rules easy to place now and easy to find later.
+- **ARCH-UC-10: Business errors are exceptions; a result type is only for an expected alternative outcome** (default, decision D7). An expected alternative outcome is one the caller handles as normal flow, such as "no match" for a search or "already done" for a repeated request. A rule violation, a missing object or a conflict is not: it raises a business exception of one category of ARCH-UC-13. Placement: ARCH-ORG-05; translation: ARCH-ADP-05.
+  *Why:* exceptions keep the happy path readable and cannot be ignored by accident; one rule for all use cases means adapters translate errors in one place instead of inspecting every result.
+- **ARCH-UC-11: The use case owns the transaction.** The boundary is set per use case on the application service, never in adapters (ARCH-ADP-11). Remote calls stay outside it: remote reads before, remote side effects after the commit through the outbox (RES-TX-01, MSG-PUB-02). Spring: SPRING-ARCH-07, SPRING-RES-03.
+
+### Error categories
+
+- **ARCH-UC-13: Every error belongs to one category of the table below, and every adapter handles a category the same way.** Each business category has one base type in `domain` (Java: JAVA-ARCH-13) and each business exception carries a stable code (the problem `code` in REST, SPRING-I18N-02). Adapters classify by category, never by concrete exception.
+
+| Category | Meaning | Raised by | HTTP (incoming REST adapter) | Message consumer (MSG-ERR-01) | UI |
+|---|---|---|---|---|---|
+| **Validation** | The input cannot form a valid command, query or value object | Input model or value object constructor (the stack's validation exception, JAVA-ARCH-12) | 400, `errors` per field | Not retryable: dead letter at once | Message at the field (WCAG 3.3.1); the input stays |
+| **Business rule** | The current state forbids the operation (overdraft, wrong status) | Domain entity or use case | 409 with the rule's `code` | Not retryable: dead letter, or acknowledge and log when expected (per listener) | Message near the action, translated from `code`; state unchanged |
+| **Not found** | The addressed object does not exist, or the caller may not know that it exists | Use case, after a load port returned nothing | 404 | Not retryable by default; retry only where ordering lets the object arrive later (per listener) | Not-found state or page |
+| **Conflict** | Concurrent change: version mismatch, optimistic lock, duplicate key | Use case or persistence adapter (via the conflict base type) | 409 with a conflict `code` | Optimistic lock: retry with backoff (RES-RTY-02); then dead letter | Explain, offer reload; never overwrite silently |
+| **Technical** | Anything else: timeout, dependency down, bug | Adapters and the runtime; not a business exception | 503 + `Retry-After` when temporary, otherwise 500 with a generic body | Retry with backoff, then dead letter | Generic message with retry; the error is reported |
+
+Status codes and the `code` catalogue in REST: API-REST-06/07 ([rest-conventions.md](../08-crosscutting-concepts/api/rest-conventions.md)); Spring: SPRING-REST-07, SPRING-I18N-02. In a frontend the HTTP adapter turns the response into the same categories (TS-ARCH-18): 400 keeps the field codes, a business `code` selects the domain error class, 404 and 409 become not-found and conflict errors, anything else the platform `TechnicalError`, which the interceptor reports with a generic message key.
+
+### Domain events
+
+- **ARCH-UC-14: Domain events are immutable types in `domain`, named in the past tense (`OrderPlaced`), raised by the aggregate or the use case, and handed to an outgoing port by the use case inside its transaction.** The port's adapter maps them to the message payload and writes them to the outbox (MSG-PUB-02, SPRING-ARCH-12/13). Use cases never call each other, directly or through in-process framework events (Spring `ApplicationEvent`): a reaction in the same context is domain logic shared through `domain`, a reaction elsewhere consumes the published event through its own incoming port. In-process events between use cases need an ADR (ARCH-SC-02).
+  *Why:* an in-process event is a hidden call between use cases, runs in or around a transaction the publisher does not see, and is lost on a crash; the outbox makes the reaction durable and visible.
+
+### Authorization
+
+- **ARCH-UC-15: The use case authorizes; the incoming adapter authenticates.** The adapter turns the authenticated principal into a framework-free caller and passes it with the command or query; it may add coarse checks per route (authenticated, has a role). The use case decides with the caller whether this caller may act on this object (ownership, tenant, state), so every adapter gets the same decision. Spring: SPRING-SEC-02.
+  *Why:* object-level checks need the loaded object, and a check that lives only in the REST adapter is skipped by the Kafka listener and the scheduled job.
+
+### Domain model style
+
+- **ARCH-UC-12 (default D2): Use a rich domain model for logic-heavy domains.** Entities expose behaviour methods that enforce invariants and are created only through constructors/factories that produce a valid state. The use case then only states the user's intent and orchestrates entity calls.
+- An **anemic** model (data holders, logic in services) is acceptable for CRUD-style contexts. Both styles fit the architecture. Decide per bounded context and document it.
+
+## Example (pseudocode, language-neutral)
+
+```text
+ports/in/TransferFundsCommand(source: AccountId, target: AccountId, amount: Money)
+    constructor: require source, target, amount present; require amount > 0
+
+ports/in/TransferFundsUseCase.transfer(caller: Caller, cmd: TransferFundsCommand): TransferFundsResult
+
+application/TransferFundsService implements TransferFundsUseCase
+    uses ports/out/LoadAccountPort, ports/out/SaveAccountPort
+    transfer(caller, cmd):                  // one transaction
+        source = loadAccount(cmd.source)    // NotFound if missing
+        target = loadAccount(cmd.target)
+        require caller.owns(source)         // authorization (ARCH-UC-15)
+        source.withdraw(cmd.amount, target.id)   // domain enforces "no overdraft"
+        target.deposit(cmd.amount, source.id)
+        saveAccount(source); saveAccount(target)
+        return TransferFundsResult.of(source.balance())
+```
+
+## Anti-patterns
+
+- `validate(cmd)` blocks at the start of every service method (input validation inside the use case).
+- One `AccountDto` used as input for create, update and patch.
+- Returning the full updated entity "in case the client needs it".
+- Builders for commands that let a new mandatory field be silently forgotten.
+- Generic names (`CreateX`, `UpdateX`) when the business has a more precise verb.
+- A `Result` with an error flag for a rule violation, or an exception for an outcome the caller expects.
+- One use case calling another, or reacting to it through an in-process framework event.
+- Authorization only in the controller.
+
+## Agent checklist
+
+- [ ] New use case → new incoming port + new service + own command/query + own result?
+- [ ] Input model immutable and self-validating?
+- [ ] Each rule placed per the validation table?
+- [ ] Output minimal and not a domain entity?
+- [ ] Caller passed in, and object-level authorization done in the use case (ARCH-UC-15)?
+- [ ] Errors raised as exceptions of one ARCH-UC-13 category; results only for expected alternative outcomes (ARCH-UC-10)?
+- [ ] Domain events raised in `domain` and handed to an outgoing port, not to another use case (ARCH-UC-14)?
+- [ ] Transaction boundary on the service, with no remote call inside it (ARCH-UC-11)?
+
+## Sources
+
+Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 4 (Implementing a Use Case), ch. 6 (transactions), ch. 11 (sharing models).

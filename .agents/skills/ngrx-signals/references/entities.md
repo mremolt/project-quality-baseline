@@ -189,28 +189,23 @@ import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods } from '@ngrx/signals';
 import { setAllEntities, withEntities } from '@ngrx/signals/entities';
 
-import {
-  setError,
-  setFulfilled,
-  setPending,
-  withRequestStatus,
-} from '../../../../../platform/adapter/in/ui/state/with-request-status';
+import { setError, setFulfilled, setPending, withRequestStatus } from '../../../../../platform'; // index.ts only (NG-ARCH-04)
 import type { CustomerId, Order } from '../../../domain/order';
-import { LOAD_ORDER_HISTORY } from '../../../orders.providers';
-import { LoadOrderHistoryQuery } from '../../../ports/in/load-order-history';
-import { OrdersErrorMessages } from './orders-error-messages';
+import { LOAD_ORDER_HISTORY } from '../../../orders.tokens';
+import { LoadOrderHistoryQuery } from '../../../ports/in/load-order-history-query';
+import { OrdersErrorKeys } from './orders-error-keys';
 
 export const OrdersStore = signalStore(
   withEntities<Order>(),
   withRequestStatus(),
-  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorMessages)) => ({
+  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorKeys)) => ({
     async load(customerId: CustomerId): Promise<void> {
       patchState(store, setPending());
       try {
         const orders = await loadHistory.loadOrderHistory(LoadOrderHistoryQuery.of({ customerId }));
         patchState(store, setAllEntities([...orders]), setFulfilled());
       } catch (error) {
-        patchState(store, setError(errors.messageFor(error)));
+        patchState(store, setError(errors.keyFor(error)));
       }
     },
   })),

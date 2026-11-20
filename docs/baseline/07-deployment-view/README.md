@@ -1,0 +1,13 @@
+# 7. Deployment View
+
+Where the code lives and how it is built, released and run, as far as the baseline prescribes it. Production infrastructure (clusters, networks, environments) is product-specific and belongs in the product's chapter 7. The application side of running software is in chapter 8: configuration and environments ([configuration](../08-crosscutting-concepts/configuration/configuration.md)), probes, graceful shutdown and telemetry ([observability](../08-crosscutting-concepts/observability/observability.md)).
+
+| Doc | Covers | Rule IDs |
+|---|---|---|
+| [repository-layout.md](repository-layout.md) | One repo per product, component folders, subfolder tooling, CI, decision guide for separate repos | `REPO-*` |
+| [delivery-and-release.md](delivery-and-release.md) | Branching, versioning, changelog, CD stages, handover, delivery platform mapping, migrations at deploy time, zero downtime, rollback, feature flags | `REL-BR/VER/CD/DB/ZD/RB/FF-*` |
+| [container-runtime.md](container-runtime.md) | Image build as a capability (Buildpacks default), frontend delivery in the BFF image, container runtime contract with Kubernetes and Compose examples | `REL-IMG-*`, `REL-FE-*`, `REL-RUN-*` |
+| [spring-local-development.md](spring-local-development.md) | Docker Compose, profiles, JDK, running a Spring service against local services | `SPRING-DEV-*` |
+| [spring-delivery.md](spring-delivery.md) | Flyway roles, lock timeout and retry, pre-deploy migration job, release version injected at deploy time, bundle embedded in the BFF | `SPRING-REL-*` |
+
+The CI system, registry, runtime platform and secret store are usually the customer's. These docs name capabilities and reference tools; each product records its realisation in the delivery platform mapping of its chapter 7 (REL-CD-06, template `templates/arc42/07-deployment-view.md`). Images are built with Buildpacks by default (REL-IMG-02, SPRING-LIB-13).

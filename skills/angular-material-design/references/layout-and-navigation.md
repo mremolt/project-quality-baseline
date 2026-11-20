@@ -2,17 +2,24 @@
 
 MD3 adaptive layout and navigation in Angular. Rules: NG-UI-09 (window size classes, no Tailwind or
 layout libraries), NG-UI-10 (navigation by window size, consistent navigation and help), NG-UI-11
-(spacing grid), NG-UI-02 (gap components), A11Y-08 / A11Y-11.
+(spacing grid), NG-UI-19..29 (responsive), NG-UI-02 (gap components), A11Y-08 / A11Y-11,
+A11Y-13..17 (reflow, text spacing, orientation, target size, axe per viewport).
 
 ## Window size classes
 
-| Class | Width (CSS px ≈ dp) | Typical device | Columns | Margin | Pane spacer |
-|---|---|---|---|---|---|
-| Compact | < 600 | Phone portrait | 4 | 16 | n/a (one pane) |
-| Medium | 600–839 | Tablet portrait, unfolded foldable | 8 | 24 | 24 |
-| Expanded | 840–1199 | Tablet landscape, small laptop | 12 | 24 | 24 |
-| Large | 1200–1599 | Desktop | 12 | 24 | 24 |
-| Extra-large | ≥ 1600 | Wide desktop | 12 | 24 | 24 |
+| Class | Width (CSS px ≈ dp) | Typical device | Columns | Margin | Panes (max) | Pane spacer |
+|---|---|---|---|---|---|---|
+| Compact | < 600 | Phone portrait | 4 | 16 | 1 | n/a |
+| Medium | 600–839 | Tablet portrait, unfolded foldable | 8 | 24 | 1 (2 only by exception) | n/a (24 if two panes) |
+| Expanded | 840–1199 | Tablet landscape, small laptop | 12 | 24 | 2 | 24 |
+| Large | 1200–1599 | Desktop | 12 | 24 | 3 | 24 |
+| Extra-large | ≥ 1600 | Wide desktop | 12 | 24 | 3 | 24 |
+
+Panes and spacers follow the Material 3 adaptive implementation (AndroidX `calculatePaneScaffoldDirective`):
+medium is one pane by default, and two panes there "can make your layout look too packed". A fixed
+pane (list, supporting pane) is ≈ 360 px up to expanded and ≈ 412 px on large and extra-large. Margins
+and columns are from MD3 guidance summaries, not re-checked against m3.material.io; Angular Material has
+no column grid, so columns are orientation only.
 
 Design mobile-first: compact styles are the base, larger classes add `min-width` queries.
 
@@ -54,7 +61,7 @@ const QUERIES = {
 } as const;
 
 @Injectable({ providedIn: 'root' })
-export class WindowSize {
+export class BreakpointWindowSize {
   private readonly breakpoints = inject(BreakpointObserver);
 
   readonly sizeClass: Signal<WindowSizeClass> = toSignal(
@@ -73,13 +80,27 @@ export class WindowSize {
   readonly atLeastMedium = computed(() => this.sizeClass() !== 'compact');
   readonly atLeastExpanded = computed(() => !['compact', 'medium'].includes(this.sizeClass()));
 }
+
+/** The contract components inject (NG-UI-19); tests stub it (NG-TEST-09). */
+@Injectable({ providedIn: 'root', useExisting: BreakpointWindowSize })
+export abstract class WindowSize {
+  abstract readonly sizeClass: Signal<WindowSizeClass>;
+  abstract readonly atLeastMedium: Signal<boolean>;
+  abstract readonly atLeastExpanded: Signal<boolean>;
+}
 ```
+
+`BreakpointWindowSize` is declared first because the decorator of `WindowSize` references it.
 
 With SSR, `initialValue: 'compact'` renders the compact shell on the server; the client corrects it after
 hydration. If that flicker matters, render both variants and switch with CSS.
 
-Test: provide a fake `BreakpointObserver` (or a stub `WindowSize` with a writable signal) in component
-tests; in Playwright, `page.setViewportSize()` per size class.
+`WindowSize` is UI-adapter state (NG-UI-19): never inject it into use cases, ports or stores, and never
+load different data per size class (NG-UI-20).
+
+Test: the class mapping of `BreakpointWindowSize` at the boundary widths with a fake `MediaMatcher`
+(NG-TEST-10); components with a stub `WindowSize` whose `sizeClass` is a writable signal, one test per
+variant (NG-TEST-09); in Playwright, the viewport projects (TS-TEST-17), not `page.setViewportSize()` loops.
 
 ### Container queries for reusable components
 
@@ -110,7 +131,88 @@ A shared component doesn't know where it is placed; it should respond to its con
 - Readable width: body text lines stay under ~80 characters. On large and extra-large, constrain single
   content columns (≈ 840–1040 px) and use the extra space for more panes, not wider lines.
 - Content reflows to a single column at 320 CSS px width (= 1280 px at 400 % zoom) without horizontal
-  scrolling (WCAG 1.4.10). Data tables may scroll horizontally inside their own container.
+  scrolling (WCAG 1.4.10, A11Y-13). Data tables may scroll horizontally inside their own container.
+- Each new screen states its layout for compact, medium and expanded in its spec or story (NG-UI-23).
+
+## Responsive details
+
+**Type stays fixed** (NG-UI-16): no `clamp()` or `vw` font sizes; the type-scale tokens don't change per
+size class. Responsiveness comes from layout; text scales with the user's browser settings, so sizes
+are `rem`.
+
+**Logical properties** (NG-UI-24): `margin-inline`, `padding-block`, `inset-inline-start`,
+`text-align: start`, `border-inline-end`. Physical `left`/`right` breaks right-to-left languages.
+
+**Wide content** (NG-UI-25): a table that can't reflow scrolls in its own focusable region, or becomes a
+list of cards on compact.
+
+```html
+<div class="table-scroll" role="region" aria-label="Orders" tabindex="0">
+  <table mat-table [dataSource]="orders()">…</table>
+</div>
+```
+
+```scss
+.table-scroll {
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+  }
+}
+
+img,
+video {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+```
+
+Content images use `NgOptimizedImage` (`<img ngSrc="…" width="…" height="…" sizes="(min-width: 840px)
+50vw, 100vw">`), which reserves space and serves the right size.
+
+**Viewport height and safe areas** (NG-UI-26):
+
+```html
+<!-- index.html: never user-scalable=no or maximum-scale -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+```
+
+```scss
+.shell {
+  min-block-size: 100dvh; // not 100vh: mobile browser bars change the height
+}
+
+.nav-bar {
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+}
+
+.top-bar {
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+}
+```
+
+**Hover is an enhancement** (NG-UI-27): actions shown on hover (row actions, card menus) are also
+reachable by focus and tap; put hover-only styling in `@media (hover: hover)`. `matTooltip` never holds
+the only copy of information. Drag (reorder, sliders) has a tap or keyboard alternative (WCAG 2.5.7).
+
+```scss
+.row-actions {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .row:not(:hover, :focus-within) .row-actions {
+    opacity: 0;
+  }
+}
+```
+
+**Forms on compact** (NG-UI-28): `type="email"`, `type="tel"`, `inputmode="numeric"` for codes,
+`autocomplete="email"`, `"tel"`, `"postal-code"`, `"one-time-code"`; `mat-form-field` full width
+(`inline-size: 100%`) on compact; `touchUi` date picker (see the adaptive table below).
+
+**Print** is out of scope unless the product decided otherwise in an ADR (NG-UI-29).
 
 ## Canonical layouts
 
@@ -123,8 +225,8 @@ Start each screen from one of MD3's canonical layouts.
 | Class | Behavior |
 |---|---|
 | Compact | List **or** detail; detail is its own route, back returns to the list |
-| Medium | List + detail side by side if the list is narrow enough, otherwise as compact |
-| Expanded+ | List (≈ 360 px or 1/3) + detail side by side |
+| Medium | As compact; side by side only by exception, when both panes stay usable |
+| Expanded+ | List (≈ 360 px, ≈ 412 px on large+, or 1/3) + detail side by side |
 
 Keep the selected item in the URL (`/orders/:id`) in every size class, so reload, deep links and back
 behave the same; only the presentation changes.
@@ -167,7 +269,7 @@ focus to its heading; when returning, restore focus to the item that opened it (
 |---|---|
 | Compact | Stacked: main first, supporting below, or the supporting pane in a bottom sheet |
 | Medium | Stacked or side by side (2/3 + 1/3) |
-| Expanded+ | Side by side; supporting pane ≈ 360 px or 1/3 |
+| Expanded+ | Side by side; supporting pane ≈ 360 px (≈ 412 px on large+) or 1/3 |
 
 Grid: one column on compact; from 840 px `grid-template-columns: 2fr minmax(18rem, 1fr)`.
 
@@ -192,7 +294,7 @@ Use a list (`<ul role="list">`) for the items; reading and tab order follow the 
 | Dialog | Full-screen for complex forms | Centered | Centered, max ≈ 560 px |
 | Bottom sheet | Modal bottom sheet | Bottom sheet | Side sheet (`mat-sidenav position="end"`) or dialog |
 | Search | Full-screen search view | Search bar | Search bar |
-| Panes | One | One or two | Two (three on large+) |
+| Panes | One | One (two only by exception) | Two (up to three on large+) |
 | Date picker | Modal (`touchUi`) | Docked | Docked |
 
 Full-screen dialog on compact:
@@ -336,7 +438,7 @@ export interface NavDestination {
 })
 export class NavRail {
   readonly destinations = input.required<readonly NavDestination[]>();
-  readonly label = input('Main navigation');
+  readonly label = input('Main'); // read as "Main navigation"
 }
 ```
 
@@ -427,14 +529,15 @@ list, background `--mat-sys-surface-container`.
 ## Keyboard test for gap components (A11Y-05 L5)
 
 ```ts
-// e2e/navigation.keyboard.spec.ts
-import { expect, test } from '@playwright/test';
+// e2e/navigation.keyboard.spec.ts — runs in the viewport projects (TS-TEST-17)
+import { expect, test } from './fixtures';
 
-test('rail navigation works by keyboard (medium window)', async ({ page }) => {
-  await page.setViewportSize({ width: 700, height: 900 });
+test.skip(({ viewport }) => !viewport || viewport.width < 600 || viewport.width >= 840, 'rail is the medium navigation');
+
+test('rail navigation works by keyboard @responsive', async ({ page }) => {
   await page.goto('/orders');
 
-  const rail = page.getByRole('navigation', { name: 'Main navigation' });
+  const rail = page.getByRole('navigation', { name: 'Main' });
   await page.keyboard.press('Tab'); // skip link
   await page.keyboard.press('Tab');
   await expect(rail.getByRole('link', { name: 'Orders' })).toBeFocused();
@@ -448,8 +551,37 @@ test('rail navigation works by keyboard (medium window)', async ({ page }) => {
 });
 ```
 
-Run the same journey per size class (compact bar / modal drawer, medium rail, expanded drawer), and the
-axe scan for each (NG-UI-18).
+Write one journey per navigation form (compact bar / modal drawer, medium rail, expanded drawer), each
+skipped outside its size class. The axe scan runs in every viewport project (A11Y-17) and in the theme
+projects (NG-UI-18, TS-TEST-28).
+
+## Responsive testing
+
+The rules and the full fixtures live in the docs; this is the map.
+
+| What | Where | Rule |
+|---|---|---|
+| Size-class mapping at 599/600, 839/840, 1199/1200, 1599/1600 | Unit test, fake `MediaMatcher` | NG-TEST-10 |
+| Which structure renders per size class | Component test, stub `WindowSize` | NG-TEST-09 |
+| Layout, container queries, spacing | Not in jsdom; E2E viewport projects | NG-TEST-11 |
+| Viewports `compact`, `medium`, `expanded`, `reflow`, … | Playwright projects, specs tagged `@responsive` | TS-TEST-17/18 |
+| Reflow at 320 px, text spacing | `expectNoHorizontalOverflow`, `expectTextSpacingTolerant` | TS-TEST-19, A11Y-13/14 |
+| Route, selection, form values and focus survive a resize | Resize-transition test | TS-TEST-20 |
+| Target size on compact | axe `target-size` (prove it ran) + `boundingBox()` | TS-TEST-21, A11Y-16 |
+| Portrait and landscape | `compact-landscape` project (nightly) | A11Y-15 |
+| Real 400 % zoom and text-only zoom | L6 release checklist, before release | A11Y-18 |
+
+```ts
+// e2e/order-browser.spec.ts
+import { expectNoHorizontalOverflow, expectTextSpacingTolerant, test } from './fixtures';
+
+test('order browser is accessible and reflows @responsive', async ({ page, expectAccessible }) => {
+  await page.goto('/orders/o-1');
+  await expectAccessible('order browser');
+  await expectNoHorizontalOverflow(page);
+  await expectTextSpacingTolerant(page);
+});
+```
 
 ## Checklist
 
@@ -459,3 +591,8 @@ axe scan for each (NG-UI-18).
 - [ ] Navigation component per size class; same destinations and order everywhere; consistent help
 - [ ] `<nav aria-label>`, `aria-current="page"`, skip link, focus handling on pane changes
 - [ ] Gap components in `src/shared/ui/` with tokens only and a keyboard journey test
+- [ ] `WindowSize` only in the UI adapter; same data in every size class; CSS for layout, signal for structure
+- [ ] Logical properties, `rem`, no fluid type; `dvh` and safe areas; zoom not blocked
+- [ ] Tables in a focusable scroll region or cards on compact; images capped at 100 %
+- [ ] No hover-only function; forms with `type`, `autocomplete`, `inputmode`
+- [ ] Main screens tagged `@responsive` with reflow and text-spacing checks; resize-transition test

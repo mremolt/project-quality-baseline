@@ -26,6 +26,6 @@ try { fs.writeFileSync(marker, ''); } catch { /* reminder still useful without t
 process.stdout.write(`${JSON.stringify({
   hookSpecificOutput: {
     hookEventName: 'PreToolUse',
-    additionalContext: 'Baseline reminder: before creating or editing Angular code, load the `baseline-angular` skill (it loads angular-developer and the other skills) and follow docs/angular/*. The baseline docs override the skills. Check for N+1 requests on data loading and work test-first (baseline-tdd).',
+    additionalContext: 'Baseline reminder: before creating or editing Angular code, load the `baseline-angular` skill (it loads angular-developer and the other skills) and follow docs/baseline/stacks/angular.md (and the docs it lists). The baseline docs override the skills. Check for N+1 requests on data loading and work test-first (baseline-tdd).',
   },
 }, null, 2)}\n`);

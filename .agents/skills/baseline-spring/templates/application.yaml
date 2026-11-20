@@ -1,0 +1,100 @@
+# src/main/resources/application.yaml: deployed defaults every service has (SPRING-CFG-05). Environment-specific values
+# (URLs, credentials, OTLP endpoints, sampling) have no default here; the platform injects them (CFG-03, SPRING-OBS-08).
+spring:
+  application:
+    name: orders
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s   # per phase; grace period >= phases x 20s + pre-stop + margin (SPRING-OBS-04)
+  http:
+    clients:                          # floor for every RestClient / HTTP Service Client; per group in spring.http.serviceclient.<group>.* (SPRING-RES-01)
+      connect-timeout: 2s
+      read-timeout: 5s
+  datasource:
+    # url is injected per environment, with pgjdbc timeouts: ...?connectTimeout=2&socketTimeout=10 (SPRING-RES-01)
+    hikari:
+      maximum-pool-size: 20           # pool sum in chapter 7: max instances incl. surge x pool < max_connections - reserve (RES-CAP-02, SPRING-RES-05)
+      connection-timeout: 2000        # milliseconds: Hikari's property is a long, "2s" fails at start-up (SPRING-RES-01)
+      connection-init-sql: "SET statement_timeout = '3s'"   # timeout ladder: statement < transaction < 10 s request budget (RES-TMO-04)
+  transaction:
+    default-timeout: 5s               # RES-TX-02, RES-TMO-04
+  jpa:
+    hibernate:
+      ddl-auto: validate              # schema comes from Flyway only (SPRING-DB-02)
+    open-in-view: false               # a lazy load in a controller means an entity leaked through a port (SPRING-DB-03)
+  flyway:
+    init-sqls: SET lock_timeout = '5s'   # a blocked migration fails the start-up instead of queueing live traffic (SPRING-REL-02)
+    lock-retry-count: 50                 # waiting instances give up after ~50 s (1 s apart); covers the longest migration, fits the start-up budget (REL-DB-03, REL-RUN-04)
+    placeholders:
+      app-role: ${spring.datasource.username}   # DML role for the default privileges (SPRING-REL-03)
+    # Deployed: spring.flyway.user/password = migration (DDL) role, spring.datasource.* = DML-only role (SPRING-REL-01),
+    # both mounted as config-tree files by the platform (SPRING-CFG-07; env variables only as fallback, SPRING-CFG-06);
+    # locally one Compose user does both. Keys a deployment sets: configuration-keys.yaml (CFG-12).
+  kafka:                              # drop this block in services without Kafka (SPRING-MSG-03)
+    producer:
+      acks: all                                  # MSG-PUB-03
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        enable.idempotence: true                 # MSG-PUB-03; explicit, so a conflicting setting fails at start-up
+        linger.ms: 5                             # Kafka 4 default, explicit because delivery.timeout.ms depends on it
+        request.timeout.ms: 10000                # RES-TMO-01
+        delivery.timeout.ms: 30000               # >= linger.ms + request.timeout.ms, or the producer fails at start-up
+        max.block.ms: 5000
+    consumer:
+      group-id: ${spring.application.name}
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      isolation-level: read-committed
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        max.poll.interval.ms: 300000
+    listener:
+      observation-enabled: true                  # trace context in and out (SPRING-OBS-09)
+    template:
+      observation-enabled: true
+
+info:
+  release:
+    version: unreleased               # the deployment sets INFO_RELEASE_VERSION; never baked into the image (SPRING-REL-06, REL-CD-01)
+
+management:
+  info:
+    env:
+      enabled: true                   # shows info.release.version on the info endpoint (SPRING-REL-06)
+  server:
+    port: 8081                        # actuator on its own port, not routed by the ingress (SPRING-OBS-01)
+  endpoints:
+    web:
+      exposure:
+        include: health,info          # allow-list (SPRING-SEC-07); add prometheus only if scraped, and permit it by name in the actuator chain (SPRING-OBS-02)
+  endpoint:
+    health:
+      probes:
+        enabled: true                 # liveness and readiness groups (SPRING-OBS-01)
+        add-additional-paths: true    # /livez, /readyz on the server port; not routed by the ingress (OBS-19, SPRING-OBS-01)
+      # group:
+      #   readiness:
+      #     include: readinessState,db  # only where OBS-03 applies, with a reason (SPRING-OBS-03)
+
+springdoc:
+  api-docs:
+    enabled: false                    # spec comes from the committed file; on only in application-local.yaml and OpenApiSpecIT (SPRING-API-10)
+  writer-with-order-by-keys: true     # deterministic output for the stale-spec check (SPRING-API-08)
+
+app:
+  resilience:
+    transaction-guard: warn           # remote call inside a transaction: warn when deployed; tests set fail (SPRING-RES-04)
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "!local"
+logging:
+  structured:
+    format:
+      console: ecs                    # JSON logs outside local development (SPRING-LOG-02)

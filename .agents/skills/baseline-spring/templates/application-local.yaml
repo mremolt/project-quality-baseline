@@ -1,0 +1,18 @@
+# src/main/resources/application-local.yaml (SPRING-DEV-02/03)
+# Activate with: ./mvnw spring-boot:run -Dspring-boot.run.profiles=local  (IDE: active profile `local`)
+# Boot starts compose.yaml automatically because spring-boot-docker-compose is on the runtime classpath.
+# That module is left out of the repackaged jar and disabled in tests by default.
+spring:
+  docker:
+    compose:
+      # lifecycle-management: start-only   # keep Postgres/Kafka running after the app stops
+      # profiles:
+      #   active: tools,auth                 # optional Compose profiles, see compose.yaml
+
+app:
+  resilience:
+    transaction-guard: fail           # fail fast on remote calls inside a transaction (SPRING-RES-04)
+
+springdoc:
+  api-docs:
+    enabled: true                     # local only; deployed it stays off (SPRING-API-10)

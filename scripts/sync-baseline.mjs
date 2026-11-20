@@ -1,48 +1,140 @@
 #!/usr/bin/env node
-// Copies the quality baseline into a consuming project (docs/shared/tooling/agent-skills.md).
-// Only baseline-owned paths are touched; project files (docs/adr, own skills, project notes
-// below the AGENTS.md end marker) are kept.
+// Copies the quality baseline into a consuming project. What it creates, replaces and never touches:
+// docs/baseline/08-crosscutting-concepts/development/agent-skills.md#distribution-to-consuming-projects (the one list).
 //
-// Usage (Linux/macOS/Git Bash): scripts/sync-baseline.sh <project-dir> [--force]
-//       (Windows CMD/PowerShell): scripts\sync-baseline.cmd <project-dir> [--force]
-//   --force   run even if the project has uncommitted changes
-// Needs: Node.js >= 22, git
+// Usage (Linux/macOS/Git Bash): scripts/sync-baseline.sh <project-dir> [--force] [--host <host>]
+//       (Windows CMD/PowerShell): scripts\sync-baseline.cmd <project-dir> [--force] [--host <host>]
+//   --force         run even if the project has uncommitted changes
+//   --host <host>   where the project's pull requests live: github | gitlab | azure | bitbucket
+//                   (default: detected from the git remote 'origin'); decides where the PR template goes
+// Needs: Node.js (version in package.json "engines.node") and git.
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const base = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const [targetArg, force] = process.argv.slice(2);
-if (!targetArg) fail('usage: sync-baseline <project-dir> [--force]');
-if (!isDir(targetArg)) fail(`not a directory: ${targetArg}`);
-const target = fs.realpathSync(targetArg);
+const pkg = readJson(path.join(base, 'package.json'));
+const skillsCli = `skills@${pkg.devDependencies?.skills ?? 'latest'}`;
+checkNodeVersion(pkg.engines?.node);
+
+// Where each host reads its pull request template from. Bitbucket reads none from the repository:
+// the file is created as a draft and pasted into the repository's default description by hand.
+const PR_TEMPLATE = {
+  github: '.github/pull_request_template.md',
+  gitlab: '.gitlab/merge_request_templates/Default.md',
+  azure: '.azuredevops/pull_request_template.md',
+  bitbucket: 'docs/pull-request-template.md',
+};
+const USAGE = `usage: sync-baseline <project-dir> [--force] [--host ${Object.keys(PR_TEMPLATE).join('|')}]`;
+
+const opts = parseArgs(process.argv.slice(2));
+if (!opts.target) fail(USAGE);
+if (!isDir(opts.target)) fail(`not a directory: ${opts.target}`);
+const target = fs.realpathSync(opts.target);
 if (target === fs.realpathSync(base)) fail('target is the baseline itself');
 
-if (git(target, 'rev-parse').ok && git(target, 'status', '--porcelain').out && force !== '--force') {
+if (git(target, 'rev-parse').ok && git(target, 'status', '--porcelain').out && !opts.force) {
   fail('Project has uncommitted changes. Commit or stash first (or pass --force), so the sync is a reviewable diff.');
 }
+
+// Managed blocks must be intact before anything is written: a start marker without an end marker
+// would silently drop everything after it (the project notes in AGENTS.md).
+const AGENTS_MARKERS = ['<!-- baseline:start', '<!-- baseline:end -->'];
+const ATTR_MARKERS = ['# baseline:start', '# baseline:end'];
+checkMarkers(path.join(target, 'AGENTS.md'), AGENTS_MARKERS);
+checkMarkers(path.join(target, '.gitattributes'), ATTR_MARKERS);
+
+const host = opts.host ?? detectHost(target);
 
 const log = (msg) => console.log(`  - ${msg}`);
 const rev = git(base, 'rev-parse', '--short', 'HEAD');
 console.log(`Syncing baseline ${rev.ok ? rev.out : '(uncommitted)'} into ${target}`);
 
 // ---------------------------------------------------------------- docs
-for (const d of ['shared', 'java', 'spring', 'typescript', 'angular']) {
-  const dest = path.join(target, 'docs', d);
-  fs.rmSync(dest, { recursive: true, force: true });
-  fs.cpSync(path.join(base, 'docs', d), dest, { recursive: true });
-  log(`docs/${d}`);
+// docs/baseline is baseline-owned and replaced as a whole (arc42 reference architecture).
+const baselineDocs = path.join(target, 'docs', 'baseline');
+fs.rmSync(baselineDocs, { recursive: true, force: true });
+fs.cpSync(path.join(base, 'docs', 'baseline'), baselineDocs, { recursive: true });
+log('docs/baseline');
+
+// Layout before the arc42 restructuring: only the files the baseline shipped there are removed.
+// Anything else in these folders belongs to the project and stays; the folder is then left for a manual decision.
+const LEGACY_DOCS = {
+  angular: ['README.md', 'architecture.md', 'state-management.md', 'testing.md', 'tooling.md', 'ui-material.md'],
+  java: ['architecture.md'],
+  shared: ['README.md', 'accessibility/wcag.md', 'api/avoiding-n-plus-one.md', 'api/openapi-contracts.md',
+    'architecture/adapters.md', 'architecture/code-organization.md', 'architecture/conscious-shortcuts.md',
+    'architecture/enforcing-boundaries.md', 'architecture/hexagonal-architecture.md',
+    'architecture/mapping-between-boundaries.md', 'architecture/use-cases.md', 'repository/repository-layout.md',
+    'testing/tdd.md', 'testing/testing-by-architecture-element.md', 'tooling/agent-skills.md', 'tooling/ide-setup.md'],
+  spring: ['architecture.md', 'openapi.md'],
+  typescript: ['README.md', 'frontend-architecture.md', 'openapi-clients.md', 'testing.md', 'tooling.md'],
+};
+for (const [d, files] of Object.entries(LEGACY_DOCS)) {
+  const legacy = path.join(target, 'docs', d);
+  if (!isDir(legacy)) continue;
+  let removed = 0;
+  for (const f of files) {
+    const file = path.join(legacy, ...f.split('/'));
+    if (fs.existsSync(file)) { fs.rmSync(file, { force: true }); removed += 1; }
+  }
+  if (removed === 0) continue;
+  removeEmptyDirs(legacy);
+  if (isDir(legacy)) {
+    log(`MANUAL: removed ${removed} legacy baseline file(s) from docs/${d} (now in docs/baseline); the files left there are not from the baseline: move or delete them`);
+  } else {
+    log(`removed legacy docs/${d} (now in docs/baseline)`);
+  }
+}
+
+// docs/architecture is project-owned: created once from the arc42 template, never touched afterwards.
+const architecture = path.join(target, 'docs', 'architecture');
+if (!fs.existsSync(architecture)) {
+  fs.cpSync(path.join(base, 'templates', 'arc42'), architecture, { recursive: true });
+  log('docs/architecture created from the arc42 template (fill it in; DOC-ARC-01)');
+}
+
+// Artefacts the rules require, project-owned: each is created once from its template, never overwritten.
+const projectFiles = [
+  ['adr/0000-template.md', 'docs/adr/0000-template.md', 'copy it per decision; ARCH-SC-03'],
+  ['security/requirements.md', 'docs/security/requirements.md', 'fill in ASVS level and data classification; SEC-REQ-01'],
+  ['security/threat-model.md', 'docs/security/threat-model.md', 'SEC-TM-01'],
+  ['security/exceptions.md', 'docs/security/exceptions.md', 'SEC-VUL-03'],
+  ['security/incident-runbook.md', 'docs/security/incident-runbook.md', 'fill in contacts and rotation steps; SEC-INC-02'],
+  ['SECURITY.md', 'SECURITY.md', 'fill in the reporting address; SEC-INC-02'],
+  ['data-protection/processing-record.md', 'docs/data-protection/processing-record.md', 'fill in with the DPO; DP-INV-01'],
+  ['data-protection/deletion-concept.md', 'docs/data-protection/deletion-concept.md', 'fill in with the DPO; DP-INV-02'],
+];
+if (host) {
+  const note = host === 'bitbucket'
+    ? 'Bitbucket reads no template file: paste it into the repository\'s default pull request description; SEC-REV-01, API-N1-02'
+    : `${host}; SEC-REV-01, API-N1-02`;
+  projectFiles.push(['pull-request/pull_request_template.md', PR_TEMPLATE[host], note]);
+} else {
+  log(`MANUAL: pull request template not created: the host could not be detected from the git remote. Re-run with --host ${Object.keys(PR_TEMPLATE).join('|')}`);
+}
+// security.txt is served with the SPA, so it goes into the frontend's static folder (if there is a frontend).
+// Other web apps copy it from templates/well-known/ into their static folder (SEC-INC-02).
+if (isDir(path.join(target, 'frontend'))) {
+  projectFiles.push(['well-known/security.txt', 'frontend/public/.well-known/security.txt', 'fill in Contact and Expires; SEC-INC-02']);
+}
+for (const [from, to, note] of projectFiles) {
+  const dest = path.join(target, ...to.split('/'));
+  if (fs.existsSync(dest)) continue;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(path.join(base, 'templates', ...from.split('/')), dest);
+  log(`${to} created from the template (${note})`);
 }
 
 // ---------------------------------------------------------------- AGENTS.md (managed block)
-const block = extractBlock(read(path.join(base, 'AGENTS.md')), '<!-- baseline:start', '<!-- baseline:end -->');
+const block = extractBlock(read(path.join(base, 'AGENTS.md')), ...AGENTS_MARKERS);
 const agents = path.join(target, 'AGENTS.md');
 if (!fs.existsSync(agents)) {
   write(agents, `${block}\n`);
   log('AGENTS.md created');
-} else if (read(agents).includes('<!-- baseline:start')) {
-  write(agents, replaceBlock(read(agents), block, '<!-- baseline:start', '<!-- baseline:end -->'));
+} else if (read(agents).includes(AGENTS_MARKERS[0])) {
+  write(agents, replaceBlock(read(agents), block, ...AGENTS_MARKERS));
   log('AGENTS.md baseline block replaced');
 } else {
   write(agents, `${block}\n\n${read(agents)}`);
@@ -61,12 +153,12 @@ if (!fs.existsSync(claude)) {
 // ---------------------------------------------------------------- .gitattributes (managed block)
 // Keeps launcher line endings intact for every developer: .sh needs LF (bash), .cmd needs CRLF (CMD).
 const attrs = path.join(target, '.gitattributes');
-const attrBlock = extractBlock(read(path.join(base, '.gitattributes')), '# baseline:start', '# baseline:end');
+const attrBlock = extractBlock(read(path.join(base, '.gitattributes')), ...ATTR_MARKERS);
 if (!fs.existsSync(attrs)) {
   write(attrs, `${attrBlock}\n`);
   log('.gitattributes created');
-} else if (read(attrs).includes('# baseline:start')) {
-  write(attrs, replaceBlock(read(attrs), attrBlock, '# baseline:start', '# baseline:end'));
+} else if (read(attrs).includes(ATTR_MARKERS[0])) {
+  write(attrs, replaceBlock(read(attrs), attrBlock, ...ATTR_MARKERS));
   log('.gitattributes baseline block replaced');
 } else {
   const current = read(attrs);
@@ -113,7 +205,15 @@ if (junctions) {
 const baseLock = readJson(path.join(base, 'skills-lock.json'));
 baseLock.skills = Object.fromEntries(Object.entries(baseLock.skills ?? {}).filter(([, v]) => v.sourceType !== 'local'));
 const lockFile = path.join(target, 'skills-lock.json');
-writeJson(lockFile, fs.existsSync(lockFile) ? deepMerge(readJson(lockFile), baseLock) : baseLock);
+const lock = fs.existsSync(lockFile) ? deepMerge(readJson(lockFile), baseLock) : baseLock;
+// Skills the baseline dropped (removed above) leave the lock file too; the project's own entries stay.
+for (const n of old) {
+  if (!names.includes(n) && lock.skills && n in lock.skills) {
+    delete lock.skills[n];
+    log(`skills-lock.json: removed entry ${n}`);
+  }
+}
+writeJson(lockFile, lock);
 log('skills-lock.json merged');
 
 // ---------------------------------------------------------------- Claude Code hooks
@@ -152,8 +252,9 @@ if (settings && typeof settings === 'object') {
 console.log(`
 Done. Review with: git -C "${target}" diff --stat
 Next steps in the project:
+  - Fill in the files created from templates above (SECURITY.md, docs/security/requirements.md, security.txt, …)
   - IDE config: run the baseline-ide-setup skill (or .agents/skills/baseline-ide-setup/scripts/apply-ide-config.sh / .cmd)
-  - Check skills without changing them: npx skills@1.9.0 check`);
+  - Check skills without changing them: npx ${skillsCli} check`);
 
 // ---------------------------------------------------------------- helpers
 function fail(msg) { console.error(msg); process.exit(1); }
@@ -167,6 +268,63 @@ function entries(d) { try { return fs.readdirSync(d, { withFileTypes: true }); }
 function git(cwd, ...args) {
   const r = spawnSync('git', ['-C', cwd, ...args], { encoding: 'utf8' });
   return { ok: r.status === 0, out: (r.stdout ?? '').trim() };
+}
+
+function removeEmptyDirs(d) {
+  for (const e of entries(d)) if (e.isDirectory()) removeEmptyDirs(path.join(d, e.name));
+  if (entries(d).length === 0) fs.rmSync(d, { recursive: true, force: true });
+}
+
+// Flags by name, in any order: <project-dir> [--force] [--host <host> | --host=<host>].
+function parseArgs(args) {
+  const out = { target: undefined, force: false, host: undefined };
+  for (let i = 0; i < args.length; i += 1) {
+    const a = args[i];
+    if (a === '--force') out.force = true;
+    else if (a === '--host' || a.startsWith('--host=')) {
+      const v = a === '--host' ? args[(i += 1)] : a.slice('--host='.length);
+      if (!v || !(v in PR_TEMPLATE)) fail(`--host must be one of ${Object.keys(PR_TEMPLATE).join(', ')}\n${USAGE}`);
+      out.host = v;
+    } else if (a === '--help' || a === '-h') { console.log(USAGE); process.exit(0); }
+    else if (a.startsWith('-')) fail(`unknown option: ${a}\n${USAGE}`);
+    else if (out.target) fail(`more than one project directory given\n${USAGE}`);
+    else out.target = a;
+  }
+  return out;
+}
+
+// The pull request host from the 'origin' remote URL; undefined if there is no remote or the host is unknown.
+function detectHost(dir) {
+  const url = git(dir, 'remote', 'get-url', 'origin');
+  if (!url.ok) return undefined;
+  const u = url.out.toLowerCase();
+  if (u.includes('github')) return 'github';
+  if (u.includes('gitlab')) return 'gitlab';
+  if (u.includes('dev.azure.com') || u.includes('visualstudio.com')) return 'azure';
+  if (u.includes('bitbucket')) return 'bitbucket';
+  return undefined;
+}
+
+function checkMarkers(file, [start, end]) {
+  if (!fs.existsSync(file)) return;
+  const lines = read(file).split(/\r?\n/);
+  const from = lines.findIndex((l) => l.includes(start));
+  if (from < 0) return;
+  if (!lines.some((l, i) => i > from && l.includes(end))) {
+    fail(`${path.basename(file)} has the start marker '${start}' but no end marker '${end}' after it. Add the end marker after the baseline block, then re-run (nothing was changed).`);
+  }
+}
+
+// Fails unless the running Node satisfies a ">=X.Y[.Z]" range (the only form package.json uses).
+function checkNodeVersion(range) {
+  const want = /^>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(range ?? '');
+  if (!want) return;
+  const have = process.versions.node.split('.').map(Number);
+  const need = want.slice(1).map((v) => Number(v ?? 0));
+  for (let i = 0; i < 3; i += 1) {
+    if (have[i] > need[i]) return;
+    if (have[i] < need[i]) fail(`Node.js ${range} required (package.json engines.node), found ${process.versions.node}`);
+  }
 }
 
 // Lines from the start marker line through the end marker line (like sed -n '/start/,/end/p').

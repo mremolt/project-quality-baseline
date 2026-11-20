@@ -1,6 +1,6 @@
 # @ngrx/signals — Testing
 
-Store tests are **adapter integration tests** (NG-STATE-14, TEST-ARCH-03): `TestBed` provides the store plus its use-case tokens, each bound to `mock<UseCase>()` from `vitest-mock-extended` (TS-TEST-01, London style per `docs/shared/testing/tdd.md`). Assert through the store's public signals. Cover the error and rollback paths. Write the test first (TEST-TDD-01/02).
+Store tests are **adapter integration tests** (NG-STATE-14, TEST-ARCH-03): `TestBed` provides the store plus its use-case tokens, each bound to `mock<UseCase>()` from `vitest-mock-extended` (TS-TEST-01, London style per `docs/baseline/08-crosscutting-concepts/testing/tdd.md`). Assert through the store's public signals. Cover the error and rollback paths. Write the test first (TEST-TDD-01/02).
 
 ## Guiding principles
 
@@ -58,7 +58,7 @@ describe('CounterStore', () => {
 
 ## Mocking use cases via tokens
 
-The canonical shape from `docs/angular/state-management.md`:
+The canonical shape from `docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md`:
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
@@ -67,23 +67,29 @@ import { mock, mockReset } from 'vitest-mock-extended';
 import { anOpenOrder, aCustomerId } from '../../../domain/order.test-data';
 import { OrderAlreadyShipped } from '../../../domain/order-errors';
 import { orderId } from '../../../domain/order';
-import { CANCEL_ORDER, LOAD_ORDER_HISTORY } from '../../../orders.providers';
-import type { CancelOrderUseCase } from '../../../ports/in/cancel-order';
-import type { LoadOrderHistoryUseCase } from '../../../ports/in/load-order-history';
+import { REPORT_ERROR, type ReportErrorUseCase } from '../../../../../platform';
+import { CANCEL_ORDER, LOAD_ORDER_HISTORY } from '../../../orders.tokens';
+import type { CancelOrderUseCase } from '../../../ports/in/cancel-order-use-case';
+import type { LoadOrderHistoryUseCase } from '../../../ports/in/load-order-history-use-case';
+import { OrdersErrorKeys } from './orders-error-keys';
 import { OrdersStore } from './orders-store';
 
 describe('OrdersStore', () => {
   const loadHistory = mock<LoadOrderHistoryUseCase>();
   const cancelOrder = mock<CancelOrderUseCase>();
+  const reportError = mock<ReportErrorUseCase>();
 
   beforeEach(() => {
     mockReset(loadHistory);
     mockReset(cancelOrder);
+    mockReset(reportError);
     TestBed.configureTestingModule({
       providers: [
         OrdersStore,
+        OrdersErrorKeys,
         { provide: LOAD_ORDER_HISTORY, useValue: loadHistory },
         { provide: CANCEL_ORDER, useValue: cancelOrder },
+        { provide: REPORT_ERROR, useValue: reportError },
       ],
     });
   });
@@ -98,13 +104,13 @@ describe('OrdersStore', () => {
     expect(store.entities().map((o) => o.id)).toEqual([orderId('o-1')]);
   });
 
-  it('shows a generic message when loading fails', async () => {
+  it('sets the generic error key when loading fails', async () => {
     const store = TestBed.inject(OrdersStore);
     loadHistory.loadOrderHistory.mockRejectedValue(new Error('network down'));
 
     await store.load(aCustomerId());
 
-    expect(store.error()).toBe('Something went wrong. Please try again.');
+    expect(store.error()).toBe('common.errors.unexpected');
     expect(store.entities()).toEqual([]);
   });
 
@@ -114,10 +120,10 @@ describe('OrdersStore', () => {
     cancelOrder.cancelOrder.mockRejectedValue(new OrderAlreadyShipped('o-1'));
     await store.load(aCustomerId());
 
-    await store.cancel(orderId('o-1'));
+    await store.cancel(orderId('o-1'), 'Ordered twice');
 
     expect(store.entityMap()[orderId('o-1')]?.status).toBe('open');
-    expect(store.error()).toBe('This order has already been shipped.');
+    expect(store.error()).toBe('orders.errors.alreadyShipped');
     expect(store.cancelling()).toBeNull();
   });
 });
@@ -125,7 +131,7 @@ describe('OrdersStore', () => {
 
 Notes:
 
-- `OrdersErrorMessages` is a stateless `providedIn: 'root'` helper, so the real one runs. That is intended: the error mapping is part of the UI adapter's behavior. Provide a `Logger` double only if the real one is noisy.
+- `OrdersErrorKeys` is not auto-provided (it is listed in `orders.providers.ts`, NG-STATE-09), so the test lists it and the real one runs. That is intended: the error mapping is part of the UI adapter's behavior. Its only dependency, the platform's `REPORT_ERROR` use case, is a `mock<ReportErrorUseCase>()`; verify `reportError.report` when a test feeds an unexpected error.
 - If the query arguments matter, stub with `calledWith`: `loadHistory.loadOrderHistory.calledWith(LoadOrderHistoryQuery.of({ customerId })).mockResolvedValue([...])`. `calledWith` compares arguments deeply, so the factory's frozen value object matches.
 - `mock()` instances are shared across tests here; `mockReset` in `beforeEach` keeps tests independent. Creating them inside `beforeEach` works too.
 

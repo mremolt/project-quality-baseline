@@ -114,7 +114,7 @@ low-priority feedback about a completed process, at most one action, bottom of t
 
 `matTooltip` = MD3 **plain** tooltip: short label for an icon button or truncated text, on hover and
 focus. Never essential information only in a tooltip, never interactive content in it. It's dismissible
-with Escape and hoverable (WCAG 1.4.13). Rich tooltips (title, text, actions) are a gap: CDK Overlay
+with Escape and hoverable (WCAG 1.4.13, A11Y-31). Rich tooltips (title, text, actions) are a gap: CDK Overlay
 panel or a small non-modal dialog. Harness: `MatTooltipHarness`.
 
 ## Containment

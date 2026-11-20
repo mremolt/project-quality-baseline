@@ -1,0 +1,41 @@
+# Security Requirements and Threat Modelling
+
+What "secure enough" means for a product, written down and testable. Standards used: **OWASP ASVS 5.0** (requirements, levels L1 to L3) and **OWASP Top 10:2025** (risk categories for reviews). Default D14 ([04-solution-strategy/README.md](../../04-solution-strategy/README.md)). Stack rules: [spring.md](spring.md), [spring-hardening.md](spring-hardening.md), [typescript.md](typescript.md), [angular.md](angular.md). The project files named here (`docs/security/*.md`) are created once from templates by the sync.
+
+## Requirements
+
+- **SEC-REQ-01: Every project states its ASVS 5.0 target level and its data classification in `docs/security/requirements.md`.** Default: **L2 target, L1 minimum release gate** (D14). An application without login and without personal data may stay at L1; that is recorded in an ADR. Data classification names the personal, confidential and public data the product handles and where each is stored; the personal-data part is the inventory in `docs/data-protection/processing-record.md` ([DP-INV-01](../data-protection/data-protection.md)), referenced rather than repeated.
+  *Why:* without a level, "secure" is undefined and cannot be tested.
+- **SEC-REQ-02: Requirements of the target level that are not met are tracked as issues**, with an owner. Unmet L1 requirements block a release (SEC-REV-02 applies to the gates that check them).
+- **SEC-REQ-03: Reviews and threat models cite the ASVS 5.0 chapter, and the requirement ID where one matches,** next to our rule IDs (SEC-REV-03). Findings are classified with the Top 10:2025 category.
+- **SEC-REQ-04: A penetration test by people outside the team runs before the first go-live, then at least yearly and after every major change** (new entry point type, new authentication flow, new external integration, new hosting platform). Its scope follows the threat model (SEC-TM-01); findings are handled like scanner findings (SEC-VUL-01/02). A product at L1 by ADR (SEC-REQ-01) may replace it with a documented internal test, recorded in the same ADR.
+- **SEC-REQ-05: Each product records in `docs/security/requirements.md` whether the EU Cyber Resilience Act (CRA, Regulation (EU) 2024/2847) applies to it, decided with legal.** The question is whether the product, or a part we ship (installable software, an agent, a library, firmware), is a product with digital elements made available on the EU market; a service run only as SaaS may fall outside it, a remote data processing solution of such a product falls inside. If the CRA applies, the reporting duties of Art. 14 apply from **11 September 2026**: an actively exploited vulnerability or a severe incident is reported through the ENISA single reporting platform with an early warning within **24 hours**, a notification within **72 hours**, and a final report within **14 days** after a fix is available (for a severe incident: within one month after the notification). The runbook carries this clock (SEC-INC-02); the SBOM (SEC-CI-03) and the fix times (SEC-VUL-02) may tighten.
+
+> **Open point: other compliance.** ISO 27001 or customer audits are decided per product and recorded in `docs/security/requirements.md`. They may tighten the fix times ([vulnerability-management.md](vulnerability-management.md)), the SBOM duty (SEC-CI-03) and disclosure (SEC-INC-02).
+
+## Cryptography
+
+- **SEC-CRY-01: TLS 1.2 is the minimum and TLS 1.3 the preference** on every connection outside the developer machine: inbound, service to service, database, broker, IdP. No TLS 1.0/1.1, no SSL, no cipher suites without forward secrecy; certificates are validated, never trusted blindly in code.
+- **SEC-CRY-02: Passwords are stored only where the product cannot leave them to the IdP (SPRING-SEC-03), and then hashed with Argon2id** (OWASP Password Storage Cheat Sheet parameters); bcrypt with work factor 10 or more is acceptable where Argon2id is not available. The stored hash carries its algorithm id so the work factor can be raised without a migration.
+- **SEC-CRY-03: Data at rest is encrypted according to its class (SEC-REQ-01).** Personal and confidential data: storage-level encryption (encrypted volumes, database or managed-service encryption, encrypted backups) everywhere. Special categories (GDPR Art. 9), credentials the product stores for third parties, and fields in immutable stores (DP-RET-04): additionally field-level encryption in the outgoing adapter. Public data: no requirement.
+- **SEC-CRY-04: Keys live in a key management service or the secret manager, never next to the data they protect and never in git or images (SEC-INC-01).** Each key has an owner and a rotation period (at least yearly, and at once on suspicion of compromise); rotation works without downtime (key id stored with the ciphertext). Per-person keys for crypto-shredding (DP-RET-04) are data keys wrapped by a KMS key (envelope encryption), stored in the product's database; erasure destroys the wrapped key, and the destruction is logged as an audit event (SEC-AUD-01).
+- **SEC-CRY-05: Security-relevant random values (tokens, ids that must not be guessed, nonces, salts) come from a cryptographically secure generator**: `SecureRandom` in Java, `crypto.getRandomValues()` / `crypto.randomUUID()` in the browser. Never `java.util.Random`, `Math.random()` or a timestamp. SAST reports the weak ones (FindSecBugs `PREDICTABLE_RANDOM`, lint).
+
+## Threat modelling
+
+- **SEC-TM-01: A system-level threat model is kept in `docs/security/threat-model.md`**: data-flow diagram, trust boundaries, threats, mitigations. It is reviewed at least yearly and on every architecture change (DOC-ARC-06); the scheduled date check (SEC-CI-08) reports an overdue review.
+  *Why:* Top 10:2025 A06 (Insecure Design) cannot be found by scanners.
+- **SEC-TM-02: A feature that adds an external entry point, an outbound call, a role, or personal data gets a short threat model in its pull request**, answering four questions: what are we working on, what can go wrong, what will we do about it, did we do a good job. Thirty minutes, a whiteboard-level data-flow sketch is enough.
+- **SEC-TM-03: Abuse cases are written next to the use cases and become tests** (a user reading another user's data, replaying a request, sending oversized input). The test type follows the architecture element ([testing-by-architecture-element.md](../testing/testing-by-architecture-element.md)).
+
+## Agent checklist
+
+- [ ] `docs/security/requirements.md` states level, data classification and CRA applicability; does the change keep it true?
+- [ ] New entry point, outbound call, role or personal data: threat model in the PR (SEC-TM-02)?
+- [ ] Abuse cases covered by tests?
+- [ ] Architecture change: `docs/security/threat-model.md` updated?
+- [ ] New stored secret, key, token or encrypted field: algorithm, key location and rotation per SEC-CRY-01..05?
+
+## Sources
+
+OWASP ASVS 5.0 (github.com/OWASP/ASVS, chapters V1 to V17; V11 cryptography), OWASP Top 10:2025 (top10.owasp.org/2025), OWASP Password Storage Cheat Sheet, OWASP Cryptographic Storage Cheat Sheet, BSI TR-02102-2 (TLS), Threat Modeling Manifesto and the four questions (A. Shostack), OWASP Developer Guide (threat modelling), NIST SP 800-218 SSDF, Regulation (EU) 2024/2847 (Cyber Resilience Act), Art. 14 and Art. 71 (eur-lex.europa.eu).

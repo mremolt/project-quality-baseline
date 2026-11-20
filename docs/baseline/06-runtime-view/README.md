@@ -1,0 +1,60 @@
+# 6. Runtime View
+
+How the building blocks of chapter 5 work together at runtime, for the scenarios every product has. The rules are in the linked chapters; this chapter only shows the flow. A product's chapter 6 adds its important business scenarios.
+
+## State-changing request (backend)
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant R as adapter.in.rest (controller)
+  participant UC as ports.in / application (use case)
+  participant D as domain
+  participant P as ports.out / adapter.out.jpa
+  participant DB as PostgreSQL
+  C->>R: POST /v1/orders (JSON, bearer token or session)
+  R->>R: validate request record, Authentication → Caller
+  R->>UC: place(Caller, PlaceOrderCommand)
+  Note over UC: @Transactional starts here
+  UC->>UC: authorize with Caller
+  UC->>D: create / change aggregate (invariants)
+  UC->>P: save(order)
+  P->>DB: INSERT (entity mapped from domain)
+  UC-->>R: result
+  R-->>C: 201 + response record (or ProblemDetail by error category)
+```
+
+Rules: SPRING-REST-01/07, SPRING-SEC-01/02, SPRING-ARCH-07/09/18, ARCH-UC-11/13/15, ARCH-MAP-01/02, ARCH-ADP.
+
+## Query with related data (backend)
+
+The query port loads everything the screen needs in a bounded number of statements (SPRING-ARCH-16, API-N1-05); the controller maps the result to one response, paged (SPRING-REST-11).
+
+## Frontend interaction
+
+```mermaid
+sequenceDiagram
+  participant V as Component (UI adapter)
+  participant S as Signal Store (view state)
+  participant U as Use case (application)
+  participant H as adapter/out/http (Orval client)
+  participant API as Backend API
+  V->>S: user action
+  S->>U: execute(command) via injection token
+  U->>H: port call (Promise)
+  H->>API: HTTP request (generated client)
+  API-->>H: JSON / problem+json
+  H-->>U: domain type (mapped, schema-validated)
+  U-->>S: result or business error
+  S-->>V: new view state (signals)
+```
+
+Rules: NG-STATE-02, NG-ARCH-13, TS-ARCH-04, TS-API.
+
+## Message from Kafka
+
+The listener in `adapter.in.kafka` deserializes, maps to a command with a system `Caller`, and calls the same incoming port as the REST adapter (SPRING-ARCH-12, SPRING-SEC-02). Retries and dead-letter handling stay in the adapter and follow the error categories ([ARCH-UC-13](../05-building-block-view/use-cases.md)): validation and business-rule failures go to the consumer's dead-letter topic at once, transient failures are retried with backoff first ([MSG-ERR-01](../08-crosscutting-concepts/messaging/messaging.md), [SPRING-MSG-05](../08-crosscutting-concepts/messaging/spring.md)). The consumer is idempotent, because delivery is at least once (MSG-IDM-01/02). Events that must be consistent with a database write go through an outbox (SPRING-ARCH-13, SPRING-MSG-07).
+
+## Browser login (BFF)
+
+The browser authenticates against the backend-for-frontend with OIDC; the BFF keeps the tokens and gives the browser a session cookie; API calls go through the BFF, which relays the access token to the resource server (SPRING-SEC-03/08/09).

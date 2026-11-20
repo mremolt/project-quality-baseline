@@ -256,12 +256,11 @@ Your own components need no dark-mode code if they use tokens only (NG-UI-05).
 - `mat.strong-focus-indicators()` adds visible outline focus rings (uses the secondary color by default;
   `mat.strong-focus-indicators-theme($color)` changes it). Check the result against WCAG 2.4.13 (2 px,
   3:1) in every theme.
-- Windows forced-colors mode is a separate thing (`@media (forced-colors: active)`); Material components
-  handle it themselves; own components should use real borders/outlines, not only background color, so
-  they stay visible.
-- Test all three variants with axe (NG-UI-18): Playwright `page.emulateMedia({ colorScheme: 'dark' })`
-  and `page.emulateMedia({ contrast: 'more' })` (check your Playwright version supports `contrast`;
-  otherwise toggle the in-app attribute).
+- Windows forced-colors mode is a separate thing (`@media (forced-colors: active)`, A11Y-28); Material
+  components handle it themselves; own components use real borders/outlines and system colors
+  (`CanvasText`, `Highlight`), not only background color, so they stay visible.
+- Test the variants with axe through the theme projects of TS-TEST-28 (NG-UI-18): Playwright options
+  `colorScheme: 'dark'`, `contrast: 'more'` and, on the shell, `forcedColors: 'active'`.
 
 ## Scoped themes
 
@@ -402,4 +401,4 @@ role (not a subset, or pairs break), and keep the build-time theme as the fallba
 - [ ] `high-contrast-overrides` under `prefers-contrast: more`
 - [ ] `mat.strong-focus-indicators()` included and checked
 - [ ] Overrides only via `mat.theme-overrides` / `mat.<x>-overrides`, with token values
-- [ ] Contrast measured in light, dark and high contrast (A11Y-09, NG-UI-18)
+- [ ] Contrast measured in light, dark and high contrast; shell usable in forced colors (A11Y-09, A11Y-28, NG-UI-18)

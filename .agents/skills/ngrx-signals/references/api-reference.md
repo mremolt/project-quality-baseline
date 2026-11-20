@@ -2,7 +2,7 @@
 
 Idiomatic, runnable examples of every primitive in the library (upstream verified them against `@ngrx/signals` 22). Read the section that matches the task; you do not need to load this whole file unless you're new to the API.
 
-Baseline adaptations: state is typed with `interface` (NG-STATE-05), feature stores are not `providedIn: 'root'` (NG-STATE-12), and methods inject **use-case contracts via tokens** from the feature's `<feature>.providers.ts`, never HTTP or API services (NG-STATE-02). Examples use the orders feature from `docs/angular/state-management.md` (`Order`, `OrderId`, `LOAD_ORDER_HISTORY`, `LoadOrderHistoryUseCase`).
+Baseline adaptations: state is typed with `interface` (NG-STATE-05), feature stores are not `providedIn: 'root'` (NG-STATE-12), and methods inject **use-case contracts via tokens** from the feature's `<feature>.tokens.ts`, never HTTP or API services (NG-STATE-02). Examples use the orders feature from `docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md` (`Order`, `OrderId`, `LOAD_ORDER_HISTORY`, `LoadOrderHistoryUseCase`).
 
 ## Table of contents
 
@@ -154,14 +154,14 @@ export const OptionsStore = signalStore(
 
 ## withMethods
 
-Adds methods to the store. The factory receives the store instance (with state, computed, and any earlier props/methods) and runs in an injection context. Methods turn user intent into **use-case calls** (NG-STATE-02); the use-case contract comes in through its token from the feature's providers file.
+Adds methods to the store. The factory receives the store instance (with state, computed, and any earlier props/methods) and runs in an injection context. Methods turn user intent into **use-case calls** (NG-STATE-02); the use-case contract comes in through its token from the feature's `<feature>.tokens.ts`.
 
 ```typescript
 import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 
-import { LOAD_ORDER_HISTORY } from '../../../orders.providers';
-import { LoadOrderHistoryQuery } from '../../../ports/in/load-order-history';
+import { LOAD_ORDER_HISTORY } from '../../../orders.tokens';
+import { LoadOrderHistoryQuery } from '../../../ports/in/load-order-history-query';
 
 export const OrderSearchStore = signalStore(
   withState<OrderSearchState>(initialState),
@@ -304,9 +304,9 @@ import { getState, patchState } from '@ngrx/signals';
 const previous = getState(store);
 patchState(store, updateEntity({ id, changes: markCancelled }));
 try {
-  await cancelOrder.cancelOrder(CancelOrderCommand.of({ orderId: id }));
+  await cancelOrder.cancelOrder(CancelOrderCommand.of({ orderId: id, reason }));
 } catch (error) {
-  patchState(store, { entityMap: previous.entityMap, ids: previous.ids }, setError(errors.messageFor(error)));
+  patchState(store, { entityMap: previous.entityMap, ids: previous.ids }, setError(errors.keyFor(error)));
 }
 ```
 
@@ -393,7 +393,7 @@ import { debounceTime, distinctUntilChanged, pipe, switchMap, tap } from 'rxjs';
 
 export const OrderSearchStore = signalStore(
   withState<OrderSearchState>(initialState),
-  withMethods((store, searchOrders = inject(SEARCH_ORDERS), errors = inject(OrdersErrorMessages)) => ({
+  withMethods((store, searchOrders = inject(SEARCH_ORDERS), errors = inject(OrdersErrorKeys)) => ({
     // rxMethod: debounce + switchMap cancellation are the point here (NG-STATE-08).
     searchByQuery: rxMethod<string>(
       pipe(
@@ -409,7 +409,7 @@ export const OrderSearchStore = signalStore(
                 patchState(store, { orders, isLoading: false });
               },
               error: (error: unknown) => {
-                patchState(store, { isLoading: false }, setError(errors.messageFor(error)));
+                patchState(store, { isLoading: false }, setError(errors.keyFor(error)));
               },
             }),
           ),
@@ -547,13 +547,13 @@ export const OrderSearchStore = signalStore(
     on(orderSearchResultEvents.loadedFailure, () => ({ isLoading: false })),
   ),
   withEventHandlers(
-    (store, events = inject(Events), searchOrders = inject(SEARCH_ORDERS), errors = inject(OrdersErrorMessages)) => ({
+    (store, events = inject(Events), searchOrders = inject(SEARCH_ORDERS), errors = inject(OrdersErrorKeys)) => ({
       loadOrders$: events.on(orderSearchEvents.opened, orderSearchEvents.queryChanged).pipe(
         switchMap(() =>
           from(searchOrders.searchOrders(SearchOrdersQuery.of({ query: store.query() }))).pipe(
             mapResponse({
               next: (orders) => orderSearchResultEvents.loadedSuccess(orders),
-              error: (error: unknown) => orderSearchResultEvents.loadedFailure(errors.messageFor(error)),
+              error: (error: unknown) => orderSearchResultEvents.loadedFailure(errors.keyFor(error)),
             }),
           ),
         ),

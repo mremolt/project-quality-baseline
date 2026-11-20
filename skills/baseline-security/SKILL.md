@@ -1,0 +1,54 @@
+---
+name: baseline-security
+description: Security entry point for any project that uses the quality baseline - authentication and authorization, input limits, headers and CSP, error handling, outbound calls, deserialization, secrets, injection, BFF sessions, logout and XSRF, cryptography and keys, audit trail, personal data, Angular XSS and Trusted Types, npm and CI supply chain, dependency and image scanning, threat modelling and security review of pull requests. Routes to the baseline's security docs by task, cites rule IDs and OWASP ASVS 5.0 / Top 10:2025 references. Use it when a change touches a security-relevant area, or when asked for a security review.
+---
+
+# Security in the quality baseline
+
+The baseline docs are the rules; skills supply know-how. **Where a skill disagrees with the docs, the docs win** (TOOL-SKL-01). Target: ASVS 5.0 level 2, level 1 as minimum gate (D14). Paths are relative to the project root; bare file names below are in `docs/baseline/08-crosscutting-concepts/security/`, other paths start at `docs/baseline/08-crosscutting-concepts/`.
+
+## 1. Read the docs for the task
+
+| Task | Read |
+|---|---|
+| Any security-relevant change, review | The PR template's security section (questions), `security-review.md` (area → rules, Top 10:2025 map) |
+| New project, new entry point, outbound call, role, personal data | `security-requirements.md` (SEC-REQ incl. pen test and CRA applicability, SEC-TM), the project's `docs/security/requirements.md` and `threat-model.md` |
+| Personal data: new field, store, recipient, retention, export/erasure, logs and telemetry, breach | `data-protection/data-protection.md` (DP-*), `data-protection/spring.md` (SPRING-DP-*), the project's `docs/data-protection/` |
+| TLS, password hashing, encryption at rest, keys, random values | `security-requirements.md` (SEC-CRY-01..05), `spring-hardening.md` (SPRING-SEC-30) |
+| Project security artefacts | The sync creates them from templates once: `docs/security/{requirements,threat-model,exceptions,incident-runbook}.md`, `SECURITY.md`, the PR template with the SEC-REV-01 checklist, `frontend/public/.well-known/security.txt`. If one is missing, re-run the sync or copy it from the baseline's `templates/`; fill in the placeholders, never invent contacts or dates |
+| Auth, `Caller`, CORS, CSRF, actuator | `spring.md` |
+| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session and logout | `spring-hardening.md` |
+| Browser code, storage, redirects, bundle, third-party scripts | `typescript.md` |
+| Angular templates, CSP, Trusted Types, XSRF, SSR, security E2E | `angular.md` |
+| Scanner, DAST, pen-test or reported finding, suppression, leaked secret, audit trail, incident | `vulnerability-management.md`, the project's `docs/security/incident-runbook.md` |
+| CI gates and thresholds, pipeline permissions, SBOM, provenance, image scans, DAST, security dates | `secure-pipeline.md` |
+| npm config, lint security rules, dependency review | `development/typescript-tooling.md` (TS-TOOL-11..16), `development/angular-tooling.md` (NG-TOOL-07/08), `development/java-tooling.md` (JAVA-TOOL-05) |
+
+## 2. Skills to combine
+
+`spring-security` (Spring Boot), `angular-developer` and `playwright-best-practices` (`security-testing`) for Angular, `baseline-tdd` for abuse-case tests.
+
+## 3. Overrides you will hit
+
+| Skill habit | Baseline rule |
+|---|---|
+| Custom JWT filter, JJWT, `@PreAuthorize` as default | Resource server, authorization on a `Caller` (SPRING-SEC-02/03) |
+| Bearer token in an Angular interceptor, token in `localStorage` | BFF session cookie, no tokens in the browser (SPRING-SEC-08, TS-SEC-01, NG-SEC-08) |
+| API CSP `default-src 'self'`, `headers().disable()` | `default-src 'none'`, headers never disabled (SPRING-SEC-13) |
+| `bypassSecurityTrust*` to make a binding work | Forbidden by lint; an exception needs a code comment with reason and trusted source plus pull-request approval (NG-SEC-02) |
+| `<meta>` CSP, CDN-cached nonce, `base-uri 'none'` | BFF sets the CSP per request, `base-uri 'self'`, Trusted Types incl. `angular#components` (NG-SEC-05/06) |
+| String-built SQL/JPQL, `ORDER BY` from a request parameter | Bind parameters, identifiers from an allow-list (SPRING-SEC-31) |
+| Binding request JSON onto an entity, `ownerId` in a request body | Request records carry only what the caller may set (SPRING-SEC-34) |
+| 403 for another user's object | 404 (SPRING-SEC-36) |
+| Angular `autoCsp` (hash-based meta CSP) | Banned everywhere; nonce-based header from the BFF (NG-SEC-10) |
+| Allowing third-party scripts by listing their host in `script-src` | Ignored with `'strict-dynamic'`; nonce or trusted loader plus SRI (TS-SEC-07) |
+| Raising a scanner threshold, disabling an architecture test, lint, compiler or accessibility check to go green | Raise it; time-boxed exception in `docs/security/exceptions.md` (SEC-REV-02, SEC-VUL-03); thresholds live only in the gate table (SEC-CI-01) |
+
+## 4. Workflow
+
+1. **Classify** the change by the areas of `security-review.md`: access control, input and injection, output and errors, outbound, browser and session, headers, abuse, deserialization, cryptography, secrets, audit trail, dependencies, design, personal data, pipeline.
+2. **Threat model** if it adds an entry point, outbound call, role or personal data (SEC-TM-02): the four questions in the PR template's threat-model section; update `docs/security/threat-model.md` on architecture changes (SEC-TM-01). Write abuse cases as tests (SEC-TM-03).
+3. **Apply the rules** of the matching docs, test first (`baseline-tdd`): `cross-user` tagged test (SPRING-SEC-16), 401/403 (SPRING-SEC-10), token rejection (SPRING-SEC-17), session rotation and logout (SPRING-SEC-32/33), XSS, header and deep-link E2E (NG-SEC-12), personal data absent from logs (SPRING-DP-07).
+4. **Review**: answer the security section of the PR template (SEC-REV-01); cite rule ID plus ASVS/Top 10 reference (SEC-REV-03). Reachability decides severity.
+5. **Never** weaken a check to pass a build (SEC-REV-02); raise it. Propose shortcuts and draft an ADR (ARCH-SC-06).
+6. **Finish** with the stack's verify command green (`./mvnw verify`, `npm run verify`).

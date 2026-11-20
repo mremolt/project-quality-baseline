@@ -2,7 +2,7 @@
 name: angular-material-design
 description: >
   Maps Material Design 3 (M3 / MD3 / Material You) concepts onto Angular Material and our baseline
-  rules (docs/angular/ui-material.md, NG-UI-*; docs/shared/accessibility/wcag.md, A11Y-*). Use when
+  rules (docs/baseline/08-crosscutting-concepts/ui/angular-material.md, NG-UI-*; docs/baseline/10-quality-requirements/accessibility.md, A11Y-*). Use when
   working with Angular Material or mat- components (matButton, mat-sidenav, mat-toolbar, mat-tab-group,
   MatDialog, chips, lists, cards, pickers), when theming an Angular app (mat.theme, palettes, the
   theme-color schematic, dark mode, high contrast, density, mat.<component>-overrides), when styling with
@@ -23,11 +23,11 @@ Material Design 3 (m3.material.io) defines **what** a UI should look and behave 
 
 ## Baseline rules first
 
-Before writing any UI code, read **`docs/angular/ui-material.md`** (rules NG-UI-01..18) and
-**`docs/shared/accessibility/wcag.md`** (A11Y-01..12, WCAG 2.2 AA + adopted AAA set). Folder layout
-comes from `docs/typescript/frontend-architecture.md`: feature UI lives in
-`src/features/<feature>/adapter/in/ui/`, shared presentational components in `src/shared/ui/`
-(no feature or business logic, TS-ARCH-11).
+Before writing any UI code, read **`docs/baseline/08-crosscutting-concepts/ui/angular-material.md`** (rules NG-UI-*) and
+**`docs/baseline/10-quality-requirements/accessibility.md`** (A11Y-*, WCAG 2.2 AA + adopted AAA set). Folder layout
+comes from `docs/baseline/05-building-block-view/typescript.md`: feature UI lives in
+`src/features/<feature>/adapter/in/ui/`, shared presentational components and stateless UI services
+(`WindowSize`, `Announcer`, `ColorScheme`) in `src/shared/ui/` (no feature or business logic, TS-ARCH-11).
 
 - **The docs win.** If this skill, another skill, or MD3 guidance disagrees with them, follow the docs.
 - **Cite rule ids** (`NG-UI-05`, `A11Y-10`) in reviews and PR text instead of restating rules.
@@ -62,6 +62,7 @@ What are you doing?
 │   └── No Angular Material equivalent?   → "Gap components" below (NG-UI-02)
 ├── App shell / navigation / breakpoints  → "Common patterns" + references/layout-and-navigation.md
 ├── Forms                                 → "Form layout" below + component-catalog.md § Input
+├── Status messages, route focus/title, form-error and dialog focus, screen reader tests → references/screen-readers.md
 ├── Type, corners, elevation, motion      → references/typography-shape-motion.md
 └── Reviewing an app against MD3          → "MD3 compliance audit" below
 ```
@@ -265,17 +266,19 @@ export class AppShell {
 <!-- src/app/shell/app-shell.html -->
 <a class="skip-link" href="#main">Skip to content</a>
 <mat-sidenav-container class="shell">
-  <mat-sidenav #drawer [mode]="drawerMode()" [opened]="isWide()" aria-label="Main navigation">
-    <mat-nav-list>
-      @for (item of destinations; track item.path) {
-        <a mat-list-item [routerLink]="item.path" routerLinkActive #rla="routerLinkActive"
-           [activated]="rla.isActive" ariaCurrentWhenActive="page"
-           (click)="isWide() || drawer.close()">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle>{{ item.label }}</span>
-        </a>
-      }
-    </mat-nav-list>
+  <mat-sidenav #drawer [mode]="drawerMode()" [opened]="isWide()">
+    <nav aria-label="Main">
+      <mat-nav-list>
+        @for (item of destinations; track item.path) {
+          <a mat-list-item [routerLink]="item.path" routerLinkActive #rla="routerLinkActive"
+             [activated]="rla.isActive" ariaCurrentWhenActive="page"
+             (click)="isWide() || drawer.close()">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </nav>
   </mat-sidenav>
 
   <mat-sidenav-content class="shell__content">
@@ -283,21 +286,28 @@ export class AppShell {
       <app-nav-rail [destinations]="destinations" />
     }
     <div class="shell__main">
-      <mat-toolbar>
-        @if (!isWide() && !showRail()) {
-          <button matIconButton aria-label="Open navigation" (click)="drawer.open()">
-            <mat-icon>menu</mat-icon>
-          </button>
-        }
-        <span class="shell__title">Order desk</span>
-      </mat-toolbar>
+      <header>
+        <mat-toolbar>
+          @if (!isWide() && !showRail()) {
+            <button matIconButton aria-label="Open navigation" (click)="drawer.open()">
+              <mat-icon>menu</mat-icon>
+            </button>
+          }
+          <span class="shell__title">Order desk</span>
+        </mat-toolbar>
+      </header>
       <main id="main" tabindex="-1" class="shell__body">
         <router-outlet />
       </main>
+      <!-- a <footer> (contentinfo) only if the app has footer content (A11Y-23) -->
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>
 ```
+
+Landmarks (A11Y-23): `<header>` is the banner, the `<nav>` inside the drawer is the named main navigation
+(label it on the `nav`, not on `mat-sidenav`), `<main>` holds the routed page. The shell also starts the
+`RouteFocus` service once (NG-UI-31, code in [references/screen-readers.md](references/screen-readers.md)).
 
 The stylesheet makes `.shell` `100dvh`, `.shell__content` a flex row (rail + main), and constrains
 `.shell__body` to a readable max width with spacing tokens.
@@ -430,16 +440,17 @@ Run when asked to audit or review an Angular app against Material Design 3 and o
 | Components | Material component used where one exists; correct variant by emphasis; gaps in `src/shared/ui` (NG-UI-01/02) |
 | Customization | No `.mdc-*`, `.mat-mdc-*`, `::ng-deep`; overrides via `mat.<x>-overrides` (NG-UI-03) |
 | Layout | Size classes 600/840/1200/1600; canonical layout per screen; readable max width; spacing grid (NG-UI-09/11) |
+| Responsive | `WindowSize` only in the UI adapter, same data per size class; logical properties, `dvh`, safe areas; reflow at 320 px; no hover-only function; zoom not blocked (NG-UI-19..28, A11Y-13..16) |
 | Navigation | Bar / rail / drawer by size; consistent order; consistent help location (NG-UI-10) |
 | Motion | Own transitions honour `prefers-reduced-motion`; MD3 easing/duration (NG-UI-15) |
-| Accessibility | Contrast per theme incl. high contrast (A11Y-09); targets ≥ 24 px, 44 px default (A11Y-10); focus visible and not obscured; labels, names, dialog focus (NG-UI-12..14); WCAG 2.2 additions (A11Y-11) |
-| Tests | Harnesses for Material widgets; axe per theme; keyboard journeys for gap components (NG-UI-17/18, A11Y-05) |
+| Accessibility | Contrast per theme incl. high contrast and forced colors (A11Y-09, A11Y-28); targets ≥ 24 px, 44 px default (A11Y-10); focus visible and not obscured; labels, names, dialog focus (NG-UI-12..14, 33); status via visible region or `Announcer`, route title and focus on `h1`, snackbar/spinner/table labels, loading/empty/error states (NG-UI-30..32, 35, A11Y-20/21); WCAG 2.2 additions (A11Y-11) |
+| Tests | Harnesses for Material widgets; axe per theme and per viewport; keyboard journeys for gap components; responsive E2E checks (NG-UI-17/18, A11Y-05/17, TS-TEST-17..21, 28); announcements, title/focus, form errors, ARIA snapshot (NG-TEST-12..14, TS-TEST-23..26) |
 
 4. **Write the report**:
 
 ```
 # MD3 Compliance Audit: <app>
-Target: <paths / URL>   Date: <date>   Overall: <sum>/110
+Target: <paths / URL>   Date: <date>   Overall: <sum>/120
 
 | Category | Score | Status | Rules |
 |---|---|---|---|
@@ -495,7 +506,7 @@ grep -rnE 'font-size:|border-radius:|box-shadow:' src --include='*.scss' | grep 
   and bottom bar
 - [references/component-catalog.md](references/component-catalog.md): per MD3 category, when to use
   which component, Angular Material API, a11y notes, harness
-- Rules: `docs/angular/ui-material.md`, `docs/shared/accessibility/wcag.md`,
-  `docs/typescript/frontend-architecture.md`, `docs/angular/testing.md`
+- Rules: `docs/baseline/08-crosscutting-concepts/ui/angular-material.md`, `docs/baseline/10-quality-requirements/accessibility.md`,
+  `docs/baseline/05-building-block-view/typescript.md`, `docs/baseline/08-crosscutting-concepts/testing/angular.md`
 - External: material.angular.dev (API, Styling tabs list each component's override tokens),
   m3.material.io (design guidance)

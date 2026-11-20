@@ -74,8 +74,11 @@ Each role also has `-font`, `-size`, `-weight`, `-line-height`, `-tracking`; the
 ```
 
 A single value (`typography: Roboto`) sets both families with weights 700/500/400. Roboto / Roboto Flex is
-MD3's default and is fine to keep; replace it only for brand reasons. Load fonts self-hosted or via the
-Angular CLI font inlining; include the weights you configure.
+MD3's default and is fine to keep; replace it only for brand reasons. Fonts and icon fonts (Material Symbols)
+are self-hosted, e.g. from `@fontsource/roboto` / `@fontsource-variable/material-symbols-outlined` or files
+in `public/`; no Google Fonts `<link>` (which `ng add @angular/material` may add to `index.html`, remove it)
+and no CLI font inlining, which still loads the font files from Google (NG-UI-34, DP-PROC-03). Include only
+the weights you configure.
 
 Angular Material components already apply MD3's role per element (button label: label-large, app bar
 title: title-large, dialog headline: headline-small, card title: title-medium, navigation labels:

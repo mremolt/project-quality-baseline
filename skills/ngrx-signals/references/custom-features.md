@@ -50,17 +50,12 @@ export function setError(error: string): RequestStatusState {
 }
 ```
 
-`setError` takes an already-translated **user message**: the store passes `errors.messageFor(error)` from the feature's error mapper, never `error.message` (NG-STATE-09).
+`setError` takes a **translation key**: the store passes `errors.keyFor(error)` from the feature's error mapper, never `error.message` or translated text; the component translates the key (NG-STATE-09, NG-I18N-04).
 
 Use it:
 
 ```typescript
-import {
-  setError,
-  setFulfilled,
-  setPending,
-  withRequestStatus,
-} from '../../../../../platform/adapter/in/ui/state/with-request-status';
+import { setError, setFulfilled, setPending, withRequestStatus } from '../../../../../platform'; // index.ts only (NG-ARCH-04)
 
 interface OrdersState {
   readonly orders: readonly Order[];
@@ -69,14 +64,14 @@ interface OrdersState {
 export const OrdersStore = signalStore(
   withState<OrdersState>({ orders: [] }),
   withRequestStatus(),
-  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorMessages)) => ({
+  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorKeys)) => ({
     async load(customerId: CustomerId): Promise<void> {
       patchState(store, setPending());
       try {
         const orders = await loadHistory.loadOrderHistory(LoadOrderHistoryQuery.of({ customerId }));
         patchState(store, { orders }, setFulfilled());
       } catch (error) {
-        patchState(store, setError(errors.messageFor(error)));
+        patchState(store, setError(errors.keyFor(error)));
       }
     },
   })),

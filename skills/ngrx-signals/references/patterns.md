@@ -1,6 +1,6 @@
 # @ngrx/signals — Architectural Patterns
 
-The "how should I structure this?" answers, applied to our hexagonal frontend. Rules are in `docs/angular/state-management.md` (NG-STATE-*) and `docs/typescript/frontend-architecture.md` (TS-ARCH-*); this file shows how they look in code.
+The "how should I structure this?" answers, applied to our hexagonal frontend. Rules are in `docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md` (NG-STATE-*) and `docs/baseline/05-building-block-view/typescript.md` (TS-ARCH-*); this file shows how they look in code.
 
 ## Table of contents
 
@@ -22,7 +22,7 @@ OrdersPage (template)
    │  reads signals, calls methods
    ▼
 OrdersStore                     adapter/in/ui   view state: filter, selection, orders, request status
-   │  inject(LOAD_ORDER_HISTORY)                 token from orders.providers.ts (TS-ARCH-09)
+   │  inject(LOAD_ORDER_HISTORY)                 token from orders.tokens.ts (TS-ARCH-17)
    ▼
 LoadOrderHistoryUseCase         ports/in        contract, returns Promise (TS-D1)
    ▲  implemented by
@@ -31,7 +31,7 @@ LoadOrderHistoryService         application     orchestrates domain + outgoing p
    ▼
 LoadOrdersPort                  ports/out
    ▲  implemented by
-HttpOrdersAdapter               adapter/out/http   HTTP, DTO → domain mapping, zod parsing
+HttpOrders               adapter/out/http   HTTP, DTO → domain mapping, zod parsing
 ```
 
 Files of the orders feature:
@@ -39,29 +39,31 @@ Files of the orders feature:
 ```
 src/features/orders/
   domain/order.ts                         ← Order, OrderId, canBeCancelled(), markCancelled()
-  ports/in/load-order-history.ts          ← LoadOrderHistoryUseCase + LoadOrderHistoryQuery (zod factory)
+  ports/in/load-order-history-use-case.ts ← LoadOrderHistoryUseCase (contract)
+  ports/in/load-order-history-query.ts    ← LoadOrderHistoryQuery (zod schema + typed factory, TS-ARCH-06)
   ports/out/load-orders-port.ts           ← LoadOrdersPort
   application/load-order-history-service.ts
   adapter/in/ui/orders-store.ts           ← the Signal Store
-  adapter/in/ui/orders-error-messages.ts  ← feature error mapper (NG-STATE-09)
+  adapter/in/ui/orders-error-keys.ts      ← feature error mapper → translation keys (NG-STATE-09), provided in orders.providers.ts
   adapter/in/ui/orders-page.ts
-  adapter/out/http/http-orders-adapter.ts
-  orders.providers.ts                     ← tokens + wiring
+  adapter/out/http/http-orders.ts
+  orders.tokens.ts                        ← injection tokens (imports only ports, TS-ARCH-17)
+  orders.providers.ts                     ← wiring (composition root); never imported by stores or pages
 ```
 
 The contract the store depends on (framework-free, `Promise`-based, TS-D1):
 
 ```typescript
-// ports/in/load-order-history.ts
+// ports/in/load-order-history-use-case.ts
 export interface LoadOrderHistoryUseCase {
   loadOrderHistory(query: LoadOrderHistoryQuery, signal?: AbortSignal): Promise<readonly Order[]>;
 }
 ```
 
-The token lives in the composition root, because `InjectionToken` is an Angular type (TS-ARCH-09):
+The token lives in the feature's tokens file, not in `ports`, because `InjectionToken` is an Angular type; the tokens file imports only `ports` (TS-ARCH-17):
 
 ```typescript
-// orders.providers.ts
+// orders.tokens.ts
 export const LOAD_ORDER_HISTORY = new InjectionToken<LoadOrderHistoryUseCase>('LoadOrderHistory');
 export const CANCEL_ORDER = new InjectionToken<CancelOrderUseCase>('CancelOrder');
 ```
@@ -74,14 +76,14 @@ export const OrdersStore = signalStore(
   withState<OrdersState>(initialState),
   withEntities<Order>(),
   withRequestStatus(),
-  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorMessages)) => ({
+  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorKeys)) => ({
     async load(customerId: CustomerId): Promise<void> {
       patchState(store, setPending());
       try {
         const orders = await loadHistory.loadOrderHistory(LoadOrderHistoryQuery.of({ customerId }));
         patchState(store, setAllEntities([...orders]), setFulfilled());
       } catch (error) {
-        patchState(store, setError(errors.messageFor(error)));
+        patchState(store, setError(errors.keyFor(error)));
       }
     },
   })),
@@ -92,12 +94,12 @@ Why:
 
 - **Incoming adapter → incoming port.** The store is a UI adapter; it reaches the core only through use-case contracts (ARCH-ADP-02).
 - **Testable in isolation.** Tests provide `mock<LoadOrderHistoryUseCase>()` for the token (NG-STATE-14).
-- **Replaceable backend.** Swap the HTTP adapter for GraphQL/IndexedDB in the providers file; store and use case don't change.
+- **Replaceable backend.** Swap the HTTP adapter for GraphQL/IndexedDB in the providers file (`orders.providers.ts`); store and use case don't change.
 - **No DTOs in the UI.** The adapter maps DTO → domain; the store only ever sees `Order` (NG-STATE-04, TS-ARCH-05).
 
 If you find `inject(HttpClient)`, a generated API service, an outgoing port or an `adapter/out` import inside a store, call it out (NG-STATE-02). dependency-cruiser will fail the build anyway (NG-STATE-15).
 
-If the use case doesn't exist yet: write the contract in `ports/in`, the token in the providers file, then the store against the token (test first, London style). The application service and adapter can follow in their own TDD cycles.
+If the use case doesn't exist yet: write the contract in `ports/in`, the token in `orders.tokens.ts`, then the store against the token (test first, London style). The application service and adapter can follow in their own TDD cycles.
 
 ## Scoping: component vs route vs root
 
@@ -115,14 +117,14 @@ Component/route scope is the default (NG-STATE-12). Putting screen state in `roo
 Snapshot, patch optimistically, call the use case, roll back and show a mapped error on failure (NG-STATE-10, NG-STATE-09).
 
 ```typescript
-withMethods((store, cancelOrder = inject(CANCEL_ORDER), errors = inject(OrdersErrorMessages)) => ({
-  async cancel(id: OrderId): Promise<void> {
+withMethods((store, cancelOrder = inject(CANCEL_ORDER), errors = inject(OrdersErrorKeys)) => ({
+  async cancel(id: OrderId, reason: string): Promise<void> {
     const previous = getState(store);
     patchState(store, { cancelling: id }, updateEntity({ id, changes: markCancelled })); // markCancelled: domain function
     try {
-      await cancelOrder.cancelOrder(CancelOrderCommand.of({ orderId: id }));
+      await cancelOrder.cancelOrder(CancelOrderCommand.of({ orderId: id, reason }));
     } catch (error) {
-      patchState(store, { entityMap: previous.entityMap, ids: previous.ids }, setError(errors.messageFor(error)));
+      patchState(store, { entityMap: previous.entityMap, ids: previous.ids }, setError(errors.keyFor(error)));
     } finally {
       patchState(store, { cancelling: null });
     }
@@ -162,7 +164,7 @@ It splits along the hexagon, not into "store + API service":
 
 | Piece of the old service                         | Goes to                                                                                    |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `OrderDto`, `HttpClient` call                    | `adapter/out/http/http-orders-adapter.ts` implementing `LoadOrdersPort`, maps DTO → `Order` |
+| `OrderDto`, `HttpClient` call                    | `adapter/out/http/http-orders.ts` implementing `LoadOrdersPort`, maps DTO → `Order` |
 | `o.status === 'open' && !o.shippedAt`            | `domain/order.ts`: `canBeCancelled(order)`                                                 |
 | "load orders for a customer" orchestration       | `application/load-order-history-service.ts` implementing `LoadOrderHistoryUseCase`          |
 | `BehaviorSubject`s, `.next`, derived observables | `adapter/in/ui/orders-store.ts` (Signal Store)                                             |
@@ -178,14 +180,14 @@ export const OrdersStore = signalStore(
   withComputed(({ entities }) => ({
     cancellable: computed(() => entities().filter(canBeCancelled)),
   })),
-  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorMessages)) => ({
+  withMethods((store, loadHistory = inject(LOAD_ORDER_HISTORY), errors = inject(OrdersErrorKeys)) => ({
     async load(customerId: CustomerId): Promise<void> {
       patchState(store, setPending());
       try {
         const orders = await loadHistory.loadOrderHistory(LoadOrderHistoryQuery.of({ customerId }));
         patchState(store, setAllEntities([...orders]), setFulfilled());
       } catch (error) {
-        patchState(store, setError(errors.messageFor(error)));
+        patchState(store, setError(errors.keyFor(error)));
       }
     },
   })),
@@ -223,14 +225,14 @@ export const PreferencesStore = signalStore(
   { providedIn: 'root' }, // app-wide: lives in src/platform/adapter/in/ui/
   withState<PreferencesState>(initialPreferences),
   withRequestStatus(),
-  withMethods((store, loadPreferences = inject(LOAD_PREFERENCES), errors = inject(PreferencesErrorMessages)) => ({
+  withMethods((store, loadPreferences = inject(LOAD_PREFERENCES), errors = inject(PreferencesErrorKeys)) => ({
     async load(): Promise<void> {
       patchState(store, setPending());
       try {
         const preferences = await loadPreferences.loadPreferences();
         patchState(store, { preferences }, setFulfilled());
       } catch (error) {
-        patchState(store, setError(errors.messageFor(error)));
+        patchState(store, setError(errors.keyFor(error)));
       }
     },
   })),
@@ -275,7 +277,7 @@ A store never `inject(OtherStore)`s and never imports another store (NG-STATE-02
 
 Allowed alternatives:
 
-1. **Call a use case.** If the orders screen needs customer data, the customers feature exports a use-case contract and token from its `index.ts`; the orders store (or the orders use case) calls it.
+1. **Call a published use case.** If the orders screen needs customer data, the customers feature publishes the use-case contract, its token and `provideCustomersApi()` from its `index.ts`; the orders route adds `provideCustomersApi()` to its providers, and the orders store injects the published token (TS-ARCH-19). Never inject a token the customers feature does not publish, and never rely on the customers route being active. A use case many features need moves to `src/platform`.
 2. **Lift the shared view state up** to a higher-scoped store that both components inject (one store, two consumers).
 3. **Compose via a custom feature** (`signalStoreFeature`) so both stores include the same slice shape (they still hold separate state).
 4. **Pass values through component inputs** from a parent that owns the store.
@@ -284,40 +286,42 @@ Allowed alternatives:
 
 ## Loading + error UX
 
-Pair every async method with the shared request status and translate errors in one place per feature (NG-STATE-09).
+Pair every async method with the shared request status and map errors to translation keys in one place per feature (NG-STATE-09). The store holds the key; the component translates it (NG-I18N-04).
 
-The feature error mapper (`adapter/in/ui/orders-error-messages.ts`): business errors from `domain` become user messages, everything else becomes a generic message plus logging.
+The feature error mapper (`adapter/in/ui/orders-error-keys.ts`): business errors from `domain` become translation keys; the platform's `TechnicalError` becomes the generic key (the HTTP interceptor already reported it, NG-OBS-04); anything else is a bug, becomes the generic key and is reported through the platform's `ReportErrorUseCase`.
 
 ```typescript
 import { inject, Injectable } from '@angular/core';
 
-import { Logger } from '../../../../../platform/adapter/out/logging/logger';
+import { REPORT_ERROR, TechnicalError } from '../../../../../platform'; // index.ts only (NG-ARCH-04)
 import { OrderAlreadyShipped, OrderNotFound } from '../../../domain/order-errors';
 
-@Injectable({ providedIn: 'root' }) // stateless helper, not state, so root is fine
-export class OrdersErrorMessages {
-  private readonly logger = inject(Logger);
+@Injectable() // not auto-provided: listed in orders.providers.ts (NG-ARCH-10, NG-STATE-09)
+export class OrdersErrorKeys {
+  private readonly reportError = inject(REPORT_ERROR);
 
-  messageFor(error: unknown): string {
+  keyFor(error: unknown): string {
     if (error instanceof OrderAlreadyShipped) {
-      return 'This order has already been shipped.';
+      return 'orders.errors.alreadyShipped';
     }
     if (error instanceof OrderNotFound) {
-      return 'This order no longer exists.';
+      return 'orders.errors.notFound';
     }
-    this.logger.error('Unexpected orders error', error);
-    return 'Something went wrong. Please try again.';
+    if (!(error instanceof TechnicalError)) {
+      this.reportError.report(error); // a bug, not an expected failure
+    }
+    return 'common.errors.unexpected';
   }
 }
 ```
 
-The store only ever calls `setError(errors.messageFor(error))`; it never shows `error.message` or inspects HTTP status codes (those are mapped to domain errors in the HTTP adapter).
+The mapper imports only the feature's `domain` and `src/platform/index.ts`, never `adapter/out` (the UI adapter and the HTTP adapter stay independent). The store only ever calls `setError(errors.keyFor(error))`; it never shows `error.message` or inspects HTTP status codes: the HTTP adapter maps problem `code`s and status codes to domain errors (TS-ARCH-18).
 
 In the template:
 
 ```html
 @if (store.isPending()) { <app-spinner /> }
-@if (store.error(); as message) { <app-error-banner [message]="message" /> }
+@if (store.error(); as errorKey) { <app-error-banner [message]="errorKey | transloco" /> }
 @if (store.isFulfilled()) {
   <ul>
     @for (order of store.visibleOrders(); track order.id) { <li>{{ order.number }}</li> }
@@ -362,13 +366,9 @@ export class CachingLoadOrdersAdapter implements LoadOrdersPort {
 ```typescript
 // orders.providers.ts
 export const ordersProviders: Provider[] = [
-  HttpOrdersAdapter,
-  { provide: LOAD_ORDERS_PORT, useFactory: () => new CachingLoadOrdersAdapter(inject(HttpOrdersAdapter)) },
-  {
-    provide: LOAD_ORDER_HISTORY,
-    useFactory: (port: LoadOrdersPort) => new LoadOrderHistoryService(port),
-    deps: [LOAD_ORDERS_PORT],
-  },
+  HttpOrders,
+  { provide: LOAD_ORDERS_PORT, useFactory: () => new CachingLoadOrdersAdapter(inject(HttpOrders)) },
+  { provide: LOAD_ORDER_HISTORY, useFactory: () => new LoadOrderHistoryService(inject(LOAD_ORDERS_PORT)) },
 ];
 ```
 

@@ -1,0 +1,63 @@
+# Architecture Documentation (arc42)
+
+How products document their architecture (default D13): arc42, in Markdown, next to the code, linking to this baseline instead of copying it. The baseline itself is written as an arc42 reference architecture in `docs/baseline/`.
+
+## Layout in a product repository
+
+```
+docs/
+  baseline/          ← synced from the baseline, replaced as a whole (read-only for the project)
+  architecture/      ← the product's arc42 documentation (project-owned)
+    README.md
+    01-introduction-and-goals.md … 12-glossary.md
+  adr/               ← the product's decisions (D6); 0000-template.md to copy from
+  security/          ← requirements, threat model, exceptions, incident runbook (SEC-REQ-01, SEC-TM-01, SEC-VUL-03, SEC-INC-02)
+  data-protection/   ← processing record, deletion concept (DP-INV-01/02)
+```
+
+The sync creates these project-owned files from the baseline's templates once; after that the project owns them. What it creates and replaces: [agent-skills.md](agent-skills.md#distribution-to-consuming-projects).
+
+## Rules
+
+- **DOC-ARC-01: Every product has an arc42 documentation in `docs/architecture/`, one Markdown file per chapter** (`01-introduction-and-goals.md` … `12-glossary.md`), created from the template.
+  *Why:* one file per chapter keeps diffs small, and agents can update exactly the chapter a change affects.
+- **DOC-ARC-02: Product chapters link to the baseline instead of repeating it.** Every chapter with a baseline link in the table below (2, 4, 5, 6, 7, 8, 10, 11, 12) states only the product's specifics and its deviations from the baseline, each deviation with its ADR. Chapter 7 also holds the delivery platform mapping and the other product records the delivery rules ask for (REL-CD-06).
+  *Why:* copies drift; the baseline is updated by re-syncing, the links stay valid because rule IDs and chapter folders are stable.
+- **DOC-ARC-03: Decisions are ADRs in `docs/adr/`** (D6), copied from `docs/adr/0000-template.md`. Chapter 9 is an index: one line per ADR with its status and a link.
+- **DOC-ARC-04: Chapter 11 lists the conscious shortcuts** (their ADRs, ARCH-SC-02) and known technical debt with the trigger that would make the team pay it back.
+- **DOC-ARC-05: Diagrams are text in the Markdown file** (Mermaid; PlantUML only if Mermaid cannot express it). Context (chapter 3) and building blocks (chapter 5) use C4-style levels: system context, containers (our component folders), components.
+  *Why:* diagrams as code are reviewed, diffed and updated by agents like any other text.
+- **DOC-ARC-06: The documentation changes in the same pull request as the architecture.** A new adapter, external system, component, deployment target or quality requirement updates the affected chapter. Reviewers check it; agents update the chapter as part of the task.
+- **DOC-ARC-07: Lean beats complete (SHOULD).** A chapter that does not apply says so in one line with the reason; it is not deleted and not padded.
+- **DOC-ARC-08: The baseline follows the same structure.** New baseline docs go into the arc42 chapter of their content under `docs/baseline/`; cross-cutting topics get a folder in chapter 8. Moving a doc never changes rule IDs.
+- **DOC-ARC-09: The baseline repository keeps `ARCHITECTURE.md` at its root current.** It is the summary of the baseline's architecture, technologies and decisions for human readers. A change to the baseline that alters any of these updates the file in the same change. It describes the current state only: no changelog, no dates of changes, no superseded or reverted decisions.
+  *Why:* a summary that lags behind the rules, or mixes in history, misleads the readers it is written for; history is in git.
+
+## What goes where (product vs. baseline)
+
+| Chapter | Product writes | Links to the baseline |
+|---|---|---|
+| 1 Introduction and goals | Requirements overview, top 3–5 quality goals, stakeholders | — |
+| 2 Constraints | Customer, regulatory, hosting constraints | [02-architecture-constraints](../../02-architecture-constraints/README.md) |
+| 3 Context and scope | Users, neighbouring systems, interfaces (business and technical context) | — |
+| 4 Solution strategy | Product-specific strategy, deviations | [04-solution-strategy](../../04-solution-strategy/README.md) |
+| 5 Building block view | Bounded contexts, features, adapters per component | [05-building-block-view](../../05-building-block-view/README.md) |
+| 6 Runtime view | Important business scenarios | [06-runtime-view](../../06-runtime-view/README.md) for the generic flows |
+| 7 Deployment view | Environments, infrastructure, delivery platform mapping, configuration keys and secret sources, rollout, recovery targets | [07-deployment-view](../../07-deployment-view/README.md) |
+| 8 Cross-cutting concepts | Domain concepts, product-specific additions | [08-crosscutting-concepts](../README.md) |
+| 9 Architecture decisions | ADR index | — |
+| 10 Quality requirements | Product scenarios with numbers | [10-quality-requirements](../../10-quality-requirements/README.md) |
+| 11 Risks and technical debt | Risks, shortcut ADRs, debt | [11-risks-and-technical-debt](../../11-risks-and-technical-debt/README.md) |
+| 12 Glossary | Domain terms | [12-glossary](../../12-glossary/README.md) |
+
+## Agent checklist
+
+- [ ] Did the change add or change a component, adapter, external system, deployment target or quality requirement? Then the matching chapter in `docs/architecture/` is updated in the same change.
+- [ ] New decision or shortcut? ADR drafted and linked in chapter 9 (and chapter 11 for shortcuts)?
+- [ ] Linked to the baseline instead of copying it?
+- [ ] Diagrams as Mermaid in the Markdown file?
+- [ ] In the baseline repository: did the change alter architecture, technology or a decision? Then `ARCHITECTURE.md` is updated in the same change, current state only (DOC-ARC-09).
+
+## Sources
+
+arc42 (arc42.org, docs.arc42.org, "arc42 by Example"), C4 model (c4model.com), Michael Nygard, "Documenting Architecture Decisions" (2011).

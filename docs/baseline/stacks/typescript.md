@@ -1,0 +1,23 @@
+# TypeScript
+
+Rules for every TypeScript project, frontend framework-independent. Angular-specific additions are in [stacks/angular.md](angular.md). Defaults (`TS-D*`): [04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md).
+
+| Doc | Covers | Rule IDs |
+|---|---|---|
+| [05-building-block-view/typescript.md](../05-building-block-view/typescript.md) | Hexagonal architecture in frontends, folder layout, dependency-cruiser, error mapping, feature boundaries | `TS-ARCH-*` |
+| [08-crosscutting-concepts/development/typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) | Supported browsers and `lib`, tsconfig, ESLint, Prettier, npm scripts, npm version, update automation, reproducible builds and SBOM | `TS-TOOL-*` |
+| [08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md) | Vitest, vitest-mock-extended, Testing Library, MSW, Playwright basics and tiers, axe | `TS-TEST-01..16` |
+| [08-crosscutting-concepts/testing/typescript-e2e.md](../08-crosscutting-concepts/testing/typescript-e2e.md) | Playwright matrix, viewports, themes, responsive, screen reader assertions, flaky tests, time budget | `TS-TEST-17..31` |
+| [08-crosscutting-concepts/security/typescript.md](../08-crosscutting-concepts/security/typescript.md) | Browser storage, DOM and eval bans, redirects, bundle secrets, source maps, third-party scripts; npm supply chain in tooling | `TS-SEC-*`, `TS-TOOL-11..16` |
+| [08-crosscutting-concepts/api/typescript-openapi-clients.md](../08-crosscutting-concepts/api/typescript-openapi-clients.md) | Generated API clients with Orval: placement, validation, mocks, N+1 helpers | `TS-API-*` |
+
+Shared docs every TypeScript frontend also implements (stack rules for Angular in [stacks/angular.md](angular.md)):
+
+| Doc | Covers | Rule IDs |
+|---|---|---|
+| [08-crosscutting-concepts/api/rest-conventions.md](../08-crosscutting-concepts/api/rest-conventions.md) | Wire format the clients consume: decimals, dates, enums, problem `code`s, paging, sorting, filtering | `API-REST-*` |
+| [07-deployment-view/container-runtime.md](../07-deployment-view/container-runtime.md) | Frontend delivery: the BFF image embeds and serves the bundle, caching, rolling deployments, one release tag | `REL-FE-*` |
+| [08-crosscutting-concepts/configuration/configuration.md](../08-crosscutting-concepts/configuration/configuration.md) | One build for all environments, runtime configuration, secrets | `CFG-*` |
+| [08-crosscutting-concepts/observability/observability.md](../08-crosscutting-concepts/observability/observability.md) | Frontend error reports, correlation, source maps | `OBS-*` |
+| [08-crosscutting-concepts/data-protection/data-protection.md](../08-crosscutting-concepts/data-protection/data-protection.md) | Personal data, no third-party browser resources (DP-PROC-03) | `DP-*` |
+
