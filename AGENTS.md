@@ -5,7 +5,7 @@ This repository is a shared quality baseline that our projects import. It define
 
 ## How the docs are organized
 
-- `docs/baseline/`: the baseline as an **arc42 reference architecture** (chapters `01-…` to `12-…`), synced from the baseline repository. Shared rules apply to every project; stack files (`java`, `spring`, `node`, `nestjs`, `typescript`, `angular` in the name) add to them and may tighten them, but never contradict them. `docs/baseline/stacks/<stack>.md` lists everything for one stack. **Read only the stacks this project uses** (listed below; declared in `.baseline.json`); never load another stack's docs or skills.
+- `docs/baseline/`: the baseline as an **arc42 reference architecture** (chapters `01-…` to `12-…`), synced from the baseline repository. Shared rules apply to every project; stack files (`java`, `spring`, `node`, `nestjs`, `typescript`, `angular`, `react`, `nextjs` in the name) add to them and may tighten them, but never contradict them. `docs/baseline/stacks/<stack>.md` lists everything for one stack. **Read only the stacks this project uses** (listed below; declared in `.baseline.json`); never load another stack's docs or skills.
 - `docs/architecture/`: this product's own arc42 documentation (project-owned), linking to the baseline. `docs/adr/`: this product's decisions.
 - Agent skills (`.agents/skills/`, `.claude/skills/`) supply framework know-how. If a skill, a tech doc or a generic habit disagrees with these docs, **the docs win**. Stack docs list known conflicts in their "Skill overrides" tables.
 
@@ -35,6 +35,7 @@ This repository is a shared quality baseline that our projects import. It define
 | Container image, frontend delivery in the BFF, runtime settings (resources, read-only filesystem, termination) | [07-deployment-view/container-runtime.md](docs/baseline/07-deployment-view/container-runtime.md) |
 | Backend: auth, logging, database/migrations, JSON/REST conventions, libraries, local services | [stacks/spring.md](docs/baseline/stacks/spring.md) and the doc it lists for the topic | <!-- stack:spring -->
 | Backend: auth, logging, database/migrations, JSON/REST conventions, libraries, local services | [stacks/nestjs.md](docs/baseline/stacks/nestjs.md) and the doc it lists for the topic | <!-- stack:nestjs -->
+| Next.js server: BFF login and session, `proxy.ts`, server actions, route handlers, image and deployment | [stacks/nextjs.md](docs/baseline/stacks/nextjs.md) and the doc it lists for the topic | <!-- stack:nextjs -->
 | Touching architecture tests, modules or visibility | [08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md](docs/baseline/08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md) |
 | Tempted to skip a layer or share a model | [11-risks-and-technical-debt/conscious-shortcuts.md](docs/baseline/11-risks-and-technical-debt/conscious-shortcuts.md) |
 | Architecture change (new component, adapter, external system, deployment target), new project | [08-crosscutting-concepts/development/architecture-documentation.md](docs/baseline/08-crosscutting-concepts/development/architecture-documentation.md); update the affected chapter in `docs/architecture/` |
@@ -52,6 +53,8 @@ This repository is a shared quality baseline that our projects import. It define
 | NestJS | everything for Node.js + [stacks/nestjs.md](docs/baseline/stacks/nestjs.md) and the docs it lists | **`baseline-nestjs` before any backend code** (it loads `baseline-tdd`, `vitest`, `baseline-security`) | <!-- stack:nestjs -->
 | TypeScript frontend (any) | [stacks/typescript.md](docs/baseline/stacks/typescript.md) and the docs it lists | `baseline-tdd`, `vitest`, `playwright-best-practices` | <!-- stack:typescript -->
 | Angular | everything for TypeScript + [stacks/angular.md](docs/baseline/stacks/angular.md) and the docs it lists | **`baseline-angular` before any Angular code** (it loads `angular-developer`, `ngrx-signals`, `angular-material-design`, `orval`, `accessibility`) | <!-- stack:angular -->
+| React (SPA, and the base of Next.js) | everything for TypeScript + [stacks/react.md](docs/baseline/stacks/react.md) and the docs it lists | **`baseline-react` before any React code** (it loads `vercel-react-best-practices`, `tanstack-query-best-practices`, `material-ui-theming`, `material-ui-styling`, `orval`, `accessibility`) | <!-- stack:react -->
+| Next.js | everything for React + [stacks/nextjs.md](docs/baseline/stacks/nextjs.md) and the docs it lists | **`baseline-nextjs` before any Next.js code** (it loads the React skills and routes to the Next.js docs) | <!-- stack:nextjs -->
 
 ## Non-negotiables for agents
 

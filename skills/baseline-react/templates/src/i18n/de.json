@@ -1,0 +1,57 @@
+{
+  "app": {
+    "name": "Shop",
+    "skipToContent": "Zum Hauptinhalt springen",
+    "nav": { "label": "Hauptnavigation", "home": "Start", "orders": "Bestellungen" },
+    "home": { "title": "Start", "intro": "Willkommen im Shop." },
+    "notFound": { "title": "Seite nicht gefunden", "message": "Diese Seite gibt es nicht." }
+  },
+  "platform": {
+    "documentTitle": "{page} | Shop",
+    "error": {
+      "title": "Etwas ist schiefgelaufen",
+      "message": "Bitte laden Sie die Seite neu. Wenn das Problem bleibt, wenden Sie sich an den Support.",
+      "reload": "Seite neu laden",
+      "retry": "Erneut versuchen"
+    }
+  },
+  "orders": {
+    "page": { "title": "Bestellungen" },
+    "count": "{count, plural, =0 {Keine Bestellungen} one {# Bestellung} other {# Bestellungen}}",
+    "loading": "Bestellungen werden geladen",
+    "empty": "Noch keine Bestellungen.",
+    "loadError": "Die Bestellungen konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "table": {
+      "label": "Bestellungen",
+      "number": "Bestellung",
+      "created": "Erstellt",
+      "status": "Status",
+      "total": "Summe",
+      "actions": "Aktionen"
+    },
+    "status": { "OPEN": "Offen", "SHIPPED": "Versendet", "CANCELLED": "Storniert" },
+    "paging": {
+      "label": "Seiten",
+      "previous": "Vorherige Seite",
+      "next": "Nächste Seite",
+      "position": "Seite {page} von {pages}"
+    },
+    "cancel": {
+      "open": "Bestellung {number} stornieren",
+      "title": "Bestellung {number} stornieren",
+      "reason": "Grund",
+      "reasonHelp": "3 bis 200 Zeichen",
+      "reasonInvalid": "Geben Sie einen Grund mit 3 bis 200 Zeichen ein.",
+      "submit": "Bestellung stornieren",
+      "dismiss": "Bestellung behalten",
+      "done": "Bestellung {number} storniert."
+    },
+    "errors": {
+      "alreadyShipped": "Diese Bestellung ist bereits versendet und kann nicht mehr storniert werden.",
+      "notFound": "Diese Bestellung gibt es nicht mehr.",
+      "invalid": "Bitte prüfen Sie Ihre Eingabe.",
+      "technical": "Die Bestellung konnte nicht storniert werden. Bitte versuchen Sie es später erneut."
+    }
+  }
+}

@@ -44,6 +44,8 @@ const anyExists = (re) => components.some((d) => (d === '.' ? fs.readdirSync('.'
 const ts = tsDirs.length > 0;
 const angular = hasDep('@angular/core');
 const nestjs = hasDep('@nestjs/core');
+const react = hasDep('react');
+const nextjs = hasDep('next');
 const vitest = hasDep('vitest');
 const playwright = hasDep('@playwright/test');
 const java = buildFiles.length > 0;
@@ -58,7 +60,7 @@ if (java && buildHas('spotless')) {
 }
 
 console.log(`TypeScript components: ${tsDirs.join(' ') || 'none'}`);
-console.log(`Detected: ts=${ts} angular=${angular} nestjs=${nestjs} vitest=${vitest} playwright=${playwright} java=${java} spring=${spring} openapi=${openapi} docker=${docker} java-formatter=${jformat}`);
+console.log(`Detected: ts=${ts} angular=${angular} react=${react} nextjs=${nextjs} nestjs=${nestjs} vitest=${vitest} playwright=${playwright} java=${java} spring=${spring} openapi=${openapi} docker=${docker} java-formatter=${jformat}`);
 
 // ---------------------------------------------------------------- .editorconfig
 if (!fs.existsSync('.editorconfig')) {
@@ -106,6 +108,7 @@ if (fs.existsSync(vsSettings)) {
 const recs = ['EditorConfig.EditorConfig'];
 if (ts) recs.push('dbaeumer.vscode-eslint', 'esbenp.prettier-vscode');
 if (angular) recs.push('Angular.ng-template', 'deque-systems.vscode-axe-linter');
+if (react) recs.push('deque-systems.vscode-axe-linter'); // React and Next.js support is built into VS Code and IntelliJ
 if (vitest) recs.push('vitest.explorer');
 if (playwright) recs.push('ms-playwright.playwright');
 if (java) recs.push('vscjava.vscode-java-pack');
@@ -121,7 +124,7 @@ if (currentExt !== undefined) {
 } else if (fs.existsSync(vsExt)) {
   note(`MANUAL: .vscode/extensions.json contains comments; add: ${recs.join(' ')}`);
 } else {
-  writeJson(vsExt, { recommendations: recs });
+  writeJson(vsExt, { recommendations: [...new Set(recs)] });
   note('created .vscode/extensions.json');
 }
 

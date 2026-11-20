@@ -1,6 +1,6 @@
 # Configuration and Environments
 
-How a component gets the values that differ between deployments, and how secrets reach it. These rules apply to every stack; [spring.md](spring.md) and [angular.md](angular.md) add the stack rules. Where environments run is product-specific (the product's chapter 7); this doc covers the application side.
+How a component gets the values that differ between deployments, and how secrets reach it. These rules apply to every stack; each stack adds its rules in `<stack>.md` here (Spring: [spring.md](spring.md), NestJS: [nestjs.md](nestjs.md); frontends: Per stack line at the end). Where environments run is product-specific (the product's chapter 7); this doc covers the application side.
 
 **Terms.** *Configuration* is every value that can differ between deployments of the same build: URLs, credentials, pool sizes, time-outs, environment-specific switches. Everything else is *code*, even if it is a constant. A *secret* is configuration that grants access (password, client secret, API key, signing key). An *environment* is one deployment target (for example `test`, `staging`, `production`); a *profile* or *build mode* is a way of running the code (local development, tests).
 
@@ -40,7 +40,7 @@ The decisions behind this concept, each stated once in the rule that owns it:
 
 - **CFG-08: Configuration is typed and validated at startup.** Each component binds its configuration into typed, immutable objects with constraints (required, ranges, URL format, durations with units); an invalid or missing value stops the start with a message naming the key. No string lookups scattered through the code, no validation at first use.
   *Why:* a broken deployment then fails its readiness check (OBS-03) instead of failing the first customer request.
-- **CFG-09: Configuration is read only at the edge.** Adapters and the composition root read and bind it; `domain`, `ports` and use cases receive plain values or value objects through constructors or commands, never a configuration framework type and never the environment (ARCH-DEP). Architecture tests enforce it (SPRING-CFG-02, NODE-ARCH-12, NG-CFG-04).
+- **CFG-09: Configuration is read only at the edge.** Adapters and the composition root read and bind it; `domain`, `ports` and use cases receive plain values or value objects through constructors or commands, never a configuration framework type and never the environment (ARCH-DEP). Architecture tests enforce it (SPRING-CFG-02, NODE-ARCH-12; frontends: the stack's rule).
 - **CFG-10: Every key is documented where it is defined** (the typed configuration class or schema), with meaning, unit and default. The product's chapter 7 says which keys each environment must set and where secrets come from by linking to the key list (CFG-12), not by repeating it.
 - **CFG-12: Each deployable component keeps a machine-readable list of the keys a deployment sets:** `configuration-keys.yaml` in the component folder, one entry per key with `key`, `required`, `secret` and a one-line `description`. It holds the component's own keys and the framework keys a deployment must set (for example the database URL). Tests read it (TEST-CFG-02, TEST-CFG-04); a handover to a customer-run platform ships it with the image digest. A frontend served by the BFF has no list of its own: its values are `app.frontend.*` keys of the BFF (CFG-11).
 
@@ -82,4 +82,6 @@ The decisions behind this concept, each stated once in the rule that owns it:
 
 ## Sources
 
-The Twelve-Factor App (12factor.net: III Config, V Build, release, run, X Dev/prod parity), OWASP Secrets Management Cheat Sheet, OWASP ASVS 5.0 (V13 Configuration), Spring Boot externalized configuration reference, Angular `provideAppInitializer` API (angular.dev).
+The Twelve-Factor App (12factor.net: III Config, V Build, release, run, X Dev/prod parity), OWASP Secrets Management Cheat Sheet, OWASP ASVS 5.0 (V13 Configuration), Spring Boot externalized configuration reference.
+
+Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).

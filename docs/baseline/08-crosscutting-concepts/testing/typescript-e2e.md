@@ -5,7 +5,7 @@ The Playwright rules that go beyond the basics of [typescript.md](typescript.md)
 ## Matrix
 
 - **TS-TEST-17: Viewports are Playwright projects named after the size class**, defined once in `playwright.config.ts`. Tests don't call `setViewportSize`, except in resize-transition tests (TS-TEST-20). Device presets (`devices[...]`) only when the device's browser engine is wanted; otherwise `viewport` + `isMobile` + `hasTouch`, which keeps the engine under our control.
-  *Why:* one source of truth, the same specs at every size, sizes that match NG-UI-09.
+  *Why:* one source of truth, the same specs at every size, sizes that match the window size classes (UI-01).
 
 | Viewport | Size (w × h) | Emulation | Purpose |
 |---|---|---|---|
@@ -28,7 +28,7 @@ The Playwright rules that go beyond the basics of [typescript.md](typescript.md)
   *Why:* the full matrix of browsers × viewports costs about four times as much and catches few extra bugs on pull requests.
 
 - **TS-TEST-28: Tagged main states are re-scanned in the other theme conditions, in one browser and one viewport:** Chromium at `expanded` with `colorScheme: 'dark'` and with `contrast: 'more'`, running the `@theme` specs and their axe fixture (TS-TEST-12); and with `forcedColors: 'active'` on the app shell (`@shell`): axe plus a keyboard pass asserting a visible focus indicator and the current navigation item (A11Y-28).
-  *Why:* contrast is only verified in a real browser; without theme projects, dark and high-contrast themes (A11Y-09, NG-UI-18) are never scanned.
+  *Why:* contrast is only verified in a real browser; without theme projects, dark and high-contrast themes (A11Y-09) are never scanned.
 
 - **TS-TEST-29: The matrix grows one dimension at a time from the default cell.** The default cell is Chromium, `expanded`, light theme, no contrast preference, source locale; every spec runs there. Each further project changes exactly one dimension: browser, viewport, theme (TS-TEST-28) or locale (TEST-I18N-02). Cross products (WebKit × dark × compact) are not added; a product that needs one specific combination adds that one cell with a reason in the config.
   *Why:* each dimension added independently multiplies the run time; the bugs a dimension finds show up with the others at their default.
@@ -104,7 +104,7 @@ export async function expectTextSpacingTolerant(page: Page) {
 ```
 
 - **TS-TEST-20: Each shell and each list-detail screen has a resize-transition test**: resize from `expanded` to `compact` and back with `page.setViewportSize`, and assert that the URL, the selected item and typed form values survive and that focus isn't lost.
-  *Why:* NG-UI-20; users rotate devices and resize windows mid-task.
+  *Why:* UI-05; users rotate devices and resize windows mid-task.
 - **TS-TEST-21: Target size (A11Y-10, A11Y-16) is asserted in the browser, and the axe fixture proves that `target-size` ran.** The rule belongs to the WCAG 2.2 rules, which axe treats separately; after `analyze()`, assert that `target-size` appears in `passes`, `violations` or `incomplete`, and if it doesn't, enable it explicitly. The jsdom helper (TS-TEST-09) disables `target-size`, because without layout it reports a false pass. A bounding-box check (`locator.boundingBox()`) on the screen's main controls at `compact` fails below 24 × 24 px, and below 44 × 44 px unless the control is listed in the conformance notes (A11Y-02).
 - **TS-TEST-22: Visual regression is opt-in per project.** A project that adopts it uses Playwright `toHaveScreenshot` for the shell and `shared/ui` components only, at `compact`, `medium` and `expanded`, in one theme. Screenshots are taken in the pinned Playwright Docker image, baselines are updated only by CI, animations are disabled and volatile content is masked. Hosted services (Argos, Chromatic, Percy) need an ADR.
   *Why:* rendering differs between operating systems, so local baselines don't match CI; large screenshot sets are approved without being looked at (same reason as TS-TEST-06).
@@ -166,7 +166,7 @@ A shell with a footer adds `- contentinfo` to its landmark snapshot.
 | Skill | Says | Our rule |
 |---|---|---|
 | `playwright-best-practices` (accessibility) | Live region found with `[aria-live="polite"]`; `toHaveAttribute('aria-expanded', …)` and similar checks; test with VoiceOver or NVDA "periodically" | `getByRole('status')` or the `expectAnnounced` fixture (TS-TEST-24); role options and `toHaveAccessible*` (TS-TEST-23); L6 release checklist per release (A11Y-24) |
-| `playwright-best-practices` (mobile-testing) | Breakpoints 375 / 768 / 1920 or Tailwind-style `xs`…`2xl`; loops over `setViewportSize`; `getByTestId('mobile-menu-button')` | Viewport projects named after the Material Design 3 size classes (NG-UI-09, TS-TEST-17); `setViewportSize` only for resize transitions (TS-TEST-20); locators by role and name (TS-TEST-11) |
+| `playwright-best-practices` (mobile-testing) | Breakpoints 375 / 768 / 1920 or Tailwind-style `xs`…`2xl`; loops over `setViewportSize`; `getByTestId('mobile-menu-button')` | Viewport projects named after the Material Design 3 size classes (UI-01, TS-TEST-17); `setViewportSize` only for resize transitions (TS-TEST-20); locators by role and name (TS-TEST-11) |
 | `playwright-best-practices` (visual-regression) | `waitForLoadState('networkidle')` before screenshots; screenshots as a default | Web-first assertions (TS-TEST-15); visual regression is opt-in (TS-TEST-22) |
 | `playwright-best-practices` (flaky tests) | Raise retries or timeouts to stabilise a test | Retries 0 locally, at most 1 in CI; a flaky test gets a ticket and a fix date (TS-TEST-31) |
 

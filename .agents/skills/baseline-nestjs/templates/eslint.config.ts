@@ -1,6 +1,7 @@
 // eslint.config.ts: TypeScript base (TS-TOOL-04..07) plus the Node backend rules (NODE-TOOL-05)
 import eslint from '@eslint/js';
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
+import type { Linter } from 'eslint';
 import { defineConfig } from 'eslint/config';
 import prettier from 'eslint-config-prettier/flat';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
@@ -10,6 +11,18 @@ import security from 'eslint-plugin-security';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
+
+/** TS-TOOL-05: a rule is `error` or `off`; some presets ship `warn` entries (import-x recommended). */
+function warnAsError(config: Linter.Config): Linter.Config {
+  const asError = (entry: Linter.RuleEntry): Linter.RuleSeverityAndOptions => {
+    const [severity, ...options]: [Linter.RuleSeverity, ...unknown[]] = Array.isArray(entry) ? entry : [entry];
+    return [severity === 'warn' || severity === 1 ? 'error' : severity, ...options];
+  };
+  const rules = Object.entries(config.rules ?? {}).flatMap(([name, entry]) =>
+    entry === undefined ? [] : [[name, asError(entry)] as const],
+  );
+  return { ...config, rules: Object.fromEntries(rules) };
+}
 
 const noDynamicImport = {
   selector: 'ImportExpression[source.type!="Literal"]',
@@ -41,7 +54,7 @@ export default defineConfig(
       tseslint.configs.strictTypeChecked,
       tseslint.configs.stylisticTypeChecked,
       sonarjs.configs.recommended,
-      importX.flatConfigs.recommended,
+      warnAsError(importX.flatConfigs.recommended), // ships `warn` entries
       importX.flatConfigs.typescript,
     ],
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },

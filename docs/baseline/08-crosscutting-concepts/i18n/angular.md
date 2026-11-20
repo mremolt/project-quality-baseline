@@ -6,6 +6,8 @@ Angular rules on top of [i18n.md](i18n.md) (`I18N-*`, `TOOL-I18N-*`, `TEST-I18N-
 
 ## Mechanism and catalogs
 
+The frontend-mechanism decision of [i18n.md](i18n.md#decisions) in Angular: runtime translation with Transloco; `@angular/localize` (build time) only through an ADR, for single-language deployments. The rendering decision that a public SEO path prefix needs is NG-ARCH-18.
+
 - **NG-I18N-01: Runtime translation with Transloco (`@jsverse/transloco` plus `@jsverse/transloco-messageformat` for ICU) is the default;** `@angular/localize` needs an ADR (I18N-01). Use the stable 8.x line until 9.x is stable (see [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)).
   *Why:* runtime switching and one artifact.
 - **NG-I18N-02: Catalogs are nested JSON, one file per language and scope,** next to the feature: `features/<f>/adapter/in/ui/i18n/<lang>.json` with its `context.json`; shared UI in `src/shared/ui/i18n`; platform texts in `src/platform`. Scopes are lazy and provided in the route providers (NG-ARCH-11).
@@ -29,12 +31,16 @@ Angular rules on top of [i18n.md](i18n.md) (`I18N-*`, `TOOL-I18N-*`, `TEST-I18N-
   *Why:* precision, consistency, and the previous-day bug in negative-offset zones. Angular calls a pure pipe only when a primitive input or an object reference changes.
 - **NG-I18N-09: Foreign-language fragments carry `lang`** (WCAG 3.1.2). Language names in the language switcher are written in their own language with `lang` set.
   *Why:* screen readers pronounce them correctly.
-- **NG-I18N-10: The language switch is one announced action:** one selector in a consistent place (WCAG 3.2.3/3.2.6), keyboard operable, current language marked, no reload, focus kept (NG-UI-10 consistency rules apply). The choice is stored per I18N-06 and in the profile for signed-in users.
-- **NG-I18N-11: Layouts tolerate text expansion and, later, RTL:** no fixed widths on text containers, CSS logical properties (NG-UI-24), no text in images. German and Finnish commonly need 30 percent or more extra space; the pseudo-locale exaggerates it on purpose.
+- **NG-I18N-10: The language switch is one announced action:** one selector in a consistent place (WCAG 3.2.3/3.2.6), keyboard operable, current language marked, no reload, focus kept (NG-UI-10 and UI-02 consistency rules apply). The choice is stored per I18N-06 and in the profile for signed-in users.
+- **NG-I18N-11: Layouts tolerate text expansion and, later, RTL:** no fixed widths on text containers, CSS logical properties (NG-UI-24, UI-09), no text in images. German and Finnish commonly need 30 percent or more extra space; the pseudo-locale exaggerates it on purpose.
 
 ## Tests
 
 The shared test rules are TEST-I18N-01..04, 07 and 08 in [i18n.md](i18n.md#tests). Angular specifics: component tests use the Transloco testing helpers with the real source catalog; the language-switch test (TEST-I18N-08) calls `setActiveLang` on the `TranslocoService` and asserts the re-formatted pipe output after change detection; Playwright locale projects add the locale as one dimension from the default cell ([TS-TEST-17/18](../testing/typescript-e2e.md), TS-TEST-29); they do not repeat the viewport matrix per locale. The `lang` and `dir` assertion lives in the shared axe fixture (TS-TEST-12, A11Y-32).
+
+## Open points
+
+The Transloco version and testing helpers, and the `Intl` pipes and `DateAdapter.setLocale` on a language switch, are confirmed in the i18n spike before the first product adopts them ([chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)).
 
 ## Tooling
 

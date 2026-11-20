@@ -71,6 +71,32 @@
       "detect": [
         "backend*/package.json#@nestjs/core"
       ]
+    },
+    "react": {
+      "requires": [
+        "typescript"
+      ],
+      "skills": [
+        "baseline-react",
+        "vercel-react-best-practices",
+        "tanstack-query-best-practices",
+        "material-ui-theming",
+        "material-ui-styling"
+      ],
+      "detect": [
+        "frontend*/vite.config.ts#@vitejs/plugin-react"
+      ]
+    },
+    "nextjs": {
+      "requires": [
+        "react"
+      ],
+      "skills": [
+        "baseline-nextjs"
+      ],
+      "detect": [
+        "frontend*/next.config.ts"
+      ]
     }
   }
 }

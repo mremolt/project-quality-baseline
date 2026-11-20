@@ -132,7 +132,7 @@ describe('OrdersStore', () => {
 Notes:
 
 - `OrdersErrorKeys` is not auto-provided (it is listed in `orders.providers.ts`, NG-STATE-09), so the test lists it and the real one runs. That is intended: the error mapping is part of the UI adapter's behavior. Its only dependency, the platform's `REPORT_ERROR` use case, is a `mock<ReportErrorUseCase>()`; verify `reportError.report` when a test feeds an unexpected error.
-- If the query arguments matter, stub with `calledWith`: `loadHistory.loadOrderHistory.calledWith(LoadOrderHistoryQuery.of({ customerId })).mockResolvedValue([...])`. `calledWith` compares arguments deeply, so the factory's frozen value object matches.
+- If the query arguments matter, stub with `calledWith` and a typed `matches` predicate: `loadHistory.loadOrderHistory.calledWith(matches((q: LoadOrderHistoryQuery) => q.customerId === customerId)).mockResolvedValue([...])`. `calledWith` compares a non-matcher argument with `===`, so a query object built in the test never matches the one the store builds (TS-TEST-03).
 - `mock()` instances are shared across tests here; `mockReset` in `beforeEach` keeps tests independent. Creating them inside `beforeEach` works too.
 
 ## Seeding protected state with `unprotected`

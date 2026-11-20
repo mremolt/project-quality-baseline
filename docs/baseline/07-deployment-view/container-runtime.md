@@ -11,19 +11,19 @@ What every deployable ships as and what it expects from the platform it runs on:
   - starts from a minimal base image pinned by digest (no shell or package manager where the stack allows it);
   - contains no build tools, sources, test dependencies or secrets in any layer, and no secret is passed as a build argument (SEC-INC-01);
   - comes with an SBOM generated for the image (SEC-CI-03) and the labels of REL-RUN-07.
-- **REL-IMG-02: Cloud Native Buildpacks are the default build method** (Spring: SPRING-LIB-13; NestJS uses a Dockerfile as a stack-level exception, NEST-REL-07). A Dockerfile-based build (multi-stage) or Jib is allowed **without an ADR** when the customer platform dictates it, for example no container daemon in CI, a mandated base image or a mandated build service. The product records the method and the reason in the delivery platform mapping of its chapter 7. Any other reason for leaving the default needs an ADR. Whatever the method, REL-IMG-01 holds.
+- **REL-IMG-02: Cloud Native Buildpacks are the default build method** (Spring: SPRING-LIB-13; NestJS and Next.js use a Dockerfile as a stack-level exception, NEST-REL-07, NEXT-REL-05). A Dockerfile-based build (multi-stage) or Jib is allowed **without an ADR** when the customer platform dictates it, for example no container daemon in CI, a mandated base image or a mandated build service. The product records the method and the reason in the delivery platform mapping of its chapter 7. Any other reason for leaving the default needs an ADR. Whatever the method, REL-IMG-01 holds.
 - **REL-IMG-03: Base and builder images stay current.** They are pinned by digest and updated by the update automation (TS-TOOL-15), which rebuilds the image; deployed images are re-scanned on a schedule (SEC-CI-06).
 
 ### Frontend delivery (default: the BFF serves the bundle)
 
-- **REL-FE-01: The BFF image embeds and serves the frontend bundle.** The SPA and its API share one origin (NG-SEC-07); the BFF is either the backend's additional filter chain or its own component (SPRING-SEC-09, NEST-SEC-13). Other topologies (a static file server container, a CDN or object storage, an ingress or gateway serving files) need an ADR, which states how REL-FE-02..05, CFG-11 and NG-SEC-06 are met there.
+- **REL-FE-01: The BFF image embeds and serves the frontend bundle.** The SPA and its API share one origin (the frontend's XSRF rule); the BFF is either the backend's additional filter chain or its own component (SPRING-SEC-09, NEST-SEC-13). **Documented alternative without ADR:** a frontend stack that renders on a server is its own image and is the BFF itself (Next.js, NEXT-D2); REL-FE-01..05 then do not apply, and its stack's delivery rules take their place (Per stack line at the end). Other topologies (a static file server container, a CDN or object storage, an ingress or gateway serving files) need an ADR, which states how REL-FE-02..05, CFG-11 and the frontend's CSP nonce rule are met there.
   *Why:* one origin, one image and one digest per release; the CSP nonce, `/config.json` and the session cookie come from the same server without extra infrastructure.
 - **REL-FE-02: The bundle reaches the BFF image as a pipeline artifact, not through a cross-component build** (REPO-LAY-04). The frontend job builds the bundle once per commit (`npm run build`) and hands the output folder to the BFF's image build job, which passes it to the build as a parameter (Spring: SPRING-REL-08; NestJS: NEST-REL-10). The BFF's own `verify` does not need the frontend: its serving tests use a small fixture bundle. Locally, the Angular dev server proxies to the BFF (NG-CFG-06), so nobody builds an image to develop.
 - **REL-FE-03: The BFF serves the bundle with fixed rules:**
 
   | Request | Response |
   |---|---|
-  | `GET /` and deep links (a `GET` that accepts `text/html` and matches no API, login, actuator or file path) | `index.html` with the per-request CSP nonce (NG-SEC-06), `Cache-Control: no-store` |
+  | `GET /` and deep links (a `GET` that accepts `text/html` and matches no API, login, actuator or file path) | `index.html` with the per-request CSP nonce (the frontend's CSP rule), `Cache-Control: no-store` |
   | Hashed files (`*-<hash>.js`, `.css`, fonts, media) | `Cache-Control: public, max-age=31536000, immutable` |
   | Unhashed public files (`favicon.ico`, `/.well-known/security.txt`) | short cache (`max-age` of minutes) |
   | `GET /config.json` | generated per environment, not cached (CFG-11, SPRING-CFG-10, NEST-CFG-11) |
@@ -113,3 +113,5 @@ Compose has no start-up budget of its own; whoever operates it records how a fai
 ## Sources
 
 OCI Image Format Specification, annotations (github.com/opencontainers/image-spec). Cloud Native Buildpacks (buildpacks.io); Paketo image labels buildpack (`BP_OCI_*`) and JVM memory calculator (paketo.io). Kubernetes documentation: pod security standards, `securityContext`, resource management, startup probes, pod termination (kubernetes.io). Docker Compose file reference (docs.docker.com/compose). OpenJDK container support, `-XX:MaxRAMPercentage`. Angular deployment guide, server configuration for routed apps (angular.dev).
+
+Per stack (frontend): Angular ([stacks/angular.md](../stacks/angular.md)), React ([stacks/react.md](../stacks/react.md)), Next.js ([stacks/nextjs.md](../stacks/nextjs.md)).

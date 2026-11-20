@@ -1,6 +1,6 @@
 # Observability and Operability
 
-What every component must provide so that it can be run, watched and debugged in production: health probes, graceful shutdown, metrics, traces, frontend error reports, SLOs and alerts. These rules apply to every stack; [spring.md](spring.md), [nestjs.md](nestjs.md) and [angular.md](angular.md) add the stack rules. Logging: [logging/spring.md](../logging/spring.md) (`SPRING-LOG-*`), [logging/nestjs.md](../logging/nestjs.md) (`NEST-LOG-*`). The monitoring platform itself (collector, storage, dashboards tool, paging) is infrastructure and product-specific (the product's chapter 7).
+What every component must provide so that it can be run, watched and debugged in production: health probes, graceful shutdown, metrics, traces, frontend error reports, SLOs and alerts. These rules apply to every stack; [spring.md](spring.md) and [nestjs.md](nestjs.md) add the backend stack rules; frontends: Per stack line at the end. Logging: [logging/spring.md](../logging/spring.md) (`SPRING-LOG-*`), [logging/nestjs.md](../logging/nestjs.md) (`NEST-LOG-*`). The monitoring platform itself (collector, storage, dashboards tool, paging) is infrastructure and product-specific (the product's chapter 7).
 
 **Terms.** *Liveness*: the process is not stuck and needs no restart. *Readiness*: the instance can take traffic now. *SLI*: a measured indicator of what users experience (share of successful requests, share of requests faster than a threshold). *SLO*: the target for an SLI over a window. *RED*: rate, errors, duration per entry point.
 
@@ -40,8 +40,8 @@ Decided for the baseline:
 
 ### Tracing and correlation
 
-- **OBS-10: Trace context propagates with W3C Trace Context (`traceparent`, `tracestate`) from the first server hop onwards:** BFF → backend → outbound HTTP and messages. The browser does not send `traceparent`; the BFF starts the trace (decision table, OBS-12, NG-OBS-04). Outbound clients and producers use the instrumented builders and templates so the header is set automatically.
-- **OBS-11: The trace id is the correlation id.** Logs carry it (SPRING-LOG-03, NEST-LOG-03); error responses return it to the caller (SPRING-SEC-18, SPRING-OBS-10, NEST-OBS-10); frontend error reports include it when an HTTP call failed (NG-OBS-04). No component invents a second correlation header.
+- **OBS-10: Trace context propagates with W3C Trace Context (`traceparent`, `tracestate`) from the first server hop onwards:** BFF → backend → outbound HTTP and messages. The browser does not send `traceparent`; the BFF starts the trace (decision table, OBS-12; frontend: the stack's rule). Outbound clients and producers use the instrumented builders and templates so the header is set automatically.
+- **OBS-11: The trace id is the correlation id.** Logs carry it (SPRING-LOG-03, NEST-LOG-03); error responses return it to the caller (SPRING-SEC-18, SPRING-OBS-10, NEST-OBS-10); frontend error reports include it when an HTTP call failed (the stack's rule). No component invents a second correlation header.
 - **OBS-12: Trace context from outside the trust boundary is not trusted.** The ingress or the BFF drops incoming `traceparent`/`tracestate` from the internet and starts a new trace, so clients cannot force sampling or join foreign traces.
 - **OBS-13: Sampling is set explicitly per environment as configuration** (CFG-03), never left to a default nobody chose. Development and test environments may sample everything.
 
@@ -54,7 +54,7 @@ Decided for the baseline:
 
 - **OBS-16: The product team defines SLOs for its user-facing journeys** and records them as quality scenarios in its chapter 10, with the SLI, target, window and owner. Placeholders until the team decides: availability ≥ `<99.5 %>` of requests without 5xx over 28 days; latency: `<95 %>` of requests under `<500 ms>` per critical endpoint. Values without a measured baseline are marked provisional.
 - **OBS-17: Every component has the minimal dashboard** (table below) before its first production release.
-- **OBS-18: Alerts page on symptoms, not causes:** SLO burn rate (fast and slow window), instances not ready, consumer lag or dead-letter growth (MSG-DLT-02), outbox age (MSG-PUB-04), error-report spikes, spikes in denied access or token failures (SEC-AUD-03), CSP violation reports (SPRING-SEC-13, NEST-SEC-51). Every paging alert has an owner and a runbook link (`docs/architecture/` chapter 8 or the incident runbook, SEC-INC-02). Cause-level signals (CPU, GC, pool usage) are dashboard panels, not pages.
+- **OBS-18: Alerts page on symptoms, not causes:** SLO burn rate (fast and slow window), instances not ready, consumer lag or dead-letter growth (MSG-DLT-02), outbox age (MSG-PUB-04), error-report spikes, spikes in denied access or token failures (SEC-AUD-03), CSP violation reports (SPRING-SEC-13, NODE-BFF-09). Every paging alert has an owner and a runbook link (`docs/architecture/` chapter 8 or the incident runbook, SEC-INC-02). Cause-level signals (CPU, GC, pool usage) are dashboard panels, not pages.
 
 ### Minimal dashboard and alert set
 
@@ -83,3 +83,5 @@ Decided for the baseline:
 ## Sources
 
 OpenTelemetry specification and semantic conventions (opentelemetry.io), W3C Trace Context (w3.org/TR/trace-context), Google SRE Workbook (implementing SLOs, alerting on SLOs), Kubernetes probe and pod termination documentation, The RED Method (Tom Wilkie), Spring Boot actuator and observability reference.
+
+Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).

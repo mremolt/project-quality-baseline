@@ -1,6 +1,6 @@
 ---
 name: baseline-i18n
-description: Internationalization entry point for any project that uses the quality baseline and supports more than one language - translation keys and catalogs (Transloco, ICU plurals), where UI text may live, language switching, html lang, formatting of dates, numbers and money, Material locale strings, localized backend errors (ProblemDetail codes, MessageSource, Accept-Language), localized emails, Weblate translation workflow, pseudo-locale and per-locale tests. Routes to the baseline's i18n docs and cites rule IDs. Use it when adding or changing user-visible text in a multilingual product, or when asked to add a language.
+description: Internationalization entry point for any project that uses the quality baseline and supports more than one language - translation keys and catalogs (Transloco, use-intl, next-intl, ICU plurals), where UI text may live, language switching, html lang, formatting of dates, numbers and money, Material locale strings, localized backend errors (ProblemDetail codes, MessageSource, Accept-Language), localized emails, Weblate translation workflow, pseudo-locale and per-locale tests. Routes to the baseline's i18n docs and cites rule IDs. Use it when adding or changing user-visible text in a multilingual product, or when asked to add a language.
 ---
 
 # i18n in the quality baseline
@@ -13,13 +13,15 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 |---|---|
 | Any i18n work, new language, workflow, tests | `i18n.md` (decisions, `I18N-*`, `TOOL-I18N-*`, `TEST-I18N-*`) |
 | Angular text, keys, pipes, language switch, Material locale | `angular.md` (`NG-I18N-*`) |
+| React text, keys, formatting, language switch, MUI locale (`use-intl`) | `react.md` (`REACT-I18N-*`) |
+| Next.js server components, request config, locale detection (`next-intl`) | `nextjs.md` (`NEXT-I18N-*`), on top of `react.md` |
 | Error codes, localized errors, emails, bundles, `Accept-Language` | Spring: `spring.md` (`SPRING-I18N-*`), `docs/baseline/08-crosscutting-concepts/api/spring-rest.md` (SPRING-REST-07). NestJS: `nestjs.md` (`NEST-I18N-*`), `docs/baseline/08-crosscutting-concepts/api/nestjs-rest.md` (NEST-REST-14). Read only the project's stack |
-| Layout under longer text, logical properties | `docs/baseline/08-crosscutting-concepts/ui/angular-material.md` (NG-UI-24/25) |
+| Layout under longer text, logical properties | `docs/baseline/08-crosscutting-concepts/ui/ui-patterns.md` (UI-09/10); Angular: `ui/angular-material.md` (NG-UI-24/25); React: `ui/react-mui.md` |
 | `lang`, switcher, screen reader in another language | `docs/baseline/10-quality-requirements/accessibility.md` |
 
 ## 2. Skills to combine
 
-`baseline-angular`, `baseline-spring` or `baseline-nestjs` (this skill is loaded from them), `angular-developer`, `baseline-tdd`, `playwright-best-practices` (locale and timezone emulation), `accessibility`.
+`baseline-angular`, `baseline-react`, `baseline-nextjs`, `baseline-spring` or `baseline-nestjs` (this skill is loaded from them), `angular-developer`, `baseline-tdd`, `playwright-best-practices` (locale and timezone emulation), `accessibility`.
 
 ## 3. Overrides you will hit
 

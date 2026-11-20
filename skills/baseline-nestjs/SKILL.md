@@ -17,7 +17,8 @@ Always: `docs/baseline/stacks/nestjs.md`, `docs/baseline/05-building-block-view/
 | Controller, request/response schema, errors, paging | `docs/baseline/08-crosscutting-concepts/api/rest-conventions.md`, `api/nestjs-rest.md`, `api/nestjs-openapi.md`, `api/openapi-contracts.md` |
 | Anything that loads data | `docs/baseline/08-crosscutting-concepts/api/avoiding-n-plus-one.md`, `persistence/nestjs.md` |
 | Authentication, authorization, CORS | `docs/baseline/08-crosscutting-concepts/security/nestjs.md` |
-| Headers, limits, injection, prototype pollution, audit events, BFF login and session | `docs/baseline/08-crosscutting-concepts/security/nestjs-hardening.md`, `security/security-review.md` |
+| Headers, limits, injection, prototype pollution, audit events | `docs/baseline/08-crosscutting-concepts/security/nestjs-hardening.md`, `security/security-review.md` |
+| BFF login, session, CSRF, logout, serving the SPA | `docs/baseline/08-crosscutting-concepts/security/node-bff.md`, `security/nestjs-hardening.md` (NEST-SEC-44..52) |
 | Database adapter, transaction, migration | `docs/baseline/08-crosscutting-concepts/persistence/nestjs.md`, `docs/baseline/07-deployment-view/nestjs-delivery.md` |
 | Library choice | `docs/baseline/04-solution-strategy/nestjs-libraries.md` |
 | Kafka consumer, producer, outbox, dead letters | `docs/baseline/08-crosscutting-concepts/messaging/nestjs.md` (shared: `messaging/messaging.md`) |

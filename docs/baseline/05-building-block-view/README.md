@@ -20,3 +20,5 @@ The static structure every product uses: rings, packages and folders, and the ki
 | NestJS | [nestjs.md](nestjs.md): modules as composition roots, tokens, wiring, transactions, dependency-cruiser template, new service | `NEST-ARCH-*` |
 | TypeScript | [typescript.md](typescript.md): hexagonal frontends, folder layout, dependency-cruiser | `TS-ARCH-*` |
 | Angular | [angular.md](angular.md): project layout, naming, DI and wiring, HTTP, routing, forms, setup | `NG-ARCH-*` |
+| React | [react.md](react.md): layout, tokens and composition, hooks, data loading, forms, error boundaries, (React SPA) Vite, router, lazy routes, new app, dependency-cruiser | `REACT-ARCH-*` |
+| Next.js | [nextjs.md](nextjs.md): `src/app/` as routing and root composition, server and client composition, server components, server actions, route handlers, `proxy.ts`, rendering default, new app | `NEXT-ARCH-*` |

@@ -1,6 +1,6 @@
 # TypeScript Testing
 
-How the shared testing rules ([08-crosscutting-concepts/testing/testing-by-architecture-element.md](testing-by-architecture-element.md), [08-crosscutting-concepts/testing/tdd.md](tdd.md), [10-quality-requirements/accessibility.md](../../10-quality-requirements/accessibility.md)) are implemented in TypeScript projects. Responsive, theme and screen reader E2E checks and the browser × viewport matrix: [typescript-e2e.md](typescript-e2e.md). Angular specifics (TestBed, zoneless, harnesses, Signal Store): [angular.md](angular.md).
+How the shared testing rules ([08-crosscutting-concepts/testing/testing-by-architecture-element.md](testing-by-architecture-element.md), [08-crosscutting-concepts/testing/tdd.md](tdd.md), [10-quality-requirements/accessibility.md](../../10-quality-requirements/accessibility.md)) are implemented in TypeScript projects. Responsive, theme and screen reader E2E checks and the browser × viewport matrix: [typescript-e2e.md](typescript-e2e.md).
 
 ## Tool set (defaults TS-D6, TS-D7)
 
@@ -18,11 +18,11 @@ How the shared testing rules ([08-crosscutting-concepts/testing/testing-by-archi
 - **TS-TEST-01: Test doubles are created with `mock<Contract>()` from `vitest-mock-extended`**, typed by the port or use-case interface. No hand-rolled `{ method: vi.fn() }` objects for contracts.
   *Why:* the double follows the interface automatically, and the compiler flags tests when a port changes.
 - **TS-TEST-02: `vi.mock()` (module mocking) is not used for our own modules.** Dependencies come in through constructors or DI (TEST-TDD-07). `vi.mock` is acceptable only for third-party modules that can't be injected, and that is a hint to wrap them in a port.
-- **TS-TEST-03: Stub queries with `calledWith(...).mockResolvedValue(...)`, verify only commands** (TEST-TDD-09).
+- **TS-TEST-03: Stub queries with `calledWith(...).mockResolvedValue(...)`, verify only commands** (TEST-TDD-09). `calledWith` compares an argument that is not a matcher with `===` (vitest-mock-extended 6), so a value object or command built in the test never matches the one the code under test builds; pass a typed `matches((arg: T) => …)` predicate for those (`expect.objectContaining` also works, but is typed `any` and fails `no-unsafe-argument`).
 
 ```ts
 // application/place-order.service.spec.ts — London style (TEST-ARCH-02)
-import { mock } from 'vitest-mock-extended';
+import { matches, mock } from 'vitest-mock-extended';
 
 describe('PlaceOrderService', () => {
   const loadCart = mock<LoadCartPort>();
@@ -30,7 +30,9 @@ describe('PlaceOrderService', () => {
   const service = new PlaceOrderService(loadCart, saveOrder);
 
   it('places an order for a non-empty cart', async () => {
-    loadCart.loadCart.calledWith(CustomerId.of('c-1')).mockResolvedValue(cartWith(2, 'ITEM'));
+    loadCart.loadCart
+      .calledWith(matches((id: CustomerId) => id.value === 'c-1')) // value object: not the same instance (===)
+      .mockResolvedValue(cartWith(2, 'ITEM'));
 
     const result = await service.placeOrder(PlaceOrderCommand.of({ customerId: 'c-1' }));
 
@@ -131,7 +133,7 @@ Rules TS-TEST-17..27 and the matrix rules from TS-TEST-28 on are in [typescript-
 
 | Skill | Says | Our rule |
 |---|---|---|
-| `vitest` | `vi.mock` module mocking as the standard; snapshot testing as a general tool; a free-standing `vitest.config.ts` | Contracts mocked via DI with `vitest-mock-extended` (TS-TEST-01/02); no snapshots of component output (TS-TEST-06); Angular configures Vitest through the CLI builder (NG-TEST-01) |
+| `vitest` | `vi.mock` module mocking as the standard; snapshot testing as a general tool; a free-standing `vitest.config.ts` | Contracts mocked via DI with `vitest-mock-extended` (TS-TEST-01/02); no snapshots of component output (TS-TEST-06); a stack may configure Vitest through its CLI |
 | `playwright-best-practices` | Never mock your own backend | Frontend system test with the backend stubbed from the contract on every pull request, full-stack system test as smoke (TS-TEST-10) |
 | `playwright-best-practices` | axe tags up to `wcag21aa` | The tag list of A11Y-05; only AA and the adopted AAA rules fail (TS-TEST-12) |
 | `playwright-best-practices` | Playwright component testing | Component tests run in Vitest with Testing Library |
@@ -148,3 +150,5 @@ Rules TS-TEST-17..27 and the matrix rules from TS-TEST-28 on are in [typescript-
 ## Sources
 
 Vitest (vitest.dev), vitest-mock-extended (github.com/eratio08/vitest-mock-extended), Testing Library guiding principles (testing-library.com), MSW (mswjs.io), Playwright (playwright.dev), `@axe-core/playwright` (github.com/dequelabs/axe-core-npm).
+
+Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).

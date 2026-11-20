@@ -18,7 +18,7 @@
     "angular-material-design": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "b250106154e8acf8f2fd7e080ffecc04cde6955959b9d6c849437a7a3317f847"
+      "computedHash": "0e9c19ed0dd9de09d2587cd1a8395be0fe912c2472eefcdba721b9f3a65d8938"
     },
     "angular-new-app": {
       "source": "angular/skills",
@@ -30,27 +30,32 @@
     "baseline-angular": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "4f58c02c625a3c4599c87403d1d6e3ac41b2a766c25d12aa2aaeb20c8f05e09d"
+      "computedHash": "93bc74922ec306645b2fb12e559a7f2d42169f23d69542e72154ce19c5d226f3"
     },
     "baseline-i18n": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "384785898885b9f04786b3adc70458038f71ab25ba18f9ab89d97fd921eeb9af"
+      "computedHash": "5febdabd3f522ce0537f8c5990a6f78f197e8be2abf41d8e3f50a913d067ebc8"
     },
     "baseline-ide-setup": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "25c0886419fbe76ad458aa85850e4dc925f330a121bcb1b64ad1dfc7ba446c55"
+      "computedHash": "ca619aec3d064fe1d27fe66da383dc8513db875cc4c62f2ee1742cf100d7cfa2"
     },
     "baseline-nestjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "5da593a145d83115cc46310f28ab8a84a93ae8ddaa8214fa4c5e3052c55fc6c0"
+      "computedHash": "26bc8ae2a761b886fe3c0775d4c2b4eae205a9e5d0f7c51fa7ba3177300b8e82"
+    },
+    "baseline-react": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "fe7f0d75ff5bc8048e48694c18232d33336942c56540602e74b26094f9e695cb"
     },
     "baseline-security": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "103794bfe1b8e038c3a3c6b40cd1c8f12f39f9934682d5f904394939f003acd2"
+      "computedHash": "a502fd00f518df358274228b8f8138e9967e189894a0a3146d3b5bc7abd1ddf8"
     },
     "baseline-spring": {
       "source": "./skills",
@@ -69,10 +74,24 @@
       "skillPath": "skills/java-hibernate-jpa/SKILL.md",
       "computedHash": "12c3a77543bd283b7c0fd68af40babccc782014d89ace21aa32dfc9cb51143ea"
     },
+    "material-ui-styling": {
+      "source": "mui/material-ui",
+      "commit": "7bd099fb3bd600dc5ef9b9f964eb6609ee553951",
+      "sourceType": "github",
+      "skillPath": "skills/material-ui-styling/SKILL.md",
+      "computedHash": "de001e8b94d49dc4e733fecbaf48dd0755821d04821326a9c069af29df5b0495"
+    },
+    "material-ui-theming": {
+      "source": "mui/material-ui",
+      "commit": "7bd099fb3bd600dc5ef9b9f964eb6609ee553951",
+      "sourceType": "github",
+      "skillPath": "skills/material-ui-theming/SKILL.md",
+      "computedHash": "b3180bb67516fd055dc1c53536e95ee14f16e73bf400e5d08ceddacff3dff3c1"
+    },
     "ngrx-signals": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "b7a6f71855156c002ed3ba171c424b34946135f6452d00d901ef743e648a19bc"
+      "computedHash": "95d18b6553927588e493303b130d7e2cc8fe265328c7948f570c752306e69275"
     },
     "orval": {
       "source": "orval-labs/orval",
@@ -115,6 +134,20 @@
       "sourceType": "github",
       "skillPath": "skills/spring-security/SKILL.md",
       "computedHash": "c1fa8c28347cfc1c8bc5449b08ec4a101bbe8ca5e075ac3b647f6f0b9213f7dd"
+    },
+    "tanstack-query-best-practices": {
+      "source": "DeckardGer/tanstack-agent-skills",
+      "commit": "b2fc14c974b2ca09b38de09c28237f240175205b",
+      "sourceType": "github",
+      "skillPath": "skills/tanstack-query/SKILL.md",
+      "computedHash": "7e22c25af6f7dd31ab76fb5b1415afe9f49caf613581c04ed04e0e8591ea704a"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "commit": "5a37a6329fbad3666c3207392a6a7c0110e92efb",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "7991ed4fbecdac23f47c1a40c243e00a212a9e7f3604db93959b3ae11dffe299"
     },
     "vitest": {
       "source": "antfu/skills",

@@ -1,0 +1,25 @@
+# React SPA templates
+
+A complete, minimal React SPA (React 19 with the React Compiler, Vite 8, TanStack Router and Query, Redux Toolkit, MUI 9, React Hook Form, use-intl, Orval, Vitest, Playwright): platform rings, runtime configuration, error reporting, HTTP mutator, strict CSP with Trusted Types, one example feature `orders`, tests and tooling (REACT-ARCH-17). It was validated as a whole on 2026-11-20: after copying per the table below, `npm install`, `npm run verify` (format, lint, dependency-cruiser, unit and component tests, build, bundle check) and `npm run build && npm run e2e` (built `dist/` behind the CSP server, light and dark theme) were green. Versions in `package.json` were at least 7 days old then (`min-release-age`, TS-TOOL-11).
+
+Copy everything into `frontend/` (REPO-TOOL-03), then:
+
+1. Rename the app: `name` in `package.json`, `<title>` in `index.html`, `app.name` and `platform.documentTitle` in `src/i18n/*.json`.
+2. Point `orval.config.ts` at the backend's spec (`../backend/openapi/<api>.yaml` in a product repo, TS-API-01) and delete `openapi/` there; in a separate frontend repository keep the copied spec in `openapi/`.
+3. Rename the example feature `orders` (folder, file names, contexts, slice, keys, catalog namespace, route in `src/app/router.tsx`, the E2E stubs and the `orders.composition-` chunk name in `e2e/orders.spec.ts`) or keep it as the model for the first real feature and delete it afterwards. The fixture tree under `test/fixtures/arch-violation/` stays as it is.
+4. Run `npm run verify`, then `npm run build && npm run e2e`.
+
+| Template | Goes to | Notes |
+|---|---|---|
+| `package.json` | `frontend/package.json` | Exact pins, `engines`, scripts per REACT-TOOL-12; run `npm install` once to create the lockfile, then always `npm ci` |
+| `npmrc`, `nvmrc`, `gitignore`, `prettierrc.json`, `prettierignore`, `dependency-cruiser.cjs` | `frontend/.<name>` (renamed with a leading dot) | TS-TOOL-11; dependency-cruiser per REACT-ARCH-22 |
+| `tsconfig.json`, `eslint.config.ts`, `vite.config.ts`, `vitest.config.ts`, `playwright.config.ts`, `orval.config.ts`, `index.html` | `frontend/` | REACT-TOOL-01..08, REACT-ARCH-18, REACT-TEST-01/18, REACT-API config; `index.html` holds the bilingual start-up error (REACT-ARCH-23) |
+| `openapi/` | `frontend/openapi/` | Example spec for `orders`; only kept in a separate frontend repository |
+| `src/` | `frontend/src/` | `main.tsx`, `strict-csp.ts`, `app/`, `platform/`, `shared/ui/`, `i18n/`, `features/orders/` (REACT-ARCH-01) |
+| `test/` | `frontend/test/` | `render-with-providers.tsx`, `setup-dom.ts`, `axe.ts`, the architecture canary with `fixtures/arch-violation` (REACT-TEST-17), the one-build check (REACT-CFG-01) |
+| `e2e/` | `frontend/e2e/` | `serve-dist.ts` (CSP server standing in for the BFF), `fixtures.ts`, `orders.spec.ts` (REACT-TEST-18..21) |
+| `scripts/check-bundle.ts` | `frontend/scripts/` | Bundle budgets, lazy features, no source-map links, no `dist/config.json` (REACT-TOOL-13) |
+
+There is no `config.json` in the template: it is not part of the build (REACT-CFG-06). Locally the Vite dev server proxies `/config.json` and `/api` to the BFF on port 8080; tests stub it (`e2e/fixtures.ts`, MSW). The BFF's frontend configuration must provide every field of `RuntimeConfigSchema` in `src/platform/adapter/out/http/http-runtime-config.ts`, including `release` (REL-VER-05).
+
+Not in the template, add when the product needs it: the language switch (REACT-I18N-12), `onError`/`getMessageFallback` on the `IntlProvider` (REACT-I18N-08), navigation by window size and `useWindowSize()` (REACT-UI-15/17), the Firefox, WebKit, viewport, contrast and locale Playwright projects (REACT-TEST-21), `e2e:nightly`/`e2e:smoke` scripts. These are marked "verify before first use" in the docs.

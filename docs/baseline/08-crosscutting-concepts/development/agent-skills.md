@@ -94,7 +94,7 @@ A product lists its stacks in `.baseline.json` at the repository root (project-o
 { "stacks": ["nestjs", "angular"] }
 ```
 
-Known stacks and what they bring are defined in the baseline's `baseline-stacks.json`: `java`, `spring` (requires `java`), `node`, `nestjs` (requires `node`), `typescript` (frontends), `angular` (requires `typescript`). Shared skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, `baseline-ide-setup`) are always copied. The sync copies only the skills of the declared stacks and the stacks they require, and keeps only the `AGENTS.md` lines tagged for them (`<!-- stack:<name> -->` in the baseline's `AGENTS.md`; the tag is removed in the product). Without `.baseline.json` the sync detects the stacks from the component folders and writes the file; if it detects nothing, it copies everything and prints a manual step. An unknown stack name stops the sync. Adding a stack later: edit `.baseline.json` and re-sync.
+Known stacks and what they bring are defined in the baseline's `baseline-stacks.json`: `java`, `spring` (requires `java`), `node`, `nestjs` (requires `node`), `typescript` (frontends), `angular` (requires `typescript`), `react` (requires `typescript`; React SPA and the base of Next.js), `nextjs` (requires `react`). Shared skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, `baseline-ide-setup`) are always copied. The sync copies only the skills of the declared stacks and the stacks they require, and keeps only the `AGENTS.md` lines tagged for them (`<!-- stack:<name> -->` in the baseline's `AGENTS.md`; the tag is removed in the product). Without `.baseline.json` the sync detects the stacks from the component folders and writes the file; if it detects nothing, it copies everything and prints a manual step. An unknown stack name stops the sync. Adding a stack later: edit `.baseline.json` and re-sync.
 
 ## Skill catalogue
 
@@ -112,6 +112,21 @@ Known stacks and what they bring are defined in the baseline's `baseline-stacks.
 | `baseline-angular` | own | own | Entry point for Angular work |
 | `baseline-spring` | own | own | Entry point for Java/Spring work, with project templates |
 | `baseline-nestjs` | own | own | Entry point for Node/NestJS work, with project templates validated in a template build |
+| `baseline-react` | own | own | Entry point for React work, with React SPA templates validated in a template build |
+| `baseline-nextjs` | own | own | Entry point for Next.js work, with templates validated in a template build |
+| `vercel-react-best-practices` | vercel-labs/agent-skills | installed | React and Next.js performance rules. Server-side examples fetch or query the database directly; overrides in [stacks/react.md](../../stacks/react.md#skill-overrides) and [stacks/nextjs.md](../../stacks/nextjs.md#skill-overrides) |
+| `tanstack-query-best-practices` | DeckardGer/tanstack-agent-skills | installed | `queryFn` calls use cases, not the API; no `retry: 3`, no persisted query cache. Overrides in [ui/react-state-management.md](../ui/react-state-management.md#skill-overrides) |
+| `material-ui-theming`, `material-ui-styling` | mui/material-ui (official) | installed | Theme tokens and styling approach; CSP nonce, self-hosted fonts and contrast overrides in [ui/react-mui.md](../ui/react-mui.md#skill-overrides) |
+| `material-ui-nextjs` | mui/material-ui (official) | not installed | Install with the first Next.js product (`next/font` and Tailwind sections need overrides) |
+| Redux Toolkit skills (`build-slices-and-selectors`, `handle-side-effects`, `adopt-rtk-query`, …) | reduxjs/redux-toolkit (official) | not installed | Names contain `/` (installed folder name does not match the frontmatter name); thunks fetch directly; RTK Query as default. Candidate for an own adapted skill (TOOL-SKL-05) |
+| TanStack Router skills | TanStack/router | not installed | File-based routing by default; ours is code-based |
+| `vercel-composition-patterns` | vercel-labs/agent-skills | not installed | Generic; overlaps with RTK view state and use cases |
+| Next.js Cache Components / PPR skills (`next-cache-components-*`, `next-partial-prefetching-*`, `next-bundle-optimizer`) | vercel/next.js | not installed | Contradict dynamic rendering by default (NEXT-D3); run `npx @next/codemod@latest` and install further skills on the fly |
+| `next-best-practices`, `next-upgrade`, `next-cache-components` | vercel-labs/next-skills | rejected | Repository archived; knowledge moved into Next.js itself |
+| `web-design-guidelines` | vercel-labs/agent-skills | rejected | Overlaps `accessibility`; update steps run `gh api` and `curl` (TOOL-SKL-03) |
+| `next-dev-loop` | vercel/next.js | rejected | Needs a global unpinned `agent-browser`; `playwright-cli` covers it |
+| `material-ui-tailwind`, `mui` (softaworks), `tanstack-query` (tanstack-skills), `redux-toolkit` (mindrally), community Next.js skills (wshobson, sickn33, mohamed-hossam1), React Testing Library skills | various | rejected | Tailwind, superseded by official skills, `retry: 3` defaults, RTK Query first, server components that fetch or query the database directly, or too thin |
+| MUI MCP (`@mui/mcp`) | mui | not installed | A runtime npm package with network access, not a skill; needs a tool review first |
 | `baseline-security` | own | own | Security rules by task, review checklist, ASVS/Top 10 mapping |
 | `baseline-i18n` | own | own | Multilingual products: keys, catalogs, formatting, Weblate workflow, per-locale tests |
 | `baseline-tdd` | own | own | TDD workflow per [08-crosscutting-concepts/testing/tdd.md](../testing/tdd.md) |

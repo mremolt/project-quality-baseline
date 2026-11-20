@@ -2,7 +2,7 @@
 
 Our Angular apps use **Angular Material** (material.angular.dev) and the CDK as their component library, and follow the **Material Design 3** guidelines (m3.material.io) for layout, color, typography and interaction. The `angular-material-design` skill (our adaptation) maps Material Design concepts to Angular Material APIs and follows these rules.
 
-Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirements/accessibility.md) for the UI layer.
+Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirements/accessibility.md) for the UI layer and the framework-neutral [ui-patterns.md](ui-patterns.md) (`UI-*`). The NG-UI rules on layout, responsiveness and screen readers keep their IDs and add only the Angular mechanism to the UI rule they cite.
 
 ## Rules
 
@@ -25,9 +25,9 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 
 ### Layout and navigation
 
-- **NG-UI-09: Layouts adapt to the Material Design window size classes** (compact < 600 px, medium 600–839, expanded 840–1199, large 1200–1599, extra-large ≥ 1600), with CSS grid/flex, CSS container queries or the CDK `BreakpointObserver` with **custom queries**. The CDK `Breakpoints` presets (600/960/1280/1920) don't match the Material Design 3 classes and are not used. No Tailwind, no layout libraries.
-- **NG-UI-10: Navigation follows the window size**: compact → navigation bar (bottom) or modal drawer; medium → navigation rail; expanded and larger → rail or standard drawer (`mat-sidenav`). Navigation is consistent across pages (WCAG 3.2.3) and so is the help location (WCAG 3.2.6).
-- **NG-UI-11: Spacing follows the 4/8 px grid**, via a small set of spacing custom properties defined once next to the theme.
+- **NG-UI-09 (implements UI-01): Size classes in Angular** come from CSS grid/flex, CSS container queries or the CDK `BreakpointObserver` with **custom queries** for the UI-01 breakpoints. The CDK `Breakpoints` presets (600/960/1280/1920) don't match the Material Design 3 classes and are not used. No Tailwind, no layout libraries.
+- **NG-UI-10 (implements UI-02): Navigation by window size** uses the navigation bar or a modal `mat-sidenav` on compact, the navigation rail gap component (NG-UI-02) on medium, and the rail or a standard `mat-sidenav` on expanded and larger.
+- **NG-UI-11 (implements UI-03): Spacing custom properties** (`--app-space-*`) are defined once in `src/styles/theme.scss`, next to the theme (NG-UI-05).
 
 ### Content and interaction
 
@@ -41,45 +41,33 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 
 - **NG-UI-17: Tests interact with Material composite widgets through their harnesses** (`MatSelectHarness`, `MatDatepickerInputHarness`, `MatTableHarness`, …); everything else through Testing Library role queries ([08-crosscutting-concepts/testing/angular.md](../testing/angular.md)).
 - **NG-UI-18: Every theme variant is scanned:** light, dark and high contrast, plus forced colors on the shell, through the theme projects of [TS-TEST-28](../testing/typescript-e2e.md#matrix) (A11Y-09, A11Y-28). Scans per viewport: A11Y-17.
-- Responsive structure and layout are tested as described in NG-TEST-09..11 and [TS-TEST-17..21](../testing/typescript-e2e.md).
+- Responsive structure and layout are tested as described in NG-TEST-09..11 and [TS-TEST-17..21](../testing/typescript-e2e.md) (UI-01..14).
 
 ### Responsive layout
 
-- **NG-UI-19: Window size is UI-adapter state.** One `WindowSize` contract in `src/shared/ui/layout` (an abstract class used as the DI token, with the implementation that derives the size class from custom queries behind it, so component tests can stub it, NG-TEST-09). It is never imported by `domain`, `application` or `ports`, never passed into a use case or command, and stores don't read it.
-  *Why:* layout is presentation; the dependency rule keeps it out of the inner rings ([04-solution-strategy/hexagonal-architecture.md](../../04-solution-strategy/hexagonal-architecture.md)).
-- **NG-UI-20: Data loading doesn't depend on the size class.** Every size class calls the same use cases and gets the same data; layout hides or restructures, it doesn't fetch less or more.
-  *Why:* no refetch on resize and no hidden extra requests (NG-ARCH-15); state survives a resize.
-- **NG-UI-21: CSS first, TypeScript when the component tree changes.** Columns, gaps, pane widths and hiding decorative content use media or container queries. `WindowSize` is for structure only: rail vs drawer, one vs two panes, dialog vs bottom sheet.
-  *Why:* least code, no flicker, nothing to keep in sync.
-- **NG-UI-22: Shells and pages respond to the window; reusable `shared/ui` components respond to their container** (`container-type: inline-size`, `@container` queries).
-  *Why:* a reusable component doesn't know where it is placed.
-- **NG-UI-23: Every new screen states its layout for compact, medium and expanded** (canonical layout, navigation form, what moves where) in its spec or story; large and extra-large only when they differ.
-  *Why:* makes the responsive decision explicit and reviewable.
-- **NG-UI-24: Layout CSS uses logical properties** (`margin-inline`, `padding-block`, `inset-inline`, `text-align: start`) and `rem`, not physical left/right or px font sizes.
-  *Why:* right-to-left languages and the user's text-size settings (WCAG 1.4.4) work without extra code.
-- **NG-UI-25: Wide content never forces page-level horizontal scrolling.** Tables and code blocks scroll inside their own region (`role="region"`, `aria-label`, `tabindex="0"` so keyboard users can scroll it), or switch to a list or card form on compact. Images and media use `max-inline-size: 100%` and an `aspect-ratio` or `width`/`height`; content images use `NgOptimizedImage` with `sizes`.
-  *Why:* reflow (A11Y-13) and no layout shift.
-- **NG-UI-26: Full-height and fixed elements use dynamic viewport units and safe areas**: `dvh`, not `100vh`; `viewport-fit=cover` with `env(safe-area-inset-*)` padding for fixed bars. The viewport meta tag never disables zoom (no `user-scalable=no`, no `maximum-scale`).
-  *Why:* mobile browser chrome, notches and rounded corners; zoom is required by WCAG 1.4.4.
-- **NG-UI-27: Hover is an enhancement.** No function or content is reachable by hover only; hover-only styling sits in `@media (hover: hover)`; pointer gestures have a single-tap alternative (WCAG 2.5.1, 2.5.7).
-  *Why:* touch devices have no hover.
-- **NG-UI-28: Form inputs set `type`, `autocomplete` and `inputmode`**, and fields are full width on compact.
-  *Why:* the right on-screen keyboard and autofill (WCAG 1.3.5).
-- **NG-UI-29: Print is out of scope by default.** A product that needs printable views records that in an ADR and adds a print stylesheet with an E2E test using `page.emulateMedia({ media: 'print' })`.
-  *Why:* most apps don't need it; when one does, it is a requirement with a test, not an accident.
+The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); these add the Angular mechanism.
+
+- **NG-UI-19 (implements UI-04): `WindowSize` is an abstract class in `src/shared/ui/layout` used as the DI token**, with the implementation that derives the size class from custom `BreakpointObserver` queries behind it, so component tests can stub it (NG-TEST-09). It is never injected into use cases or stores.
+- **NG-UI-20 (implements UI-05): Every size class calls the same use cases** through the same store or `resource()`; no `resource()` or store method depends on `WindowSize` (NG-ARCH-15).
+- **NG-UI-21 (implements UI-06): `WindowSize` is for structure only** (rail vs drawer, one vs two panes, `MatDialog` vs `MatBottomSheet`); columns, gaps and pane widths are CSS in the component's styles.
+- **NG-UI-22 (implements UI-07): Reusable `shared/ui` components set `container-type: inline-size`** on their host (`:host`) and use `@container` queries.
+- **NG-UI-23 (implements UI-08): The layout statement for compact, medium and expanded** sits in the screen's spec or story.
+- **NG-UI-24 (implements UI-09): Component styles (`.scss`) use logical properties and `rem`**; Angular Material's own styles already do.
+- **NG-UI-25 (implements UI-10): Tables (`mat-table`) that can't reflow** scroll inside their own region or switch to a `mat-list` or card form on compact; content images use `NgOptimizedImage` with `sizes`.
+- **NG-UI-26 (implements UI-11): `index.html`** carries `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`; fixed bars pad with `env(safe-area-inset-*)`, full-height panes use `dvh`.
+- **NG-UI-27 (implements UI-12): Row and card actions shown on hover** are also in a `mat-menu` or always visible on touch; hover styling sits in `@media (hover: hover)`.
+- **NG-UI-28 (implements UI-13): `matInput` fields set `type`, `autocomplete` and `inputmode`**, and `mat-form-field` is full width on compact.
+- **NG-UI-29 (implements UI-14): Print** is out of scope unless an ADR adds it with a print stylesheet in `src/styles/` and its E2E test.
 
 ### Screen readers
 
-- **NG-UI-30: Status messages (A11Y-20) use a visible `role="status"` region or `mat-error` where possible; otherwise the app `Announcer`.** `Announcer` is a contract in `src/shared/ui/a11y` (abstract class as the DI token) whose implementation wraps the CDK `LiveAnnouncer`. No hand-rolled `aria-live` elements per component, no nested live regions, no `ariaNotify()` for now. Only UI adapters use it: stores expose state, the component announces on change, so the wording stays in the UI adapter.
-  *Why:* one consistent mechanism that tests can mock (NG-TEST-12). The CDK announcer's delayed clear-and-write works around repeated-message bugs in screen readers; don't "fix" it.
-- **NG-UI-31: Route title and focus (A11Y-21):** every route defines a `title` (static or `ResolveFn`) and the app provides one `TitleStrategy` ("Page | App"). One app-wide `RouteFocus` service in `src/platform/adapter/in/ui`, started once by the shell, listens to `NavigationEnd`: when the URL path (without query and fragment) differs from the previous one, it focuses the routed `h1` (`tabindex="-1"`), falling back to `main`, with `preventScroll: true`; it does nothing on the first navigation. It treats back/forward like any other navigation, so the router's scroll restoration (`withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })`) keeps the position. It waits for the heading to render with `afterNextRender`, not with timers. Navigation links set `ariaCurrentWhenActive="page"`.
+- **NG-UI-30 (implements UI-15): `Announcer` is an abstract class in `src/shared/ui/a11y` used as the DI token**, whose implementation wraps the CDK `LiveAnnouncer`. Field errors use `mat-error`. Tests mock it (NG-TEST-12). The CDK announcer's delayed clear-and-write works around repeated-message bugs in screen readers; don't "fix" it.
+- **NG-UI-31 (implements UI-16): Route title and focus in Angular:** every route defines a `title` (static or `ResolveFn`) and the app provides one `TitleStrategy` ("Page | App"). The `RouteFocus` service in `src/platform/adapter/in/ui`, started once by the shell, listens to `NavigationEnd` and waits for the heading with `afterNextRender`, not with timers. Scroll restoration: `withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })`. Navigation links set `ariaCurrentWhenActive="page"`.
   *Why:* the Angular router manages neither focus nor announcements.
-- **NG-UI-32: Snackbars are polite, short, and never the only place for an error or a required action;** a snackbar with an action has no `duration`. Content loaded by `@defer` or lazy routes announces its completion; every `mat-progress-spinner`, `mat-progress-bar` and `mat-table` has an accessible label.
-  *Why:* Material's own accessibility guidance.
-- **NG-UI-33 (extends NG-UI-14): Dialogs set their label through `mat-dialog-title`** (`ariaLabelledBy`), and when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly in `afterClosed()`.
+- **NG-UI-32 (implements UI-17): Snackbars (`MatSnackBar`) with an action have no `duration`.** Content loaded by `@defer` or lazy routes announces its completion; every `mat-progress-spinner`, `mat-progress-bar` and `mat-table` has an accessible label.
+- **NG-UI-33 (implements UI-18, extends NG-UI-14): Dialogs set their label through `mat-dialog-title`** (`ariaLabelledBy`), and when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly in `afterClosed()`.
   *Why:* Material restores focus only if the trigger element still exists.
-- **NG-UI-35: Loading, empty and error states use shared components from `src/shared/ui`:** loading is a labelled `mat-progress-bar` or spinner ("Loading orders"); an empty result says so and offers the next action ("No orders yet. Create order"); a load error says what failed in plain words and offers a retry button. Each state is a status message (NG-UI-30, A11Y-20), keeps the page heading, and is a main state in the inventory (A11Y-27).
-  *Why:* the same three states appear on every screen; built once, they are accessible and tested once.
+- **NG-UI-35 (implements UI-19): The shared loading, empty and error components in `src/shared/ui`** use a labelled `mat-progress-bar` or spinner for loading and a `matButton` for the next action or retry; each state is announced through NG-UI-30.
 
 ### Fonts and icons
 
@@ -105,8 +93,7 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 - [ ] Status via visible region or `Announcer`; route `title`; `RouteFocus` only on path changes; snackbar, spinner and table labelled; dialog focus restored when the trigger can vanish?
 - [ ] Loading, empty and error states from the shared components (NG-UI-35)?
 - [ ] Harnesses for Material widgets in tests; theme projects cover the screen (TS-TEST-28)?
-- [ ] Layout stated for compact, medium and expanded; CSS for layout, `WindowSize` only for structure; same data in every size class?
-- [ ] Logical properties, `dvh`, safe areas, no hover-only function, zoom not blocked?
+- [ ] Framework-neutral UI rules met ([ui-patterns.md](ui-patterns.md) checklist): layout per size class, `WindowSize` only for structure, logical properties, `dvh`, no hover-only function, zoom not blocked?
 - [ ] Fonts and icons self-hosted, no Google Fonts link (NG-UI-34)?
 
 ## Sources

@@ -23,7 +23,7 @@ Material Design 3 (m3.material.io) defines **what** a UI should look and behave 
 
 ## Baseline rules first
 
-Before writing any UI code, read **`docs/baseline/08-crosscutting-concepts/ui/angular-material.md`** (rules NG-UI-*) and
+Before writing any UI code, read **`docs/baseline/08-crosscutting-concepts/ui/ui-patterns.md`** (framework-neutral rules UI-*), **`docs/baseline/08-crosscutting-concepts/ui/angular-material.md`** (rules NG-UI-*) and
 **`docs/baseline/10-quality-requirements/accessibility.md`** (A11Y-*, WCAG 2.2 AA + adopted AAA set). Folder layout
 comes from `docs/baseline/05-building-block-view/typescript.md`: feature UI lives in
 `src/features/<feature>/adapter/in/ui/`, shared presentational components and stateless UI services

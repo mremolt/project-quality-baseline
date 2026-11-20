@@ -53,6 +53,8 @@ src/
 
 ### Dependency injection and wiring
 
+The Angular form of TS-ARCH-09: the feature's composition file is `<feature>.providers.ts`. `InjectionToken`s are Angular types, so they live in `<feature>.tokens.ts`, not in `ports` (TS-ARCH-17). Adapters are injectable classes that use `inject()` and are bound to their port tokens with `useExisting`; use cases are plain classes created with `useFactory` and `inject()`.
+
 - **NG-ARCH-09: Use cases are plain classes** (no Angular decorators, TS-ARCH-01), created with `useFactory` in the feature's providers file.
 - **NG-ARCH-10: Adapters are injectable but not auto-provided**: `@Service({ autoProvided: false })` (or `@Injectable()` without `providedIn`), take their dependencies with `inject()`, are listed once in the providers file and bound to each port token with `useExisting` (one instance for all ports it implements). Tokens come from `<feature>.tokens.ts` (TS-ARCH-17). Auto-provided root services (`@Service()`) only for cross-cutting infrastructure in `src/platform`.
   *Why:* auto-provided singletons bypass the composition root, so wiring becomes invisible and architecture tests can't see it.
@@ -128,6 +130,7 @@ export class OrderDetailPage {
 }
 ```
 
+- **Promises and errors in Angular (TS-D1, TS-ARCH-18):** ports return `Promise`, so HTTP adapters convert the `HttpClient` observable with the shared `untilAborted` helper, which honors the `AbortSignal` (TS-API-06, [api/angular-openapi-clients.md](../08-crosscutting-concepts/api/angular-openapi-clients.md)). The error interceptor reports technical errors before the adapter's mapper turns them into `TechnicalError` (TS-ARCH-18, NG-OBS-04); stores map domain errors to translation keys through the feature's error mapper (NG-STATE-09).
 - **NG-ARCH-14: Route params arrive as component inputs** (`withComponentInputBinding()`). Guards and resolvers are incoming adapters: they call use cases, never HTTP.
 - **NG-ARCH-20: A failed lazy-chunk load reloads the page once** ([REL-FE-04](../07-deployment-view/container-runtime.md)). During a rolling deployment a browser on release N can ask an instance for a chunk it no longer has. A platform handler registered with `withNavigationErrorHandler` in `app.config.ts` recognises a rejected dynamic import and does one full navigation to the target URL, guarded by a `sessionStorage` flag keyed by the release version from `RUNTIME_CONFIG` (NG-CFG-04), so it never loops. A second failure shows the global error state (NG-UI-35) and is reported (NG-OBS-02). An E2E test stubs a failing chunk and asserts exactly one reload.
 - **NG-ARCH-15: Every data-loading feature gets an N+1 check** (API-N1-01). Typical Angular trap: a row component with its own `resource()` per item; fix with coalescing in the adapter (API-N1 S4) or a view endpoint (S1).
@@ -158,16 +161,16 @@ protected readonly cancelForm = form(this.model, (path) => validateStandardSchem
 
 ## Enforcement
 
-Add to the dependency-cruiser rules of [05-building-block-view/typescript.md](typescript.md#enforcement), which already cover `src/platform` and the routes (NG-ARCH-04/11):
+The dependency-cruiser rules of [05-building-block-view/typescript.md](typescript.md#enforcement) already cover `src/platform` (NG-ARCH-04), the routes (NG-ARCH-11) and the stores (`stores-only-call-use-cases`, NG-STATE-02). Angular sets the constants at the top of that template:
 
 ```js
-{
-  name: 'stores-only-call-use-cases', severity: 'error',
-  comment: 'NG-STATE-02: no HTTP, no adapters, no services, no outgoing ports, no generated code, no other store',
-  from: { path: '-store\\.ts$' },
-  to: { path: ['/adapter/out/', '/application/', '/ports/out/', '/generated/', '-store\\.ts$', 'node_modules/@angular/common/http'] },
-},
+// Angular additions to .dependency-cruiser.cjs
+const COMPOSITION_FILE = '\\.providers\\.ts$'; // <feature>.providers.ts
+const ROOT_HTTP_SETUP = '^src/app/app\\.config\\.ts$'; // provideHttpClient(withInterceptors([...]))
+const HTTP_CLIENT_MODULES = 'node_modules/(@angular/common/http|axios|ky)';
 ```
+
+With these, `http-clients-only-in-http-adapter` lets only `adapter/out/http`, `src/platform/adapter/`, the providers files and `app.config.ts` import `@angular/common/http`, and `stores-only-call-use-cases` forbids it in stores.
 
 `app.config.ts` and `app.routes.ts` are the root composition and may import `platform/index.ts`, feature `index.ts` files and, with a dynamic `import()` only, feature routes.
 

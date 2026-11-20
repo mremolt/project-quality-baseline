@@ -63,7 +63,7 @@ export interface PlaceOrderUseCase { placeOrder(command: PlaceOrderCommand): Pro
 ## Enforcement
 
 - **NODE-ARCH-13: dependency-cruiser checks the rings in CI** (ARCH-ENF-01, NODE-D8) with `tsPreCompilationDeps: true`, so type-only imports count. The NestJS template ([nestjs.md](nestjs.md#architecture-test-template)) implements NODE-ARCH-01..04 and NODE-ARCH-09. Test files are excluded from the ring allow-lists only.
-- **NODE-ARCH-14: Guard against "checks nothing"** (ARCH-ENF-02). A test runs dependency-cruiser on a fixture with a deliberate type-only violation (an adapter type imported into `domain`) and expects it to fail. Re-check the patterns after renaming folders.
+- **NODE-ARCH-14: Guard against "checks nothing"** (ARCH-ENF-02). A test runs dependency-cruiser on a fixture with a deliberate type-only violation (an adapter type imported into `domain`) and expects it to fail. A test that calls `cruise()` passes an absolute `baseDir` (`fileURLToPath(new URL('fixtures/arch-violation', import.meta.url))`), as in TS-ARCH-13. Re-check the patterns after renaming folders.
 - **NODE-ARCH-15: Larger backends may split contexts into npm workspaces** with explicit dependencies (ARCH-ENF-06).
 
 ## What does not carry over from Java

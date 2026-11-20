@@ -14,9 +14,9 @@ Always: `docs/baseline/stacks/angular.md`, `docs/baseline/05-building-block-view
 | Task | Also read |
 |---|---|
 | Use case, port, command, domain type | `docs/baseline/05-building-block-view/use-cases.md`, `docs/baseline/08-crosscutting-concepts/mapping/mapping-between-boundaries.md` |
-| Component, page, route, guard, form | `docs/baseline/08-crosscutting-concepts/ui/angular-material.md`, `docs/baseline/10-quality-requirements/accessibility.md` |
+| Component, page, route, guard, form | `docs/baseline/08-crosscutting-concepts/ui/ui-patterns.md`, `docs/baseline/08-crosscutting-concepts/ui/angular-material.md`, `docs/baseline/10-quality-requirements/accessibility.md` |
 | Signal Store | `docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md` |
-| HTTP adapter, API client, backend data | `docs/baseline/08-crosscutting-concepts/api/typescript-openapi-clients.md`, `docs/baseline/08-crosscutting-concepts/api/avoiding-n-plus-one.md` |
+| HTTP adapter, API client, backend data | `docs/baseline/08-crosscutting-concepts/api/typescript-openapi-clients.md`, `docs/baseline/08-crosscutting-concepts/api/angular-openapi-clients.md`, `docs/baseline/08-crosscutting-concepts/api/avoiding-n-plus-one.md` |
 | Tests | `docs/baseline/08-crosscutting-concepts/testing/testing-by-architecture-element.md` (element table), `docs/baseline/08-crosscutting-concepts/testing/tdd.md`, `docs/baseline/08-crosscutting-concepts/testing/typescript.md`, `docs/baseline/08-crosscutting-concepts/testing/typescript-e2e.md`, `docs/baseline/08-crosscutting-concepts/testing/angular.md` |
 | User-visible text, locales, language switch | `docs/baseline/08-crosscutting-concepts/i18n/i18n.md`, `i18n/angular.md` (only if the project ADR says i18n is in scope, I18N-01) |
 | Templates with user data, HTTP/session, headers, third-party scripts | `docs/baseline/08-crosscutting-concepts/security/angular.md`, `security/typescript.md` |

@@ -1,0 +1,137 @@
+# Next.js: Testing
+
+Next.js specifics on top of [react.md](react.md) (`REACT-TEST-*`), [typescript.md](typescript.md) and [typescript-e2e.md](typescript-e2e.md): what Testing Library can and cannot test in the App Router, server actions and route handlers as incoming adapters, the BFF tests, the contract stubs inside the Next.js server (NEXT-D5) and the stubbed E2E tier against the built standalone server. REACT-TEST-03..13, 16, 17 and 19..21 apply unchanged where this file does not say otherwise; it replaces the "(React SPA)" rules REACT-TEST-02, 14, 15, 18 and 20 and the memory-router part of REACT-TEST-05. Folder and file names follow [05-building-block-view/nextjs.md](../../05-building-block-view/nextjs.md).
+
+Verified in the Next.js reference build (2026-11-20; Next 16.4.6, Vitest 5.1, jsdom 31, Testing Library 16.3, MSW 3.0, `@testcontainers/redis` 12.2, Playwright 1.65.0): 68 Vitest tests in 18 files including a Redis container test and the architecture canary, 14 Playwright tests in Chromium, Firefox, dark and high contrast. Items marked "to verify before first use" are listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use).
+
+## Element → setup
+
+| Element | Setup |
+|---|---|
+| `domain`, `application`, `ports` | Vitest `core` project (node), as in React (REACT-TEST-01) |
+| Client components and pages' client parts (`*.client.tsx`) | `renderWithProviders`, use cases mocked at their contexts (NEXT-TEST-03) |
+| Async server components (`*.server.tsx`) | Not rendered in Vitest; kept thin, their client child tested with the server data as props, the whole covered by E2E (NEXT-TEST-04) |
+| Route handlers (`adapter/in/next`) | Node spec: handler factory with mocked use cases, called with a `Request` (NEXT-TEST-05) |
+| Server actions (`adapter/in/next/*-actions.ts`) | Node spec of the action's handler with mocked dependencies; the `'use server'` binding in E2E (NEXT-TEST-06) |
+| `proxy.ts` logic (headers, nonce, action origin check) | Node spec of the pure functions it calls (NEXT-TEST-07) |
+| BFF adapters: session store, IdP | Redis Testcontainer; `openid-client` with a hand-built `Configuration` and MSW (NEXT-TEST-08, NEXT-TEST-09) |
+| `adapter/out/http` (browser and server mutator) | MSW with Orval handlers (REACT-TEST-16) |
+| Configuration and the test-stub guard | Node spec of the schema (NEXT-TEST-11) |
+| Architecture rules | Canary through dependency-cruiser's `cruise()`, including the `'use client'` blind spot (NEXT-TEST-17) |
+| Main user paths, security headers, accessibility | Stubbed E2E tier against the built standalone server in test mode (NEXT-TEST-12..16) |
+
+## Vitest
+
+- **NEXT-TEST-01: Vitest has its own config, without a Vite build config, and runs two projects split by file extension:** `core` in the `node` environment for every `*.spec.ts` in `src/` and `test/` (core specs, route handlers, server actions' handlers, BFF adapters, configuration, HTTP adapters, the canary) and `dom` in `jsdom` for every `*.spec.tsx`. A `.ts` spec that needs `document` or `location` switches with `// @vitest-environment jsdom` in its first line. `resolve.tsconfigPaths: true` (Vite 8 built in) resolves the `@/` paths. Replaces REACT-TEST-02 for Next.js; it extends the split of REACT-TEST-01 to the server-side specs, which need Node APIs (`Request`, Testcontainers) and no DOM.
+  *Why:* Next.js builds with its own compiler, so there is no `vite.config.ts` to merge, and the React Compiler does not run in tests; tests check behaviour, not memoization.
+- **NEXT-TEST-02: `server-only` resolves to its empty module in tests.** The marker package throws outside a React server bundle, so `vitest.config.ts` aliases it to `node_modules/server-only/empty.js` by file path. `import.meta.resolve('server-only/empty.js')` fails because the package's `exports` hide the file.
+
+```ts
+// vitest.config.ts (validated, project names aligned to REACT-TEST-01)
+const serverOnlyStub = fileURLToPath(new URL('node_modules/server-only/empty.js', import.meta.url));
+
+export default defineConfig({
+  resolve: { tsconfigPaths: true, alias: { 'server-only': serverOnlyStub } },
+  test: {
+    clearMocks: true,
+    projects: [
+      { extends: true, test: { name: 'core', environment: 'node', include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'] } },
+      { extends: true, test: { name: 'dom', environment: 'jsdom', include: ['src/**/*.spec.tsx'], setupFiles: ['./vitest.setup-dom.ts'] } },
+    ],
+  },
+});
+```
+
+## Components
+
+- **NEXT-TEST-03: `renderWithProviders(ui, { useCases, store })` renders like the root layout and root client providers, without a router:** `NextIntlClientProvider` with `locale="en"`, the source catalog and the configured default time zone (NEXT-I18N-14); the real MUI theme; `PublicConfigProvider` with test values; a fresh store from `makeStore()` and a fresh `QueryClient` with `retry: false`; the feature's use-case contexts with `mock<UseCase>()` from the `useCases` option (REACT-TEST-05/06). Slices the feature composition injects are injected at the top of the spec (`rootReducer.inject(ordersViewSlice)`). Client components that receive server data take it as props (`<OrdersPanel initialOrders={orders} />`), which the test passes directly. The helper lives in `src/testing/render-with-providers.tsx`, which the Docker build excludes. Verified. To verify before first use: components that call `useRouter`, `usePathname` or `useParams` from `next/navigation` need the App Router context, which jsdom tests do not have; until a product has verified a test wrapper, such calls stay in thin client components that pass values down as props.
+- **NEXT-TEST-04: Async server components are not rendered with Testing Library; they stay thin enough not to need it.** React's client renderer in jsdom cannot render an `async` component, and `getTranslations`, `headers()` and `cookies()` need Next's request context. So a server component (NEXT-ARCH-02) only calls its use case (received as a prop from the pages file), maps `UnauthenticatedError` to `redirect()`, translates its heading and passes domain values to a client component. What it renders is covered by:
+  - the client child's component tests with the same data as props (NEXT-TEST-03);
+  - the use case's own tests;
+  - the stubbed E2E tier, which renders the real server component against the contract stubs (NEXT-TEST-12), including the request budget "the first page comes with the HTML, no `/api` call" (TS-TEST-14).
+
+  Logic that needs a unit test (a mapping, a decision between two use cases) moves into a plain function or the use case, tested in `core`. Calling the async component as a function and rendering its result was not tried: to verify before first use, and only worth it if a server component grows beyond the shape above.
+
+## Incoming adapters on the server
+
+- **NEXT-TEST-05: Route handlers are adapter tests in `core`: the handler is built by a factory from use-case contracts and called with a plain `Request`.** `createAuthRouteHandlers(sessions, origin)`, `createApiProxy(sessions, apiRelay)` and `createReadinessHandler(readiness)` take `mock<…>()` contracts (TS-TEST-01); the `route.ts` file only binds the composed handler and is not unit-tested. Assert status, `Location`, `Set-Cookie` (`response.headers.getSetCookie()`), `Cache-Control`, problem `content-type`, and which use case was or was not called. Cases the reference build covers and every BFF must have:
+  - login redirects to the IdP and sets the pre-login cookie with all attributes (NODE-BFF-04);
+  - the callback rebuilds its URL from the configured origin, never from `Host` (`new Request('http://attacker.test/auth/callback?…')`), and sets session and `XSRF-TOKEN` cookies;
+  - a failed callback answers 400;
+  - logout and every unsafe proxied method without `X-XSRF-TOKEN` answer 403 and call nothing; with it they succeed, and logout clears both cookies with `Max-Age=0` (NODE-BFF-06/08);
+  - the proxy relays only allow-listed request headers, drops `set-cookie` from the backend, answers 401 without a session or token, and passes a backend problem through with its status and `content-type`.
+- **NEXT-TEST-06: A server action's logic is tested through a handler that takes its dependencies; the `'use server'` file only binds it.** An action cannot receive constructor arguments, it imports the feature's server composition (NEXT-ARCH-04), and `vi.mock` of our own modules is not allowed (TS-TEST-02). So the action's body is a function in a plain module next to it, `handleCancelOrder(input: unknown, deps: { currentCaller; cancelOrder })`, and the `'use server'` file exports `async function cancelOrderAction(input: unknown) { return handleCancelOrder(input, await cancelOrderDeps()); }`. The handler spec covers: no caller → `UNAUTHENTICATED` and the use case not called; input with an unknown key or a wrong type → `INVALID_INPUT` (`.strict()` schema); each domain error → its code; a programming error is rethrown, not mapped. The reference build had no unit test for its action (all of this was checked with E2E and `curl` against the built server); the handler split is to verify before first use.
+- **NEXT-TEST-07: What `proxy.ts` decides is tested as pure functions in `core`:** the page CSP for a nonce (`script-src 'nonce-…' 'strict-dynamic'`, `require-trusted-types-for 'script'`, no `'unsafe-inline'`), a fresh 128-bit nonce per call, the security headers, and the server-action origin check ([security/nextjs.md](../security/nextjs.md)): a `POST` with `Next-Action` passes with `Sec-Fetch-Site: same-origin` or the configured `Origin`, and is rejected with a foreign or missing origin. CSP and nonce specs are verified; the origin check was not built: to verify before first use, plus one E2E test that replays the page's real action request with `Origin: https://evil.example` and without `Origin`, and expects the rejection.
+
+## BFF adapters
+
+- **NEXT-TEST-08: The session store is tested against Redis in a Testcontainer** (`@testcontainers/redis`, image `redis:8.4-alpine`, file `*.int.spec.ts` in `core`, `beforeAll` timeout 120 s). Cases: set and get with TTL, `compareAndSet` only on the expected generation, `compareAndSet` on a missing session fails, `destroy`, and of two concurrent writers with the same generation exactly one wins (NODE-BFF-03). The session service above it is a London-style spec with a mocked store and identity provider and a fixed clock: pre-login session replaced at login, idle and absolute limits, refresh through `compareAndSet` shortly before expiry, failed refresh ends the session, logout revokes and returns the end-session URL (NODE-BFF-07/08). Verified.
+- **NEXT-TEST-09: The `openid-client` adapter is tested with a hand-built `Configuration` and the IdP's endpoints in MSW, never with a module mock.** `new oidc.Configuration({ issuer, authorization_endpoint, token_endpoint, end_session_endpoint, revocation_endpoint }, clientId, secret)` is handed to the adapter instead of `discovery()`; `setupServer()` with `onUnhandledFrame: 'error'` answers the token endpoint. Cases: the authorization URL carries S256 PKCE, `state`, `nonce` and the configured `redirect_uri`; the code exchange sends the verifier and checks `state` and `nonce` (a forged `state` is rejected); a refresh response without ID or refresh token keeps the previous ones; the end-session URL carries `id_token_hint` and `post_logout_redirect_uri`. Two findings shape the stubs: `openid-client` 6.9 checks the ID token's claims (`iss`, `aud`, `exp`, `nonce`) but not its signature when it comes from the token endpoint, so a stub may return an unsigned token; and `expiresIn()` counts down from the response time, so an expiry is asserted with a lower bound, never with equality (the one flaky assertion the reference build found). Verified.
+
+## Contract stubs inside the Next.js server
+
+- **NEXT-TEST-10: In test mode the Next.js server answers its own backend and IdP calls with MSW, started in `register()`** (NEXT-D5). Server components, server actions and the API proxy call the backend from the server, so the browser-side `page.route` stubs of the React SPA cannot reach those calls. `src/instrumentation.ts` imports `src/backend-stubs.ts` dynamically when the stub switch is on; it calls `setupServer(...idpStubHandlers, ...ordersStubHandlers).listen({ onUnhandledFrame: 'bypass' })` from `msw/node`. The handlers are:
+  - per feature, `adapter/out/http/<feature>-stub-handlers.ts`, built from Orval's `get<Operation>MockHandler(...)` with **fixed** data (Orval's examples repeat one id, which gives duplicate React keys), and hand-written `http.post(...)` problem answers for the documented error codes, because Orval generates only the success response;
+  - the IdP stub in `src/platform/adapter/out/oidc/idp-stub-handlers.ts`: discovery document, and a token endpoint that returns an unsigned ID token whose `nonce` is the `code` the test sent (NEXT-TEST-13).
+
+  Scenarios are chosen by data, not per test: a fixed id leads to a fixed answer (order `o-3` answers 409 `ORDER_ALREADY_SHIPPED`). A test cannot change the server's stubs at run time; a control endpoint for that would be test code reachable over HTTP and needs an ADR. Verified: server-rendered lists, the server action and the client refetch through the API proxy all hit the stubs. Next.js (Turbopack) bundles `msw` and `@faker-js/faker` into the server chunks of the production build, so they are inside the image; accepted (one build, CFG-02), and guarded by NEXT-TEST-11.
+- **NEXT-TEST-11: The stubs start only when `APP_TEST_STUBS=1` and the validated configuration says the environment is a test environment; start-up refuses the switch anywhere else, and a test asserts it.** The server configuration schema ([configuration/nextjs.md](../configuration/nextjs.md)) holds `APP_ENVIRONMENT_KIND` (`local` | `test` | `deployed`, NEXT-CFG-07) and rejects `APP_TEST_STUBS=1` with `deployed` (a zod `superRefine`). `register()` parses the configuration first and starts the stubs only from the parsed value, never from `process.env` directly; a rejected configuration stops the start. The `core` spec of the schema asserts: switch on with the production (and every non-test) environment → parse error; switch on with the test environment → accepted; switch off → no stubs anywhere. The guard is verified (`deployed` with the switch on exits with code 1; `test` runs the E2E); the schema spec is part of the template.
+  *Why:* the stubs are in every image; only the configuration keeps a production instance from answering with fake data and a fake IdP that accepts any login.
+
+## E2E against the standalone server
+
+- **NEXT-TEST-12: The stubbed tier runs against the built standalone server in test mode, never against `next dev` or `next start`.** `playwright.config.ts` starts `node e2e/stubbed-server.ts` as `webServer` with `url: …/readyz` (it waits for readiness), `gracefulShutdown: { signal: 'SIGTERM', timeout: 15_000 }` and `reuseExistingServer: !process.env['CI']`; `npm run build` runs first. The script (plain `node` with type stripping):
+  - starts Redis in a Testcontainer for the sessions;
+  - copies `.next/static` into `.next/standalone/.next/static`, as the Dockerfile does (standalone output does not contain the static files);
+  - spawns `.next/standalone/server.js` with `NODE_ENV=production`, `APP_TEST_STUBS=1`, the test environment (NEXT-TEST-11), `OTEL_SDK_DISABLED=true`, `APP_ORIGIN=http://localhost:<port>`, stub backend and IdP URLs, a non-secret test client secret and the container's `REDIS_URL`;
+  - stops server and container on `SIGTERM`/`SIGINT`.
+
+  Replaces REACT-TEST-18 for Next.js. The use options of REACT-TEST-19 apply (`locale`, `reducedMotion: 'reduce'`; add `timezoneId: 'UTC'` once the time zone is configurable, NEXT-I18N-05); its `stub(operationId, …)` and `/config.json` stubs do not, because backend calls happen on the server (NEXT-TEST-10).
+  *Why:* only the production build shows the real CSP nonces, Trusted Types behaviour of lazy chunks, server actions and the BFF cookies.
+- **NEXT-TEST-13: Every E2E test logs in through the real BFF.** A `context` fixture calls `/auth/login?returnTo=…` with `context.request` (it shares the browser context's cookies) and `maxRedirects: 0`, reads the IdP authorization URL from `Location`, builds the callback URL from its `redirect_uri` with `code=<nonce>` and the `state`, calls it, and expects 302. Login, PKCE, `state` and `nonce` checks, session store and cookies thereby run in every test. `context.addCookies` with a `__Host-` cookie fails in Chromium (`Invalid cookie fields`), and `context.route` cannot intercept the redirect to the stub IdP origin, so neither is used. Verified.
+- **NEXT-TEST-14: A fixture collects CSP and Trusted Types violations and fails the test on any.** `page.exposeFunction('reportCspViolation', …)` plus an init script that listens for `securitypolicyviolation` (directive, blocked URI, sample, source position), and a `console` listener for messages matching `Content Security Policy|Trusted Type|TrustedHTML|TrustedScript`; after the test the list must be empty (REACT-SEC-09). Specs request the fixture in `beforeEach`, so collection starts before the first navigation. The main-screen spec also asserts the CSP header (`script-src 'nonce-…' 'strict-dynamic'`, `require-trusted-types-for 'script'`) and the security headers on the server-rendered response. Firefox enforces CSP but not Trusted Types, so Trusted Types evidence comes from Chromium. Verified.
+- **NEXT-TEST-15: The axe fixture of TS-TEST-12 runs in the light, dark and high-contrast themes** (REACT-TEST-21, TS-TEST-28): projects `stubbed-expanded` (default cell), `stubbed-firefox-expanded`, `stubbed-dark` (`colorScheme: 'dark'`) and `stubbed-high-contrast` (`contrast: 'more'`), the last two with `grep: /@theme/`. The tests run with `reducedMotion: 'reduce'` and the app switches to a theme without transitions under `prefers-reduced-motion: reduce`; without it axe failed once in Firefox while a dialog faded in. Verified, two runs with `--repeat-each` green. Not built: `stubbed-forced-colors` (`@shell`), viewport projects (`@responsive`), locale projects, `e2e:nightly` and the smoke tier: to verify before first use.
+- **NEXT-TEST-16: WebKit runs once the E2E server has an HTTPS origin.** WebKit in the Playwright 1.65 image drops `Secure` cookies on `http://localhost`, so the `__Host-session` login loops. The stubbed tier therefore runs Chromium and Firefox only, a recorded deviation from TS-TEST-16 until the test server serves HTTPS (a local certificate in `e2e/stubbed-server.ts`, `APP_ORIGIN=https://…`, `ignoreHTTPSErrors` only for that origin). To verify before first use and listed in chapter 11.
+
+## Architecture rules
+
+- **NEXT-TEST-17: The architecture canary (REACT-TEST-17) adds the Next.js rules and asserts the `'use client'` blind spot.** Fixtures under `test/fixtures/arch-violation/src/` must produce:
+  - `domain-is-pure` for a type-only import of generated code into a domain file;
+  - `client-never-imports-server-only` for `orders-panel.client.tsx` importing `orders.composition.server.ts`;
+  - `app-route-files-are-thin` and `generated-api-only-in-http-adapter` for `src/app/orders/page.tsx` with a deep import;
+  - **no** `client-never-imports-server-only` for `orders-widget.tsx`, a file with `'use client'` but without the `.client` suffix that imports a server module. dependency-cruiser cannot read directives; client-ness comes from the file name (NEXT-ARCH-13). The test documents the gap and fails if the tool ever starts to see it, so the rule can be tightened. `next build` still fails on a real `server-only` import into client code at bundling time.
+
+  To verify before first use: a canary for `server-never-imports-client-entry` (a server component importing `@/platform/index.client`), which the reference build added after a build failure without a fixture. The `baseDir` rule of REACT-TEST-17 (absolute path) applies; the reference build's relative `baseDir` worked only because its fixtures resolve no bare imports.
+
+## To verify before first use
+
+Listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use): a test wrapper for `next/navigation` hooks (NEXT-TEST-03); rendering an async server component in a test (NEXT-TEST-04, only if needed); the server-action handler split and its spec (NEXT-TEST-06); the server-action origin check and its E2E replay (NEXT-TEST-07); the environment guard for the test stubs and its test (NEXT-TEST-11); forced colors, viewports, locale projects, nightly and smoke tiers (NEXT-TEST-15); WebKit with an HTTPS test origin (NEXT-TEST-16); the `server-never-imports-client-entry` canary (NEXT-TEST-17).
+
+## Skill overrides
+
+| Skill or source | Says | Our rule |
+|---|---|---|
+| Next.js testing docs (Vitest guide) | `@vitejs/plugin-react` in `vitest.config`, test async server components with E2E | No Vite plugin needed; split by environment, `server-only` aliased (NEXT-TEST-01/02); async server components thin and covered by E2E (NEXT-TEST-04) |
+| Generic Next.js habit | `vi.mock('next/headers')`, `vi.mock('@/lib/db')` to test server actions | No module mocks of our code (TS-TEST-02); handler with injected dependencies (NEXT-TEST-06) |
+| `playwright-best-practices`, Next.js docs | `webServer: 'npm run dev'` or `next start` | Built standalone server in test mode (NEXT-TEST-12) |
+| `playwright-best-practices` (API mocking) | `page.route` to mock the backend | Backend calls run on the server; MSW inside the server with Orval handlers (NEXT-TEST-10) |
+| `playwright-best-practices` (authentication) | `storageState` or `context.addCookies` with a session cookie | Real BFF login per test through `context.request` (NEXT-TEST-13) |
+| Generic habit | MSW mocks enabled by `NODE_ENV === 'test'` or a dev-only build | One build; stubs only with `APP_TEST_STUBS=1` in a validated test environment (NEXT-TEST-11) |
+| Generic habit | Mock `openid-client` | Hand-built `Configuration` and MSW for the IdP (NEXT-TEST-09) |
+
+## Agent checklist
+
+- [ ] Spec in the right project: `.ts` in `core` (node), `.tsx` in `dom` (NEXT-TEST-01)?
+- [ ] Client component tested with `renderWithProviders`, server data as props, use cases mocked at their contexts (NEXT-TEST-03)?
+- [ ] Server component still thin (use case, redirect, translate, pass data), covered by E2E (NEXT-TEST-04)?
+- [ ] New route handler: factory with contracts, `Request`-based spec incl. 401/403 and XSRF cases (NEXT-TEST-05)?
+- [ ] New server action: handler spec for unauthenticated, invalid input with unknown keys, each domain error (NEXT-TEST-06)?
+- [ ] BFF adapter change: Redis container spec or MSW IdP spec still green, expiry asserted with a bound (NEXT-TEST-08/09)?
+- [ ] New backend operation: stub handler with fixed data and its problem answers (NEXT-TEST-10)?
+- [ ] Test-stub switch still refused outside a test environment, with its test (NEXT-TEST-11)?
+- [ ] E2E against the built standalone server, real BFF login, zero CSP/Trusted Types violations, `@theme` specs in all theme projects (NEXT-TEST-12..15)?
+- [ ] Architecture canary green, `'use client'` blind-spot assertion kept, new suffix rules with a fixture (NEXT-TEST-17)?
+
+## Sources
+
+Next.js 16.4 documentation (testing with Vitest and Playwright, `instrumentation.ts`, standalone output, server actions, route handlers), React 19.3 server components reference, Vitest 5.1 projects and environments, Testing Library React 16.3, MSW 3.0 (`setupServer`, `onUnhandledFrame`), Orval 8.47 MSW output, Testcontainers for Node.js 12.2 (`@testcontainers/redis`), `openid-client` 6.9 README (`Configuration`), Playwright 1.65 (`webServer`, fixtures, `APIRequestContext`, `contrast`, `colorScheme`), `@axe-core/playwright` 4.14, dependency-cruiser 18.7 API. Checked in the Next.js reference build on 2026-11-20.

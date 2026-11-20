@@ -16,7 +16,7 @@ How an Angular frontend implements [observability.md](observability.md) (`OBS-*`
 
 ### Content
 
-- **NG-OBS-05: A report contains** error type, message and stack, release version (a build constant, identical in every environment, NG-CFG-01), environment (from `RUNTIME_CONFIG`), route **template** (`/orders/:orderId`, not the URL), status and `traceId` for HTTP failures, browser family. **Never** query strings, URLs with ids, form values, request or response bodies, tokens, cookies, names or e-mail addresses (TS-SEC-06). The scrubber is a pure function in `platform/application` with Chicago-style tests.
+- **NG-OBS-05: A report contains** error type, message and stack, release version and environment (from `RUNTIME_CONFIG`, injected at deploy time, REL-VER-05), commit (a build constant, identical in every environment, NG-CFG-01), route **template** (`/orders/:orderId`, not the URL), status and `traceId` for HTTP failures, browser family. **Never** query strings, URLs with ids, form values, request or response bodies, tokens, cookies, names or e-mail addresses (TS-SEC-06). The scrubber is a pure function in `platform/application` with Chicago-style tests.
 
 ### Source maps
 

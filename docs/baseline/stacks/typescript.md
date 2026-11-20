@@ -1,6 +1,6 @@
 # TypeScript
 
-Rules for every TypeScript frontend, framework-independent. Angular-specific additions are in [stacks/angular.md](angular.md). Node.js backends use only [typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) from this page, through [stacks/node.md](node.md). Defaults (`TS-D*`): [04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md).
+Rules for every TypeScript frontend, framework-independent. Each frontend stack adds its own page (Angular: [stacks/angular.md](angular.md); React SPA: [stacks/react.md](react.md); Next.js: [stacks/react.md](react.md) + [stacks/nextjs.md](nextjs.md)) and never needs another frontend stack's docs. Node.js backends use only [typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) from this page, through [stacks/node.md](node.md). Defaults (`TS-D*`): [04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md).
 
 | Doc | Covers | Rule IDs |
 |---|---|---|
@@ -10,8 +10,9 @@ Rules for every TypeScript frontend, framework-independent. Angular-specific add
 | [08-crosscutting-concepts/testing/typescript-e2e.md](../08-crosscutting-concepts/testing/typescript-e2e.md) | Playwright matrix, viewports, themes, responsive, screen reader assertions, flaky tests, time budget | `TS-TEST-17..31` |
 | [08-crosscutting-concepts/security/typescript.md](../08-crosscutting-concepts/security/typescript.md) | Browser storage, DOM and eval bans, redirects, bundle secrets, source maps, third-party scripts; npm supply chain in tooling | `TS-SEC-*`, `TS-TOOL-11..16` |
 | [08-crosscutting-concepts/api/typescript-openapi-clients.md](../08-crosscutting-concepts/api/typescript-openapi-clients.md) | Generated API clients with Orval: placement, validation, mocks, N+1 helpers | `TS-API-*` |
+| [08-crosscutting-concepts/ui/ui-patterns.md](../08-crosscutting-concepts/ui/ui-patterns.md) | Window size classes, navigation by size, responsive layout, status messages, route title and focus, dialogs, loading/empty/error states | `UI-*` |
 
-Shared docs every TypeScript frontend also implements (stack rules for Angular in [stacks/angular.md](angular.md)):
+Shared docs every TypeScript frontend also implements (the stack page lists its implementation of each):
 
 | Doc | Covers | Rule IDs |
 |---|---|---|

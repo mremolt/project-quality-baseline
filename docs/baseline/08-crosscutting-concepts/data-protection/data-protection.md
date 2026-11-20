@@ -62,7 +62,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 
 - **DP-PROC-01: Every external service that receives personal data is listed in the inventory before it goes live**: hosting, e-mail and SMS providers, third-party APIs, error tracking and APM, analytics, maps, CDNs, and hosted dev tools that see production data. Each entry names the data sent, the data processing agreement (DPA, AVV) status and the location of processing. Integrating a new one is an outgoing adapter (ARCH-ADP-*) whose pull request states this.
 - **DP-PROC-02: Transfers outside the EU/EEA need a documented basis** (adequacy decision under Art. 45, e.g. a certified recipient under the EU–US Data Privacy Framework, or standard contractual clauses under Art. 46), decided by the controller and DPO. The DPF was upheld by the EU General Court on 3 September 2025 (T-553/23, *Latombe*); an appeal is pending before the Court of Justice (C-703/25 P), so a product relying on it names a fallback in the inventory.
-- **DP-PROC-03: The browser loads no third-party resources that transmit user data without need.** Fonts, icons, scripts and styles are self-hosted with the frontend; a third-party resource in the CSP (NG-SEC-05) is a processor entry under DP-PROC-01.
+- **DP-PROC-03: The browser loads no third-party resources that transmit user data without need.** Fonts, icons, scripts and styles are self-hosted with the frontend; a third-party resource in the CSP (the frontend stack's CSP rule) is a processor entry under DP-PROC-01.
 
 ### Logging and telemetry
 

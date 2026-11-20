@@ -19,6 +19,8 @@ Angular additions to [08-crosscutting-concepts/development/typescript-tooling.md
 }
 ```
 
+- **NG-TOOL-10: The Angular CLI applies the browser matrix of TS-TOOL-02.** The date TS-TOOL-02 fixes is Angular's supported-browser date (Angular 22: 2026-05-07); the CLI's default `browserslist` resolves it, so no own `.browserslistrc` is added. On every Angular major, re-check the date and the `lib` level against Angular's supported browsers and raise a baseline change if they differ.
+
 ## ESLint
 
 - **NG-TOOL-02: angular-eslint and `@ngrx/eslint-plugin` extend the shared TypeScript config**, including the template accessibility rules:
@@ -84,7 +86,14 @@ export default defineConfig(
 );
 ```
 
-> Rule names follow angular-eslint 22 / `@ngrx/eslint-plugin` 22. Check them on upgrades; a removed rule makes ESLint fail loudly, which is intended.
+> Rule names follow angular-eslint 22 / `@ngrx/eslint-plugin` 22. Check them on upgrades; a removed rule makes ESLint fail loudly, which is intended. A preset that ships `warn` entries is wrapped in the shared `warnAsError` helper (TS-TOOL-05, [typescript-tooling.md](typescript-tooling.md#eslint-default-ts-d4)); whether the angular-eslint and NgRx presets above contain any is to verify on adoption.
+
+Prettier formats the templates with the Angular parser (TS-TOOL-08):
+
+```json
+// .prettierrc.json (addition)
+{ "overrides": [{ "files": "*.html", "options": { "parser": "angular" } }] }
+```
 
 - **NG-TOOL-03: Template accessibility lint rules are errors** (A11Y layer L1). Disabling one inline needs a reason and a ticket (A11Y-04).
 
@@ -100,7 +109,7 @@ export default defineConfig(
 
 ## Agent checklist
 
-- [ ] Strict template checking green, extended diagnostics clean?
+- [ ] Strict template checking green, extended diagnostics clean; browser matrix re-checked on a new major (NG-TOOL-10)?
 - [ ] No `httpResource` outside the HTTP adapter, no classic `@ngrx/store`?
 - [ ] Template a11y rules green without new disables?
 - [ ] Security lint rules green, `bypassSecurityTrust*` not suppressed?

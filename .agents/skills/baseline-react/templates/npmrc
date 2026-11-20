@@ -1,0 +1,5 @@
+ignore-scripts=true
+allow-git=none
+min-release-age=7
+engine-strict=true
+save-exact=true

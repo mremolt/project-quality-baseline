@@ -31,7 +31,7 @@ The API validates bearer JWTs. It does not issue tokens, store passwords or hand
 ### Browser login (default SPRING-D6)
 
 - **SPRING-SEC-08: Browser applications authenticate through a backend-for-frontend (BFF)** that performs the OIDC login, keeps the tokens server-side and gives the browser a session cookie (CSRF protection on). The browser holds no access token. The API behind it stays a plain resource server (SPRING-SEC-03).
-- **SPRING-SEC-09: Whether the BFF is its own component** (`backend-bff/`, REPO-LAY-03) **or an additional filter chain** (`spring-boot-starter-security-oauth2-client`) in the backend is decided per project in an ADR. The BFF holds no business logic (ARCH-ADP).
+- **SPRING-SEC-09: Whether the BFF is its own component** (`backend-bff/`, REPO-LAY-03) **or an additional filter chain** (`spring-boot-starter-security-oauth2-client`) in the backend is decided per project in an ADR. The BFF holds no business logic (ARCH-ADP). With a Next.js frontend, the Next.js app is the BFF (NODE-BFF-*) and the Spring backend stays a plain resource server.
 
 The cookie, CSRF and session details of the BFF are SPRING-SEC-24/25 and SPRING-SEC-32/33 ([spring-hardening.md](spring-hardening.md)); the Angular side is NG-SEC-07/08 ([angular.md](angular.md)); the BFF sets the CSP (NG-SEC-06).
 

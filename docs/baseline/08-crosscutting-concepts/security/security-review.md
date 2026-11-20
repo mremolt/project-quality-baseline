@@ -13,11 +13,11 @@ The rows match the rows of the PR template's security section.
 | Area | Rules |
 |---|---|
 | Access control | SPRING-SEC-01/02/10/16, SPRING-SEC-34..36, NEST-SEC-01/02/08/14, NEST-SEC-27..29, NG-SEC-09 |
-| Input and injection | SPRING-SEC-15, SPRING-SEC-31, SPRING-SEC-20 and SPRING-MSG-04 (deserialization), SPRING-SEC-26 (uploads), NEST-SEC-22..26, NEST-SEC-37 (uploads), NG-SEC-01..04, TS-SEC-02/08 |
+| Input and injection | SPRING-SEC-15, SPRING-SEC-31, SPRING-SEC-20 and SPRING-MSG-04 (deserialization), SPRING-SEC-26 (uploads), NEST-SEC-22..26, NEST-SEC-37 (uploads), NG-SEC-01..04, TS-SEC-02/08, TS-API-09 (path parameter encoding) |
 | Configuration | SPRING-SEC-07 (actuator), SPRING-SEC-12, SPRING-SEC-23, NEST-SEC-10/11/36 |
 | Output and errors | SPRING-SEC-18, SPRING-LOG-07/08, NEST-SEC-30, NEST-LOG-08/09, NG-SEC-11, TS-SEC-06 |
 | Outbound | SPRING-SEC-19, NEST-SEC-31, RES-TMO-01 |
-| Browser and session | SPRING-SEC-04/05 (CSRF, CORS), SPRING-SEC-08, SPRING-SEC-13 (headers), SPRING-SEC-24/25, SPRING-SEC-32/33, NEST-SEC-06/07, NEST-SEC-12, NEST-SEC-20/51 (headers), NEST-SEC-47..50, NG-SEC-05..08, TS-SEC-01/03/07 |
+| Browser and session | SPRING-SEC-04/05 (CSRF, CORS), SPRING-SEC-08, SPRING-SEC-13 (headers), SPRING-SEC-24/25, SPRING-SEC-32/33, NEST-SEC-06/07, NEST-SEC-12, NEST-SEC-20/51 (headers), NEST-SEC-47..50, NODE-BFF-04..09, NG-SEC-05..08, TS-SEC-01/03/07/09 |
 | Abuse | SPRING-SEC-21, NEST-SEC-32, SEC-TM-03 |
 | Cryptography and secrets | SEC-CRY-01..05, SPRING-SEC-14/30, NEST-SEC-21/42, SEC-INC-01/03, CFG-05 |
 | Audit trail | SEC-AUD-01..03, SPRING-SEC-22, NEST-SEC-33 |
@@ -36,7 +36,7 @@ The rows match the rows of the PR template's security section.
 | A04 Cryptographic Failures | SEC-CRY-01..05, SPRING-SEC-14/30, NEST-SEC-21/42 |
 | A05 Injection | SPRING-SEC-31, SPRING-SEC-15, NEST-SEC-25/26, NEST-SEC-22, NG-SEC-01..04, TS-SEC-02 |
 | A06 Insecure Design | SEC-TM-01..03, SPRING-SEC-21 (rate limiting), SPRING-SEC-26 (uploads), NEST-SEC-32, NEST-SEC-37 |
-| A07 Authentication Failures | SPRING-SEC-03/08/17/24, SPRING-SEC-32/33, NEST-SEC-03/04/12/47, NEST-SEC-49/50, NG-SEC-08 |
+| A07 Authentication Failures | SPRING-SEC-03/08/17/24, SPRING-SEC-32/33, NEST-SEC-03/04/12/47, NEST-SEC-49/50, NODE-BFF-02..08, NG-SEC-08 |
 | A08 Software or Data Integrity Failures | SPRING-SEC-20, NEST-SEC-23, SEC-CI-02/03/07 |
 | A09 Security Logging and Alerting Failures | SEC-AUD-01..03, SPRING-SEC-22, SPRING-LOG-08/09, NEST-SEC-33, NEST-LOG-09/10, DP-TEL-01..03, OBS-18 |
 | A10 Mishandling of Exceptional Conditions | SPRING-SEC-18, SPRING-SEC-15, NEST-SEC-30, NEST-SEC-22, NG-SEC-11 |

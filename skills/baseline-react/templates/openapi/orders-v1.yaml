@@ -1,0 +1,133 @@
+openapi: 3.1.0
+info:
+  title: Orders API
+  version: 1.0.0
+tags:
+  - name: orders
+paths:
+  /api/v1/orders:
+    get:
+      tags: [orders]
+      operationId: listOrders
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: One page of orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderPage' }
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+  /api/v1/orders/{orderId}/cancel:
+    post:
+      tags: [orders]
+      operationId: cancelOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, minLength: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelOrderRequest' }
+      responses:
+        '200':
+          description: The cancelled order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400':
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '404':
+          description: Order not found
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+        '409':
+          description: The order can no longer be cancelled (code ORDER_ALREADY_SHIPPED)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/ProblemDetail' }
+components:
+  schemas:
+    OrderStatus:
+      type: string
+      enum: [OPEN, SHIPPED, CANCELLED]
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          pattern: '^-?\d+(\.\d+)?$'
+          description: Decimal as a string (API-REST-01)
+          examples: ['129.90']
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          examples: [EUR]
+    Order:
+      type: object
+      required: [id, number, status, total, createdAt]
+      properties:
+        id: { type: string, examples: [o-1] }
+        number: { type: string, examples: [A-1001] }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total: { $ref: '#/components/schemas/Money' }
+        createdAt: { type: string, format: date-time, examples: ['2026-11-02T10:15:00Z'] }
+    OrderPage:
+      type: object
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Order' }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    PageInfo:
+      type: object
+      required: [number, size, totalElements, totalPages]
+      properties:
+        number: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 1 }
+        totalElements: { type: integer, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
+    CancelOrderRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 3, maxLength: 200 }
+    ProblemDetail:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code: { type: string, examples: [ORDER_ALREADY_SHIPPED] }
+        traceId: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field: { type: string }
+              code: { type: string }

@@ -1,6 +1,6 @@
 ---
 name: baseline-security
-description: Security entry point for any project that uses the quality baseline - authentication and authorization, input limits, headers and CSP, error handling, outbound calls, deserialization, secrets, injection, BFF sessions, logout and XSRF, cryptography and keys, audit trail, personal data, Angular XSS and Trusted Types, npm and CI supply chain, dependency and image scanning, threat modelling and security review of pull requests. Routes to the baseline's security docs by task, cites rule IDs and OWASP ASVS 5.0 / Top 10:2025 references. Use it when a change touches a security-relevant area, or when asked for a security review.
+description: Security entry point for any project that uses the quality baseline - authentication and authorization, input limits, headers and CSP, error handling, outbound calls, deserialization, secrets, injection, BFF sessions, logout and XSRF, cryptography and keys, audit trail, personal data, Angular and React XSS and Trusted Types, Next.js server actions and proxy.ts, npm and CI supply chain, dependency and image scanning, threat modelling and security review of pull requests. Routes to the baseline's security docs by task, cites rule IDs and OWASP ASVS 5.0 / Top 10:2025 references. Use it when a change touches a security-relevant area, or when asked for a security review.
 ---
 
 # Security in the quality baseline
@@ -17,16 +17,18 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | TLS, password hashing, encryption at rest, keys, random values | `security-requirements.md` (SEC-CRY-01..05), `spring-hardening.md` (SPRING-SEC-30) or `nestjs-hardening.md` (NEST-SEC-42) |
 | Project security artefacts | The sync creates them from templates once: `docs/security/{requirements,threat-model,exceptions,incident-runbook}.md`, `SECURITY.md`, the PR template with the SEC-REV-01 checklist, `frontend/public/.well-known/security.txt`. If one is missing, re-run the sync or copy it from the baseline's `templates/`; fill in the placeholders, never invent contacts or dates |
 | Auth, `Caller`, CORS, CSRF, actuator / probes | Spring: `spring.md`; NestJS: `nestjs.md` |
-| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md` (also prototype pollution, ReDoS, process hardening) |
+| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md`; Node BFF (NestJS or Next.js): `node-bff.md` (also prototype pollution, ReDoS, process hardening) |
 | Browser code, storage, redirects, bundle, third-party scripts | `typescript.md` |
 | Angular templates, CSP, Trusted Types, XSRF, SSR, security E2E | `angular.md` |
+| React JSX and DOM safety, CSP nonce, Trusted Types, zod jitless, XSRF, security E2E | `react.md` (REACT-SEC-*) |
+| Next.js: BFF wiring, `proxy.ts` CSP and headers, server actions as endpoints, secrets in client props | `nextjs.md` (NEXT-SEC-*), `node-bff.md` (NODE-BFF-*) |
 | Scanner, DAST, pen-test or reported finding, suppression, leaked secret, audit trail, incident | `vulnerability-management.md`, the project's `docs/security/incident-runbook.md` |
 | CI gates and thresholds, pipeline permissions, SBOM, provenance, image scans, DAST, security dates | `secure-pipeline.md` |
-| npm config, lint security rules, dependency review | `development/typescript-tooling.md` (TS-TOOL-11..16), `development/angular-tooling.md` (NG-TOOL-07/08), `development/java-tooling.md` (JAVA-TOOL-05), `development/node-tooling.md` (NODE-TOOL-05/08) |
+| npm config, lint security rules, dependency review | `development/typescript-tooling.md` (TS-TOOL-11..16), `development/angular-tooling.md` (NG-TOOL-07/08), `development/react-tooling.md` (REACT-TOOL-05), `development/java-tooling.md` (JAVA-TOOL-05), `development/node-tooling.md` (NODE-TOOL-05/08) |
 
 ## 2. Skills to combine
 
-`spring-security` (Spring Boot; NestJS has no adopted security skill), `angular-developer` and `playwright-best-practices` (`security-testing`) for Angular, `baseline-tdd` for abuse-case tests.
+`spring-security` (Spring Boot; NestJS has no adopted security skill), `angular-developer` and `playwright-best-practices` (`security-testing`) for Angular, `playwright-best-practices` for React and Next.js, `baseline-tdd` for abuse-case tests.
 
 ## 3. Overrides you will hit
 
@@ -41,6 +43,9 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | String-built SQL/JPQL, `ORDER BY` from a request parameter | Bind parameters, identifiers from an allow-list (SPRING-SEC-31, NEST-SEC-25) |
 | Binding request JSON onto an entity, `ownerId` in a request body | Request records and schemas carry only what the caller may set (SPRING-SEC-34, NEST-SEC-27) |
 | 403 for another user's object | 404 (SPRING-SEC-36, NEST-SEC-29) |
+| `dangerouslySetInnerHTML`, `innerHTML` in React | Banned by lint; rich text only by ADR through one sanitizing component (REACT-SEC-01..03) |
+| Next.js server action trusting bound arguments, or without a session and input check | Every action is a public endpoint: session, authorization in the use case, zod parsing (`nextjs.md`) |
+| `NEXT_PUBLIC_*` for environment values, secrets in props of client components | Runtime configuration from the server, public subset only (`configuration/nextjs.md`, `nextjs.md`) |
 | Angular `autoCsp` (hash-based meta CSP) | Banned everywhere; nonce-based header from the BFF (NG-SEC-10) |
 | Allowing third-party scripts by listing their host in `script-src` | Ignored with `'strict-dynamic'`; nonce or trusted loader plus SRI (TS-SEC-07) |
 | Raising a scanner threshold, disabling an architecture test, lint, compiler or accessibility check to go green | Raise it; time-boxed exception in `docs/security/exceptions.md` (SEC-REV-02, SEC-VUL-03); thresholds live only in the gate table (SEC-CI-01) |
@@ -49,7 +54,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 
 1. **Classify** the change by the areas of `security-review.md`: access control, input and injection, output and errors, outbound, browser and session, headers, abuse, deserialization, cryptography, secrets, audit trail, dependencies, design, personal data, pipeline.
 2. **Threat model** if it adds an entry point, outbound call, role or personal data (SEC-TM-02): the four questions in the PR template's threat-model section; update `docs/security/threat-model.md` on architecture changes (SEC-TM-01). Write abuse cases as tests (SEC-TM-03).
-3. **Apply the rules** of the matching docs, test first (`baseline-tdd`): `cross-user` tagged test (SPRING-SEC-16 / NEST-SEC-08), 401/403 (SPRING-SEC-10 / NEST-SEC-14), token rejection (SPRING-SEC-17 / NEST-SEC-04), session rotation and logout (SPRING-SEC-32/33 / NEST-SEC-49/50), XSS, header and deep-link E2E (NG-SEC-12), personal data absent from logs (SPRING-DP-07).
+3. **Apply the rules** of the matching docs, test first (`baseline-tdd`): `cross-user` tagged test (SPRING-SEC-16 / NEST-SEC-08), 401/403 (SPRING-SEC-10 / NEST-SEC-14), token rejection (SPRING-SEC-17 / NEST-SEC-04), session rotation and logout (SPRING-SEC-32/33 / NODE-BFF-07/08), XSS, header and deep-link E2E (NG-SEC-12), personal data absent from logs (SPRING-DP-07).
 4. **Review**: answer the security section of the PR template (SEC-REV-01); cite rule ID plus ASVS/Top 10 reference (SEC-REV-03). Reachability decides severity.
 5. **Never** weaken a check to pass a build (SEC-REV-02); raise it. Propose shortcuts and draft an ADR (ARCH-SC-06).
 6. **Finish** with the stack's verify command green (`./mvnw verify`, `npm run verify`).

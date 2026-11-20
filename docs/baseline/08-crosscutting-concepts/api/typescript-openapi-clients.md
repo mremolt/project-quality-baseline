@@ -29,7 +29,7 @@ One API used by several features: generate once into `src/platform/adapter/out/h
 ## Configuration
 
 ```ts
-// orval.config.ts (Angular; for React/Vue use client: 'fetch')
+// orval.config.ts (client and its override per stack, TS-API-03)
 import { defineConfig } from 'orval';
 
 export default defineConfig({
@@ -39,9 +39,9 @@ export default defineConfig({
       mode: 'tags-split',
       target: './src/features/orders/adapter/out/http/generated/endpoints',
       schemas: './src/features/orders/adapter/out/http/generated/model',
-      client: 'angular',                       // HttpClient services: interceptors (auth, XSRF) apply
-      override: { angular: { provideIn: false } }, // provided by the feature's providers file, not root
+      // client: …, override: { … }            // per stack: a client whose calls pass the platform HTTP stack
       mock: { generators: [{ type: 'msw', useExamples: true }] }, // key `mock` (singular) in Orval 8; the `orval` skill's `mocks` is wrong
+      urlEncodeParameters: true, // TS-API-09: path parameters go through encodeURIComponent
       clean: true,
     },
   },
@@ -57,49 +57,21 @@ export default defineConfig({
 });
 ```
 
-Option names change between Orval versions; the installed `orval` skill and orval.dev are the reference for the exact syntax.
+Option names change between Orval versions; the installed `orval` skill and orval.dev are the reference for the exact syntax. The generated MSW mocks import `@faker-js/faker`, so it is a dev dependency of every project that generates mocks (pinned like any other, TS-TOOL-13); the generated zod schemas need `zod` as a runtime dependency.
 
 ## Rules
 
 - **TS-API-01: Orval generates clients, types, zod schemas and MSW mocks from the pinned spec**: the backend's committed spec in the same repository (`../backend/openapi/<api>-v<N>.yaml`), or the pinned copy in a separate repository (`openapi/<api>-v<N>.yaml`). `npm run generate:api` runs before `build`, `test` and `e2e`.
 - **TS-API-02: Generated code is gitignored, never edited, and excluded from lint and coverage.** Customization goes into `orval.config.ts` (overrides, mutators), never into the output.
-- **TS-API-03: Client mode per framework:** Angular `client: 'angular'` (HttpClient, so interceptors apply); React/Vue `client: 'fetch'` with a custom mutator for base URL and auth. **Query-library clients (`angular-query`, `react-query`, `vue-query`, `swr`) are not used.** They generate hooks that components call directly, which bypasses ports and use cases (TS-ARCH-04).
-- **TS-API-04: Generated services are not provided in root.** The feature's composition root provides them; only the adapter injects them.
+- **TS-API-03: The client mode is one whose calls pass the platform HTTP stack** (base URL, auth, XSRF, timeouts and error reporting configured once in `src/platform/adapter/out/http`); the stack names the Orval `client` and its override. **Query-library clients (the Orval `*-query` and `swr` clients) are not used.** They generate hooks that components call directly, which bypasses ports and use cases (TS-ARCH-04).
+- **TS-API-04: Generated clients are not app-wide singletons.** The feature's composition file creates or provides them; only the adapter uses them.
 - **TS-API-05: The adapter parses every response with the generated zod schema** before mapping (TS-ARCH-06). A parse failure becomes a technical error of the adapter, never a half-filled domain object.
-- **TS-API-06: The adapter maps to domain types and returns `Promise`** (TS-D1), honoring the caller's `AbortSignal`. Angular adapters convert the generated client's `Observable` with the shared `untilAborted` helper below, never with a bare `firstValueFrom` (which ignores the signal) or `toPromise`.
-- **TS-API-07: Batching and caching (API-N1 S4/S5) are decorators in the same folder**, implementing the same port and wrapping the plain adapter. They are wired in the providers file and have their own adapter tests (one batch call for N items, one call for repeated requests).
+- **TS-API-06: The adapter maps to domain types and returns `Promise`** (TS-D1), honoring the caller's `AbortSignal`: the signal reaches the HTTP call, so an aborted load cancels the request. A client that returns observables is converted with a shared helper that honors the signal (per stack).
+- **TS-API-07: Batching and caching (API-N1 S4/S5) are decorators in the same folder**, implementing the same port and wrapping the plain adapter. They are wired in the composition file and have their own adapter tests (one batch call for N items, one call for repeated requests).
 - **TS-API-08: A spec change is reviewed together with its effect on the frontend**: spec diff, regenerated code compiles, adapter tests green. In the same repository this is the pull request that changes the backend (REPO-API-01). With a separate repository, updating the pinned copy is its own pull request. A breaking change in the spec shows up as compile errors in the adapters, which is the point.
+- **TS-API-09: `urlEncodeParameters: true` is set in every Orval client output.** Without it Orval interpolates path parameters raw into the URL template (`/orders/${orderId}`), so a value containing `/`, `?`, `#` or `..` changes the path or query of the request (path traversal to another endpoint of the same API, injected query parameters; OWASP ASVS 5.0 V1 encoding). With it the generated code calls `encodeURIComponent(String(orderId))`. Domain value objects validate their format as well, but the encoding does not rely on that.
 
 ## Examples
-
-### Adapter
-
-```ts
-// http-orders.ts
-@Service({ autoProvided: false })
-export class HttpOrders implements LoadOrdersPort, CancelOrderPort { // bound to both tokens with useExisting (NG-ARCH-10)
-  private readonly api = inject(OrdersApiService); // generated by Orval (name follows the spec's tag)
-
-  async loadOrders(customerId: CustomerId, signal?: AbortSignal): Promise<readonly Order[]> {
-    const dto = await untilAborted(this.api.listOrders({ customerId: customerId.value }), signal);
-    return listOrdersResponse.parse(dto).items.map(toOrder); // zod schema from generated/*.zod.ts: camelCase operationId + `Response`
-  }
-
-  // cancelOrder(command, signal) follows the same pattern
-}
-
-// small helper in src/platform/adapter/out/http: Observable → Promise of the first value (firstValueFrom + takeUntil).
-// Unsubscribing removes the abort listener; a source that completes without a value rejects with EmptyError.
-export async function untilAborted<T>(source: Observable<T>, signal?: AbortSignal): Promise<T> {
-  signal?.throwIfAborted();
-  try {
-    return await firstValueFrom(signal ? source.pipe(takeUntil(fromEvent(signal, 'abort'))) : source);
-  } catch (error) {
-    signal?.throwIfAborted(); // aborted: reject with the signal's reason, not with EmptyError
-    throw error; // the source failed or completed without a value
-  }
-}
-```
 
 ### Request coalescing (API-N1 S4)
 
@@ -167,7 +139,7 @@ export class CachedCountries implements LoadCountriesPort {
 
 ```ts
 const server = setupServer();
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' })); // MSW 3; `onUnhandledRequest` in MSW 2
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
@@ -185,13 +157,15 @@ it('rejects a malformed response', async () => {
 
 ## Skill overrides (`orval` skill)
 
+Stack-specific rows are in the stack's clients doc.
+
+
 | Skill says | Our rule |
 |---|---|
-| `angular-query` / TanStack Query clients for Angular with signals | Not used; plain `angular` client behind ports (TS-API-03) |
-| `provideIn: 'root'` for generated services | `provideIn: false`; provided by the feature (TS-API-04) |
+| Query-library clients (TanStack Query, SWR) generated by Orval | Not used; a plain client behind ports (TS-API-03) |
 | Generated client used directly in components | Only adapters use generated code (TS-ARCH-04/05) |
 | Output key `mocks` for MSW generation | `mock` (singular), as in the configuration above; check the installed Orval's types when upgrading |
-| PascalCase zod schema names (`ListOrdersResponse.parse`) | Orval's zod output is camelCase (`listOrdersResponse`); use the names from the generated `*.zod.ts` |
+| camelCase zod schema names (`listOrdersResponse.parse`) | Orval 8.47's zod output is PascalCase operationId + `Response` (`ListOrdersResponse`); the naming has changed between Orval versions, so use the names from the generated `*.zod.ts` |
 
 ## Agent checklist
 
@@ -200,7 +174,10 @@ it('rejects a malformed response', async () => {
 - [ ] Response parsed with the generated zod schema, mapped to domain types?
 - [ ] N+1 check done; batching/caching as decorator if chosen?
 - [ ] Adapter tests use the generated MSW handlers, including an error and a malformed response?
+- [ ] `urlEncodeParameters: true` in the Orval config (TS-API-09); `@faker-js/faker` a dev dependency when MSW mocks are generated?
 
 ## Sources
 
-Orval (orval.dev, `orval` skill from github.com/orval-labs/orval; option names `mock.generators` and `override.angular.provideIn` from the Orval 8 type definitions), MSW (mswjs.io), zod (zod.dev), RxJS `firstValueFrom` and `takeUntil` (rxjs.dev).
+Orval (orval.dev, `orval` skill from github.com/orval-labs/orval; option names `mock.generators` and `urlEncodeParameters` from the Orval 8 type definitions, zod schema names from Orval 8.47 output), MSW (mswjs.io; `onUnhandledFrame` in MSW 3), zod (zod.dev).
+
+Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).

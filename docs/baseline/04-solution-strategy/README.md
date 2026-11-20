@@ -39,7 +39,7 @@ Where the sources leave a choice open, this baseline decides:
 
 ## Stack strategies
 
-Each stack tightens the defaults with its own (`JAVA-D*`, `SPRING-D*`, `NODE-D*`, `NEST-D*`, `TS-D*`):
+Each stack tightens the defaults with its own (`JAVA-D*`, `SPRING-D*`, `NODE-D*`, `NEST-D*`, `TS-D*`, `REACT-D*`, `NEXT-D*`):
 
 | Stack | Strategy |
 |---|---|
@@ -49,3 +49,5 @@ Each stack tightens the defaults with its own (`JAVA-D*`, `SPRING-D*`, `NODE-D*`
 | NestJS | [nestjs.md](nestjs.md), libraries: [nestjs-libraries.md](nestjs-libraries.md) |
 | TypeScript | [typescript.md](typescript.md) |
 | Angular | [angular.md](angular.md) |
+| React | [react.md](react.md) |
+| Next.js | [nextjs.md](nextjs.md) |

@@ -52,7 +52,7 @@ The API validates bearer JWTs. It does not issue tokens, store passwords or rend
 ### Browser login
 
 - **NEST-SEC-12: Browser applications authenticate through a backend-for-frontend (BFF)** that performs the OIDC login, keeps the tokens server-side and gives the browser only a session cookie with CSRF protection. The browser holds no access token. The API behind it stays a plain resource server (NEST-SEC-03).
-- **NEST-SEC-13: Whether the BFF is its own component (`backend-bff/`, REPO-LAY-03) or a module of the NestJS backend is decided per project in an ADR.** The BFF holds no business logic (ARCH-ADP). Its rules are NEST-SEC-44 ff. in [nestjs-hardening.md](nestjs-hardening.md).
+- **NEST-SEC-13: Whether the BFF is its own component (`backend-bff/`, REPO-LAY-03) or a module of the NestJS backend is decided per project in an ADR.** The BFF holds no business logic (ARCH-ADP). Its rules are NODE-BFF-01..10 in [node-bff.md](node-bff.md), wired as NEST-SEC-44 ff. in [nestjs-hardening.md](nestjs-hardening.md). With a Next.js frontend, the Next.js app is the BFF and the NestJS backend stays a plain resource server.
 
 ### Tests
 

@@ -8,7 +8,7 @@
 | arc42 | Template for architecture documentation in 12 chapters; used for this baseline and for every product's `docs/architecture/` |
 | ASVS | OWASP Application Security Verification Standard, version 5.0; our requirement catalogue, level L2 by default (D14) |
 | AsyncAPI | Specification format for event-driven interfaces (topics, payloads); our event contract format (MSG-CON-01) |
-| BFF | Backend-for-frontend: holds the OIDC tokens for a browser app and gives it a session cookie (SPRING-SEC-08, NEST-SEC-12) |
+| BFF | Backend-for-frontend: holds the OIDC tokens for a browser app and gives it a session cookie (SPRING-SEC-08, NEST-SEC-12, NODE-BFF-01); a Next.js app is its own BFF |
 | Bounded context | A part of the domain with its own model and language; contexts in one application meet only at incoming ports (ARCH-ORG-09) |
 | Build once, promote | One artifact per component and commit is deployed unchanged to every environment; only configuration differs (CFG-02, REL-CD-01) |
 | Caller | Framework-free record describing who triggered a use case (user id, roles), passed with the command; the use case authorizes with it (ARCH-UC-15, SPRING-SEC-02, NEST-SEC-02) |
@@ -29,6 +29,7 @@
 | Event / command (message) | An event reports a fact that happened (past tense, many consumers); a command asks one receiver to do something (MSG-EVT-01) |
 | Expand/contract | Migration technique: add the new form, migrate users, remove the old form in a later release (SPRING-DB-05, NEST-DB-20, REPO-API-02) |
 | Feature flag | Runtime switch read through an outgoing port; release flags are temporary and have a removal date (REL-FF-01..04) |
+| Hydration | React attaching event handlers to HTML that the server rendered; the client render must produce the same markup ([05-building-block-view/nextjs.md](../05-building-block-view/nextjs.md)) |
 | Idempotency key | Client-chosen key that makes a retried request or redelivered message have its effect only once (RES-IDM-01..05) |
 | Liveness / readiness | Liveness: the process is alive and should not be restarted. Readiness: this instance can serve traffic now (OBS-01..03) |
 | N+1 | One request or statement per item of a list instead of a bounded number ([avoiding-n-plus-one.md](../08-crosscutting-concepts/api/avoiding-n-plus-one.md)) |
@@ -41,14 +42,18 @@
 | Record of processing activities | Art. 30 GDPR list of processing activities; each product keeps its part in `docs/data-protection/processing-record.md` (DP-INV-01) |
 | Ring | One layer of the hexagonal architecture: domain, ports, application, adapters |
 | Roll forward | Fixing a faulty release with a new release instead of reverting to the previous one; the default (REL-RB-01) |
+| Route handler | A Next.js `route.ts` file answering HTTP requests; an incoming adapter, used for the BFF endpoints, the API proxy and the probes, not for business APIs ([05-building-block-view/nextjs.md](../05-building-block-view/nextjs.md)) |
 | Rule ID | Stable identifier of a rule (`PREFIX-AREA-NN`), cited in reviews, commits and ADRs |
 | Runtime config | Per-environment frontend configuration loaded at startup from the serving origin (`/config.json`), not built in (CFG-11, NG-CFG) |
 | SAST / DAST / SCA | Static and dynamic application security testing; software composition analysis (dependency scanning) ([secure-pipeline.md](../08-crosscutting-concepts/security/secure-pipeline.md)) |
 | SBOM | Software bill of materials (CycloneDX), published with releases (SEC-CI-03) |
+| Server action | A Next.js function marked `'use server'` that the browser calls over HTTP; a public endpoint and an incoming adapter that calls one use case ([security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md)) |
+| Server component | A React component that renders only on the server (Next.js App Router default); an incoming UI adapter that gets use cases from the request-scoped server composition ([05-building-block-view/nextjs.md](../05-building-block-view/nextjs.md)) |
 | Shared kernel | Value objects shared by two bounded contexts; allowed only with an ADR (ARCH-ORG-09) |
 | Skill | Packaged agent instructions (`SKILL.md`); third-party skills supply know-how, own skills point at these docs (D11) |
 | Skill override | A documented conflict between a skill and these docs, resolved in favour of the docs |
 | SLI / SLO | Service level indicator (a measured ratio such as successful requests) and objective (its target over a window), defined per user journey (OBS-16) |
+| Slice | A Redux Toolkit unit of state, reducers and actions; in React frontends the view state of a feature's UI adapter, injected lazily into the one app store ([ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md)) |
 | Slice test | Spring test that starts only one layer of the context (`@WebMvcTest`, `@DataJpaTest`) |
 | Stereotype | Our component annotations (`@UseCase`, `@WebAdapter`, `@PersistenceAdapter`, `@MessagingAdapter`, `@SchedulingAdapter`, `@MetricsAdapter`) (SPRING-ARCH-04) |
 | Timeout | Upper bound on how long an outbound call may take; mandatory for every remote call (RES-TMO-01) |
