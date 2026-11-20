@@ -1,8 +1,8 @@
 # Messaging and Event Contracts
 
-How services talk asynchronously: what a message is, how it is named, versioned, ordered, published and consumed, and what happens when a consumer cannot process it. The rules are language- and broker-neutral; the Spring Kafka specifics are in [messaging/spring.md](spring.md). Timeouts, retries and idempotency in general: [resilience/resilience.md](../resilience/resilience.md). The REST equivalent of the contract rules is [api/openapi-contracts.md](../api/openapi-contracts.md).
+How services talk asynchronously: what a message is, how it is named, versioned, ordered, published and consumed, and what happens when a consumer cannot process it. The rules are language- and broker-neutral; the Spring Kafka specifics are in [messaging/spring.md](spring.md), the NestJS ones in [messaging/nestjs.md](nestjs.md). Timeouts, retries and idempotency in general: [resilience/resilience.md](../resilience/resilience.md). The REST equivalent of the contract rules is [api/openapi-contracts.md](../api/openapi-contracts.md).
 
-Placement follows the hexagon (SPRING-ARCH-12): the core publishes **domain events through an outgoing port** and receives messages **through an incoming port**. Topics, headers, serializers, envelopes and error handlers live in the messaging adapters. Deduplication of a delivery is a use case decision, made through a port (MSG-IDM).
+Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): the core publishes **domain events through an outgoing port** and receives messages **through an incoming port**. Topics, headers, serializers, envelopes and error handlers live in the messaging adapters. Deduplication of a delivery is a use case decision, made through a port (MSG-IDM).
 
 **Broker.** The rules name capabilities, not broker features. The default broker is Apache Kafka; a product that must use another broker (imposed by the customer platform) records the choice in an ADR, maps each capability in that ADR, and puts the code in its own adapter packages (`adapter.in.<broker>`, `adapter.out.<broker>`). The core and its ports do not change.
 
@@ -23,7 +23,7 @@ Placement follows the hexagon (SPRING-ARCH-12): the core publishes **domain even
   - A **command** asks exactly one owner to do something: imperative (`ShipOrder`). The receiving context owns its contract.
   Between bounded contexts, events are the default; a command over messaging needs a reason (asynchronous work, load levelling), otherwise use a synchronous API.
 - **MSG-EVT-02: Events describe business facts, not table changes.** `OrderPlaced` with what consumers need, not `orders_row_updated`. Change-data-capture streams of internal tables are not a public contract.
-- **MSG-EVT-03: Payloads carry only what consumers need.** Identifiers and the facts of the event; personal data only where a consumer needs it and the privacy concept allows it (SPRING-LOG-08 applies to payloads in logs and dead letters as well).
+- **MSG-EVT-03: Payloads carry only what consumers need.** Identifiers and the facts of the event; personal data only where a consumer needs it and the privacy concept allows it (SPRING-LOG-08, NEST-LOG-09 apply to payloads in logs and dead letters as well).
 - **MSG-EVT-04: Topic names follow `<context>.<stream>.v<major>`** (`orders.order-events.v1`), in kebab-case per segment. One topic per aggregate's event stream; several event types may share it when they need a common order (MSG-ORD-01). Command topics end in `.commands.v<major>`.
 
 ### Envelope
@@ -60,7 +60,7 @@ Placement follows the hexagon (SPRING-ARCH-12): the core publishes **domain even
 ### Publishing
 
 - **MSG-PUB-01: A message that must be consistent with a database change is never sent directly from the use case** (no dual write: commit then send, or send then commit). The default is the transactional outbox with a relay (MSG-PUB-02); change data capture needs an ADR.
-- **MSG-PUB-02: The default pattern is a transactional outbox with a relay:** the outgoing port writes the serialized message into an outbox table in the use case's transaction; a relay sends it after the commit and marks it sent. The relay preserves per-key order and delivers at least once. Outbox with relay needs no ADR; change data capture (Debezium) on the outbox table instead of the relay needs an ADR (SPRING-ARCH-13).
+- **MSG-PUB-02: The default pattern is a transactional outbox with a relay:** the outgoing port writes the serialized message into an outbox table in the use case's transaction; a relay sends it after the commit and marks it sent. The relay preserves per-key order and delivers at least once. Outbox with relay needs no ADR; change data capture (Debezium) on the outbox table instead of the relay needs an ADR (SPRING-ARCH-13; NestJS: [nestjs.md](nestjs.md)).
 - **MSG-PUB-03: Producers wait for a durable publish acknowledgement from the broker** (Kafka: `acks=all`, all in-sync replicas) and use the broker's protection against duplicates from producer retries (Kafka: the idempotent producer), so a producer retry does not duplicate or reorder messages of one key.
 - **MSG-PUB-04: The outbox relay is observable and does not let one bad row block everything.** It exposes the age of the oldest unsent row and the count of unsent and parked rows as metrics. An alert fires when the oldest unsent row is older than a threshold the product sets (default: 5 minutes) or when any row is parked, and the messaging row of the minimal dashboard (OBS-17) shows these values. A transient send failure (timeout, broker unavailable) ends the run; the next run retries. A non-retryable send failure (message too large, not authorized for the topic, cannot be serialized) parks the row with the reason and the relay continues with other keys. Later rows of the parked row's key wait, so per-key order holds; an operator fixes the cause and releases or discards the parked row through a documented procedure (like MSG-DLT-03).
   *Why:* a relay that stops at the first failure for good blocks every topic of the service, and without a metric nobody notices until consumers miss data.
@@ -87,8 +87,8 @@ Placement follows the hexagon (SPRING-ARCH-12): the core publishes **domain even
 
 - **MSG-ERR-02: Retries for a consumer are bounded, with exponential backoff and jitter** (RES-RTY-03), and happen in the consumer's error handler (one retry layer: RES-RTY-04). Blocking retries keep per-key order; retries through separate retry topics break it and need a stated reason.
 - **MSG-ERR-03: A poison message never blocks a partition.** After classification or exhausted retries, it goes to the dead-letter topic and the consumer moves on.
-- **MSG-DLT-01: Dead-letter topics belong to the consuming service.** Name: `<source-topic>.<consumer-service>-dlt` (`orders.order-events.v1.billing-dlt`), so two consumers of one topic never share a dead-letter topic. The consuming team creates it (Kafka: at least as many partitions as the source, SPRING-MSG-05), monitors it and handles its records. The dead letter keeps the original key, payload and headers and adds the failure reason, original topic, partition and offset.
-- **MSG-DLT-02: Every dead letter raises an alert** to the owning team (a metric on the DLT's record count or the consumer's dead-letter counter), and dead letters are logged once by the error handler at `ERROR` without the payload (SPRING-LOG-07/08).
+- **MSG-DLT-01: Dead-letter topics belong to the consuming service.** Name: `<source-topic>.<consumer-service>-dlt` (`orders.order-events.v1.billing-dlt`), so two consumers of one topic never share a dead-letter topic. The consuming team creates it (Kafka: at least as many partitions as the source, SPRING-MSG-05; NestJS: [nestjs.md](nestjs.md)), monitors it and handles its records. The dead letter keeps the original key, payload and headers and adds the failure reason, original topic, partition and offset.
+- **MSG-DLT-02: Every dead letter raises an alert** to the owning team (a metric on the DLT's record count or the consumer's dead-letter counter), and dead letters are logged once by the error handler at `ERROR` without the payload (SPRING-LOG-07/08, NEST-LOG-08/09).
 - **MSG-DLT-03: Replay is a documented, tested procedure.** After the cause is fixed, records are re-published from the DLT to the source topic (or fed to the consumer) by an operator tool or admin endpoint, keeping the original `id`, so the consumer's deduplication (MSG-IDM-02) makes a replay safe. The runbook lives in the product's chapter 8 and names who may replay.
 
 ## Anti-patterns
@@ -110,7 +110,7 @@ Placement follows the hexagon (SPRING-ARCH-12): the core publishes **domain even
 - [ ] Broker other than Kafka: ADR with the capability mapping, own adapter packages?
 - [ ] Consumer idempotent and tested with a duplicate (MSG-IDM)?
 - [ ] Failure classification, bounded retries, dead-letter topic owned, alerted and replayable (MSG-ERR, MSG-DLT)?
-- [ ] New topic consumed or produced: threat model note for the new data flow (SEC-TM-02), ACLs (SPRING-SEC-28)?
+- [ ] New topic consumed or produced: threat model note for the new data flow (SEC-TM-02), ACLs (SPRING-SEC-28, NEST-SEC-39)?
 
 ## Sources
 

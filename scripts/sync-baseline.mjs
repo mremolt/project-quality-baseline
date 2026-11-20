@@ -51,9 +51,17 @@ checkMarkers(path.join(target, '.gitattributes'), ATTR_MARKERS);
 
 const host = opts.host ?? detectHost(target);
 
+// Declared stacks (.baseline.json, project-owned): only their skills are copied and only their AGENTS.md lines kept.
+const stackDefs = readJson(path.join(base, 'baseline-stacks.json'));
+const stacks = resolveStacks(target, stackDefs);
+
 const log = (msg) => console.log(`  - ${msg}`);
 const rev = git(base, 'rev-parse', '--short', 'HEAD');
 console.log(`Syncing baseline ${rev.ok ? rev.out : '(uncommitted)'} into ${target}`);
+log(stacks.declared
+  ? `stacks: ${[...stacks.active].join(' ')} (from .baseline.json)`
+  : 'MANUAL: no .baseline.json and no stack detected: all stacks are synced. Create .baseline.json, e.g. {"stacks": ["spring", "angular"]}, and re-run');
+if (stacks.created) log(`.baseline.json created from the detected stacks (${stacks.created.join(', ')}); check it`);
 if (!isRepo) log('MANUAL: the project is not a git repository; run `git init` and add the remote, then re-run so the pull request template is created');
 else if (!hasCommit) log('the project has no commits yet: uncommitted-changes check skipped');
 
@@ -134,7 +142,7 @@ for (const [from, to, note] of projectFiles) {
 }
 
 // ---------------------------------------------------------------- AGENTS.md (managed block)
-const block = extractBlock(read(path.join(base, 'AGENTS.md')), ...AGENTS_MARKERS);
+const block = filterStackLines(extractBlock(read(path.join(base, 'AGENTS.md')), ...AGENTS_MARKERS), stacks);
 const agents = path.join(target, 'AGENTS.md');
 if (!fs.existsSync(agents)) {
   write(agents, `${block}\n`);
@@ -183,7 +191,7 @@ const old = fs.existsSync(manifest) ? read(manifest).split(/\r?\n/).filter(Boole
 const names = [...new Set([
   ...entries(path.join(base, '.agents', 'skills')).filter((e) => e.isDirectory() || e.isSymbolicLink()).map((e) => e.name),
   ...entries(path.join(base, 'skills')).filter((e) => e.isDirectory()).map((e) => e.name),
-])].sort();
+])].sort().filter((n) => stacks.wantsSkill(n));
 
 for (const n of old) {
   if (!names.includes(n)) {
@@ -263,6 +271,65 @@ Next steps in the project:
   - Check skills without changing them: npx ${skillsCli} check`);
 
 // ---------------------------------------------------------------- helpers
+// The project's stacks plus the stacks they require. Without .baseline.json the stacks are detected from the
+// component folders and written to a new .baseline.json; if nothing is detected, every stack is active.
+function resolveStacks(dir, defs) {
+  const known = Object.keys(defs.stacks);
+  const file = path.join(dir, '.baseline.json');
+  let wanted;
+  let created;
+  if (fs.existsSync(file)) {
+    let cfg;
+    try { cfg = readJson(file); } catch { fail('.baseline.json is not valid JSON'); }
+    wanted = cfg.stacks;
+    if (!Array.isArray(wanted) || wanted.length === 0) fail(`.baseline.json needs "stacks": a non-empty list of ${known.join(', ')}`);
+    const unknown = wanted.filter((s) => !known.includes(s));
+    if (unknown.length > 0) fail(`.baseline.json: unknown stack(s) ${unknown.join(', ')}; known: ${known.join(', ')}`);
+  } else {
+    wanted = known.filter((s) => defs.stacks[s].detect.some((d) => detectFile(dir, d)));
+    if (wanted.length > 0) {
+      writeJson(file, { stacks: wanted });
+      created = wanted;
+    }
+  }
+  const declared = wanted.length > 0;
+  const active = new Set();
+  const add = (s) => { if (!active.has(s)) { active.add(s); defs.stacks[s].requires.forEach(add); } };
+  (declared ? wanted : known).forEach(add);
+  const owner = new Map();
+  for (const [s, def] of Object.entries(defs.stacks)) for (const k of def.skills) owner.set(k, [...(owner.get(k) ?? []), s]);
+  return {
+    declared,
+    created,
+    active,
+    // Shared skills and skills no stack claims are always copied.
+    wantsSkill: (n) => defs.shared.includes(n) || !owner.has(n) || owner.get(n).some((s) => active.has(s)),
+  };
+}
+
+// "<folder-glob>/<file>[#<text>]": a top-level folder matching the glob (only a trailing * is supported)
+// contains the file, and the file contains the text.
+function detectFile(dir, spec) {
+  const [rel, text] = spec.split('#');
+  const [folderGlob, ...rest] = rel.split('/');
+  const prefix = folderGlob.replace(/\*$/, '');
+  return entries(dir)
+    .filter((e) => e.isDirectory() && (folderGlob.endsWith('*') ? e.name.startsWith(prefix) : e.name === folderGlob))
+    .some((e) => {
+      const f = path.join(dir, e.name, ...rest);
+      return fs.existsSync(f) && (!text || read(f).includes(text));
+    });
+}
+
+// Lines tagged <!-- stack:a,b --> stay only if one of the stacks is active; the tag itself is removed.
+function filterStackLines(text, stacks) {
+  const tag = /\s*<!-- stack:([a-z0-9,-]+) -->/;
+  return text.split('\n')
+    .filter((l) => { const m = tag.exec(l); return !m || m[1].split(',').some((s) => stacks.active.has(s)); })
+    .map((l) => l.replace(tag, ''))
+    .join('\n');
+}
+
 function fail(msg) { console.error(msg); process.exit(1); }
 function read(f) { return fs.readFileSync(f, 'utf8'); }
 function write(f, s) { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, s); }

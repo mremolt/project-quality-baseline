@@ -1,6 +1,6 @@
 # TypeScript
 
-Rules for every TypeScript project, frontend framework-independent. Angular-specific additions are in [stacks/angular.md](angular.md). Defaults (`TS-D*`): [04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md).
+Rules for every TypeScript frontend, framework-independent. Angular-specific additions are in [stacks/angular.md](angular.md). Node.js backends use only [typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) from this page, through [stacks/node.md](node.md). Defaults (`TS-D*`): [04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md).
 
 | Doc | Covers | Rule IDs |
 |---|---|---|

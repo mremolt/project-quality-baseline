@@ -1,6 +1,6 @@
 # Angular: Runtime Configuration
 
-How one Angular build gets per-environment values. Shared rules: [configuration.md](configuration.md) (`CFG-*`); the server side is SPRING-CFG-10 ([spring.md](spring.md)). Folder layout: [05-building-block-view/angular.md](../../05-building-block-view/angular.md).
+How one Angular build gets per-environment values. Shared rules: [configuration.md](configuration.md) (`CFG-*`); the server side is SPRING-CFG-10 ([spring.md](spring.md)) or NEST-CFG-11 ([nestjs.md](nestjs.md)). Folder layout: [05-building-block-view/angular.md](../../05-building-block-view/angular.md).
 
 ## Rules
 
@@ -42,7 +42,7 @@ providers: [
 ```
 
 - **NG-CFG-05: `config.json` contains public values only** (CFG-11, TS-SEC-04): environment name, release version (REL-VER-05), same-origin paths, switches, public identifiers. No API keys with write power, no credentials, no internal host names. The schema is the list of what may be in it; a new field is reviewed like an API change.
-- **NG-CFG-06: `config.json` is not part of the build output.** During `ng serve` the dev-server proxy (`proxy.conf.json`) forwards `/config.json` to the locally running BFF or backend (SPRING-DEV-09), like the API calls. Changing a value needs a reload of the page; there is no hot reload of configuration.
+- **NG-CFG-06: `config.json` is not part of the build output.** During `ng serve` the dev-server proxy (`proxy.conf.json`) forwards `/config.json` to the locally running BFF or backend (SPRING-DEV-09, NEST-DEV-11), like the API calls. Changing a value needs a reload of the page; there is no hot reload of configuration.
 
 ## Tests
 
@@ -58,7 +58,7 @@ providers: [
 ## Agent checklist
 
 - [ ] No `fileReplacements` or per-environment build configuration (NG-CFG-01)?
-- [ ] New value: added to the schema, the server's `app.frontend.*` record and its test, public only (NG-CFG-03/05, SPRING-CFG-10)?
+- [ ] New value: added to the schema, the server's `app.frontend.*` record (NestJS: `FRONTEND_*` schema) and its test, public only (NG-CFG-03/05, SPRING-CFG-10, NEST-CFG-11)?
 - [ ] Read through `RUNTIME_CONFIG` in an adapter or providers file, never in the core (NG-CFG-04)?
 - [ ] Tests provide the token or stub `/config.json`?
 

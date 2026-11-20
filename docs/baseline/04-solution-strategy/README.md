@@ -22,7 +22,7 @@ Where the sources leave a choice open, this baseline decides:
 |---|---|---|---|
 | D1 | Incoming ports | Required; skipping needs an ADR (ARCH-SC-07) | [conscious-shortcuts.md](../11-risks-and-technical-debt/conscious-shortcuts.md) |
 | D2 | Domain model | Rich for logic-heavy domains, anemic OK for CRUD | [use-cases.md](../05-building-block-view/use-cases.md) |
-| D3 | Mapping | Full (adapter→app, commands); none → two-way (persistence, queries); Spring always maps persistence two-way (SPRING-ARCH-10) | [mapping-between-boundaries.md](../08-crosscutting-concepts/mapping/mapping-between-boundaries.md) |
+| D3 | Mapping | Full (adapter→app, commands); none → two-way (persistence, queries); Spring and NestJS always map persistence two-way (SPRING-ARCH-10, NEST-DB-06) | [mapping-between-boundaries.md](../08-crosscutting-concepts/mapping/mapping-between-boundaries.md) |
 | D4 | Enforcement | Architecture tests from day one; build modules once stable | [enforcing-boundaries.md](../08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md) |
 | D5 | Coverage | Not the success metric; confidence to ship + bug post-mortems | [testing-by-architecture-element.md](../08-crosscutting-concepts/testing/testing-by-architecture-element.md) |
 | D6 | ADRs | `docs/adr/NNNN-title.md`, Nygard format | [conscious-shortcuts.md](../11-risks-and-technical-debt/conscious-shortcuts.md) |
@@ -39,11 +39,13 @@ Where the sources leave a choice open, this baseline decides:
 
 ## Stack strategies
 
-Each stack tightens the defaults with its own (`JAVA-D*`, `SPRING-D*`, `TS-D*`):
+Each stack tightens the defaults with its own (`JAVA-D*`, `SPRING-D*`, `NODE-D*`, `NEST-D*`, `TS-D*`):
 
 | Stack | Strategy |
 |---|---|
 | Java | [java.md](java.md) |
 | Spring Boot | [spring.md](spring.md), libraries: [spring-libraries.md](spring-libraries.md) |
+| Node.js | [node.md](node.md) |
+| NestJS | [nestjs.md](nestjs.md), libraries: [nestjs-libraries.md](nestjs-libraries.md) |
 | TypeScript | [typescript.md](typescript.md) |
 | Angular | [angular.md](angular.md) |

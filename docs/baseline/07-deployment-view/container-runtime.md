@@ -1,6 +1,6 @@
 # Container Images, Frontend Delivery and Runtime Contract
 
-What every deployable ships as and what it expects from the platform it runs on: how images are built, how the frontend bundle reaches the browser, and the runtime contract between the container and the platform. The platform itself (Kubernetes, a PaaS, Compose on a VM, the customer's orchestrator) is the product's or the customer's; the rules name capabilities, and the examples show Kubernetes and Docker Compose. Each product records its realisation in the delivery platform mapping of its chapter 7 (REL-CD-06). Spring specifics: [spring-delivery.md](spring-delivery.md) and SPRING-LIB-13.
+What every deployable ships as and what it expects from the platform it runs on: how images are built, how the frontend bundle reaches the browser, and the runtime contract between the container and the platform. The platform itself (Kubernetes, a PaaS, Compose on a VM, the customer's orchestrator) is the product's or the customer's; the rules name capabilities, and the examples show Kubernetes and Docker Compose. Each product records its realisation in the delivery platform mapping of its chapter 7 (REL-CD-06). Spring specifics: [spring-delivery.md](spring-delivery.md) and SPRING-LIB-13; NestJS: [nestjs-delivery.md](nestjs-delivery.md).
 
 ## Rules
 
@@ -11,14 +11,14 @@ What every deployable ships as and what it expects from the platform it runs on:
   - starts from a minimal base image pinned by digest (no shell or package manager where the stack allows it);
   - contains no build tools, sources, test dependencies or secrets in any layer, and no secret is passed as a build argument (SEC-INC-01);
   - comes with an SBOM generated for the image (SEC-CI-03) and the labels of REL-RUN-07.
-- **REL-IMG-02: Cloud Native Buildpacks are the default build method** (Spring: SPRING-LIB-13). A Dockerfile-based build (multi-stage) or Jib is allowed **without an ADR** when the customer platform dictates it, for example no container daemon in CI, a mandated base image or a mandated build service. The product records the method and the reason in the delivery platform mapping of its chapter 7. Any other reason for leaving the default needs an ADR. Whatever the method, REL-IMG-01 holds.
+- **REL-IMG-02: Cloud Native Buildpacks are the default build method** (Spring: SPRING-LIB-13; NestJS uses a Dockerfile as a stack-level exception, NEST-REL-07). A Dockerfile-based build (multi-stage) or Jib is allowed **without an ADR** when the customer platform dictates it, for example no container daemon in CI, a mandated base image or a mandated build service. The product records the method and the reason in the delivery platform mapping of its chapter 7. Any other reason for leaving the default needs an ADR. Whatever the method, REL-IMG-01 holds.
 - **REL-IMG-03: Base and builder images stay current.** They are pinned by digest and updated by the update automation (TS-TOOL-15), which rebuilds the image; deployed images are re-scanned on a schedule (SEC-CI-06).
 
 ### Frontend delivery (default: the BFF serves the bundle)
 
-- **REL-FE-01: The BFF image embeds and serves the frontend bundle.** The SPA and its API share one origin (NG-SEC-07); the BFF is either the backend's additional filter chain or its own component (SPRING-SEC-09). Other topologies (a static file server container, a CDN or object storage, an ingress or gateway serving files) need an ADR, which states how REL-FE-02..05, CFG-11 and NG-SEC-06 are met there.
+- **REL-FE-01: The BFF image embeds and serves the frontend bundle.** The SPA and its API share one origin (NG-SEC-07); the BFF is either the backend's additional filter chain or its own component (SPRING-SEC-09, NEST-SEC-13). Other topologies (a static file server container, a CDN or object storage, an ingress or gateway serving files) need an ADR, which states how REL-FE-02..05, CFG-11 and NG-SEC-06 are met there.
   *Why:* one origin, one image and one digest per release; the CSP nonce, `/config.json` and the session cookie come from the same server without extra infrastructure.
-- **REL-FE-02: The bundle reaches the BFF image as a pipeline artifact, not through a cross-component build** (REPO-LAY-04). The frontend job builds the bundle once per commit (`npm run build`) and hands the output folder to the BFF's image build job, which passes it to the build as a parameter (Spring: SPRING-REL-08). The BFF's own `verify` does not need the frontend: its serving tests use a small fixture bundle. Locally, the Angular dev server proxies to the BFF (NG-CFG-06), so nobody builds an image to develop.
+- **REL-FE-02: The bundle reaches the BFF image as a pipeline artifact, not through a cross-component build** (REPO-LAY-04). The frontend job builds the bundle once per commit (`npm run build`) and hands the output folder to the BFF's image build job, which passes it to the build as a parameter (Spring: SPRING-REL-08; NestJS: NEST-REL-10). The BFF's own `verify` does not need the frontend: its serving tests use a small fixture bundle. Locally, the Angular dev server proxies to the BFF (NG-CFG-06), so nobody builds an image to develop.
 - **REL-FE-03: The BFF serves the bundle with fixed rules:**
 
   | Request | Response |
@@ -26,7 +26,7 @@ What every deployable ships as and what it expects from the platform it runs on:
   | `GET /` and deep links (a `GET` that accepts `text/html` and matches no API, login, actuator or file path) | `index.html` with the per-request CSP nonce (NG-SEC-06), `Cache-Control: no-store` |
   | Hashed files (`*-<hash>.js`, `.css`, fonts, media) | `Cache-Control: public, max-age=31536000, immutable` |
   | Unhashed public files (`favicon.ico`, `/.well-known/security.txt`) | short cache (`max-age` of minutes) |
-  | `GET /config.json` | generated per environment, not cached (CFG-11, SPRING-CFG-10) |
+  | `GET /config.json` | generated per environment, not cached (CFG-11, SPRING-CFG-10, NEST-CFG-11) |
   | A missing file, or an API path that does not exist | `404`, never `index.html` |
 
   *Why:* serving `index.html` for a missing chunk turns a clean load error into a JavaScript syntax error that the reload of REL-FE-04 cannot catch.
@@ -45,7 +45,7 @@ Kubernetes and Compose examples follow the rules. The product's chapter 7 record
 - **REL-RUN-03: Every container has resource bounds.** A memory limit is always set, and the memory request equals it (SHOULD); a CPU request is always set, and a CPU limit follows the platform's policy. Values come from load tests and are recorded in chapter 7, with the instance counts that the connection pool calculation (RES-CAP-02) uses.
 - **REL-RUN-04: The platform's start-up budget covers the worst-case start.** The budget (Kubernetes: `startupProbe` period × failure threshold; elsewhere the platform's start timeout) is at least the measured start time plus the start-up migration and its lock wait (REL-DB-03/04). Liveness checks do not run before start-up finished. The product records the budget and the measured start in chapter 7.
 - **REL-RUN-05: The JVM heap is derived from the container's memory limit**, as a percentage, never a fixed `-Xmx` chosen without the limit in view. Heap plus metaspace, thread stacks, direct and native memory stay below the limit. Buildpacks' memory calculator does this; with a Dockerfile or Jib set `-XX:MaxRAMPercentage` (75 as a starting point, tuned from measurements). An out-of-memory kill by the platform is visible in monitoring (OBS).
-- **REL-RUN-06: The platform's termination grace period is longer than the application's shutdown budget** plus any pre-stop delay plus a margin (OBS-04, Spring: SPRING-OBS-04).
+- **REL-RUN-06: The platform's termination grace period is longer than the application's shutdown budget** plus any pre-stop delay plus a margin (OBS-04, Spring: SPRING-OBS-04; NestJS: NEST-OBS-04).
 - **REL-RUN-07: Images carry OCI labels** `org.opencontainers.image.source` (repository URL), `org.opencontainers.image.revision` (commit SHA) and `org.opencontainers.image.title`. The release version is not a label, because it is attached after the build (REL-CD-01). A creation timestamp only if the build sets it reproducibly (TS-TOOL-16, JAVA-TOOL-23).
 
 ### Example: Kubernetes
@@ -67,7 +67,7 @@ spec:
         requests: { cpu: 500m, memory: 1Gi }
         limits: { memory: 1Gi }
       startupProbe:                           # REL-RUN-04: 36 × 5 s = 180 s ≥ start + migration + lock wait
-        httpGet: { path: /livez, port: http }   # serving port by default (OBS-19, Spring: SPRING-OBS-01)
+        httpGet: { path: /livez, port: http }   # serving port by default (OBS-19, Spring: SPRING-OBS-01; NestJS: NEST-OBS-01)
         periodSeconds: 5
         failureThreshold: 36
       volumeMounts: [{ name: tmp, mountPath: /tmp }]

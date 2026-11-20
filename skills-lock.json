@@ -35,17 +35,22 @@
     "baseline-i18n": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "dd0de6670ff51a3a336ae64567c81b9ebdcd13acfe8caccbafee273fd92020a4"
+      "computedHash": "384785898885b9f04786b3adc70458038f71ab25ba18f9ab89d97fd921eeb9af"
     },
     "baseline-ide-setup": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "91a51d23183be47d79c4e80063e7c818507d5a45a77ec482b3f59c930e325e19"
+      "computedHash": "25c0886419fbe76ad458aa85850e4dc925f330a121bcb1b64ad1dfc7ba446c55"
+    },
+    "baseline-nestjs": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "5da593a145d83115cc46310f28ab8a84a93ae8ddaa8214fa4c5e3052c55fc6c0"
     },
     "baseline-security": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "4bcc1b837c3910d73e931bcf31dd220286fd71d00a0fc1d1c62d72900e8f30ed"
+      "computedHash": "103794bfe1b8e038c3a3c6b40cd1c8f12f39f9934682d5f904394939f003acd2"
     },
     "baseline-spring": {
       "source": "./skills",
@@ -55,7 +60,7 @@
     "baseline-tdd": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "952490c79c3a2ea2b34535379d8f29d2da013a120e7713061abc93f3a840c3d6"
+      "computedHash": "089167b47eaea66881e567cd145686db638e948574bffe8b39c96ae074c45595"
     },
     "java-hibernate-jpa": {
       "source": "github/awesome-copilot",

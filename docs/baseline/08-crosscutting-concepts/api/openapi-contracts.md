@@ -1,6 +1,6 @@
 # OpenAPI Contracts
 
-Every REST API between our systems is described by an OpenAPI spec, and clients are generated from it. This doc covers the contract itself; what the payloads, errors and collection parameters look like is in [rest-conventions.md](rest-conventions.md) (API-REST-*). Generating clients is stack-specific: [08-crosscutting-concepts/api/typescript-openapi-clients.md](typescript-openapi-clients.md), and producing the spec in Spring: [08-crosscutting-concepts/api/spring-openapi.md](spring-openapi.md).
+Every REST API between our systems is described by an OpenAPI spec, and clients are generated from it. This doc covers the contract itself; what the payloads, errors and collection parameters look like is in [rest-conventions.md](rest-conventions.md) (API-REST-*). Generating clients is stack-specific: [08-crosscutting-concepts/api/typescript-openapi-clients.md](typescript-openapi-clients.md), and producing the spec in Spring: [08-crosscutting-concepts/api/spring-openapi.md](spring-openapi.md), in NestJS: [nestjs-openapi.md](nestjs-openapi.md).
 
 ## Workflow (default D8: code-first)
 

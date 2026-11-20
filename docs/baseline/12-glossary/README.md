@@ -8,14 +8,14 @@
 | arc42 | Template for architecture documentation in 12 chapters; used for this baseline and for every product's `docs/architecture/` |
 | ASVS | OWASP Application Security Verification Standard, version 5.0; our requirement catalogue, level L2 by default (D14) |
 | AsyncAPI | Specification format for event-driven interfaces (topics, payloads); our event contract format (MSG-CON-01) |
-| BFF | Backend-for-frontend: holds the OIDC tokens for a browser app and gives it a session cookie (SPRING-SEC-08) |
+| BFF | Backend-for-frontend: holds the OIDC tokens for a browser app and gives it a session cookie (SPRING-SEC-08, NEST-SEC-12) |
 | Bounded context | A part of the domain with its own model and language; contexts in one application meet only at incoming ports (ARCH-ORG-09) |
 | Build once, promote | One artifact per component and commit is deployed unchanged to every environment; only configuration differs (CFG-02, REL-CD-01) |
-| Caller | Framework-free record describing who triggered a use case (user id, roles), passed with the command; the use case authorizes with it (ARCH-UC-15, SPRING-SEC-02) |
+| Caller | Framework-free record describing who triggered a use case (user id, roles), passed with the command; the use case authorizes with it (ARCH-UC-15, SPRING-SEC-02, NEST-SEC-02) |
 | Chicago / London style | TDD styles: real collaborators (Chicago) vs. mocked collaborators (London) ([tdd.md](../08-crosscutting-concepts/testing/tdd.md)) |
 | Command / Query / Result | Input (`…Command` changes state, `…Query` reads) and output (`…Result`) of one use case, validated on construction; the incoming port itself is the `…UseCase` ([use-cases.md](../05-building-block-view/use-cases.md)) |
 | Component folder | Top-level folder of a product repository holding one deployable (`backend/`, `frontend/`) (REPO-LAY-03) |
-| Composition root | The one place that wires adapters, ports and services (Spring: the `@SpringBootApplication` class) |
+| Composition root | The one place that wires adapters, ports and services (Spring: the `@SpringBootApplication` class; NestJS: the context module, NEST-ARCH-01) |
 | Controller / processor (GDPR) | The controller decides purpose and means of processing personal data; a processor processes it on the controller's behalf under a data processing agreement (AVV). See [data-protection.md](../08-crosscutting-concepts/data-protection/data-protection.md) |
 | Conventional Commits | Commit message convention (`feat:`, `fix:`, `feat!:` …) used for squash-merge titles and generated changelogs (REL-BR-03) |
 | Core | Domain + ports + application: everything inside the adapters ([hexagonal-architecture.md](../04-solution-strategy/hexagonal-architecture.md)) |
@@ -27,7 +27,7 @@
 | DPO | Data protection officer (DSB); decides legal questions such as legal basis and retention periods |
 | Error category | Validation, business rule, not found, conflict or technical; decides how every adapter reports an error (ARCH-UC-13) |
 | Event / command (message) | An event reports a fact that happened (past tense, many consumers); a command asks one receiver to do something (MSG-EVT-01) |
-| Expand/contract | Migration technique: add the new form, migrate users, remove the old form in a later release (SPRING-DB-05, REPO-API-02) |
+| Expand/contract | Migration technique: add the new form, migrate users, remove the old form in a later release (SPRING-DB-05, NEST-DB-20, REPO-API-02) |
 | Feature flag | Runtime switch read through an outgoing port; release flags are temporary and have a removal date (REL-FF-01..04) |
 | Idempotency key | Client-chosen key that makes a retried request or redelivered message have its effect only once (RES-IDM-01..05) |
 | Liveness / readiness | Liveness: the process is alive and should not be restarted. Readiness: this instance can serve traffic now (OBS-01..03) |

@@ -2,7 +2,7 @@
 
 How we structure, build and test software, written as an **arc42 reference architecture**. Every product repository gets this folder through the sync script (replaced as a whole) and documents its own system in `docs/architecture/` (arc42, project-owned) and `docs/adr/` (decisions). The project's chapters link to these chapters instead of repeating them ([architecture-documentation.md](08-crosscutting-concepts/development/architecture-documentation.md)).
 
-Shared rules apply to **every project, regardless of language or framework**. Stack-specific files (`java`, `spring`, `typescript`, `angular` in their names) add to them and may tighten them, but never contradict them.
+Shared rules apply to **every project, regardless of language or framework**. Stack-specific files (`java`, `spring`, `node`, `nestjs`, `typescript`, `angular` in their names) add to them and may tighten them, but never contradict them. A project reads the shared docs and only the docs of its own stacks (declared in its `.baseline.json`).
 
 ## Chapters
 
@@ -11,10 +11,10 @@ Shared rules apply to **every project, regardless of language or framework**. St
 | 1 | [Introduction and goals](01-introduction-and-goals/README.md) | Purpose of the baseline, quality goals, stakeholders | — |
 | 2 | [Architecture constraints](02-architecture-constraints/README.md) | Technical and organisational constraints every project inherits | — |
 | 3 | [Context and scope](03-context-and-scope/README.md) | The baseline, consuming projects, agents, skill sources | — |
-| 4 | [Solution strategy](04-solution-strategy/README.md) | Hexagonal architecture, baseline defaults D1–D16, stack strategies, Spring libraries | `ARCH-DEP-*`, `SPRING-LIB-*` |
-| 5 | [Building block view](05-building-block-view/README.md) | Code organisation, use cases, adapters; per-stack package and folder structure | `ARCH-ORG/UC/ADP-*`, `JAVA-ARCH-*`, `SPRING-ARCH-*`, `TS-ARCH-*`, `NG-ARCH-*` |
+| 4 | [Solution strategy](04-solution-strategy/README.md) | Hexagonal architecture, baseline defaults D1–D16, stack strategies, Spring and NestJS libraries | `ARCH-DEP-*`, `SPRING-LIB-*`, `NEST-LIB-*` |
+| 5 | [Building block view](05-building-block-view/README.md) | Code organisation, use cases, adapters; per-stack package and folder structure | `ARCH-ORG/UC/ADP-*`, `JAVA-ARCH-*`, `SPRING-ARCH-*`, `NODE-ARCH-*`, `NEST-ARCH-*`, `TS-ARCH-*`, `NG-ARCH-*` |
 | 6 | [Runtime view](06-runtime-view/README.md) | Typical request, message and login flows through the rings | — |
-| 7 | [Deployment view](07-deployment-view/README.md) | Repository and component layout, CI, local development environment, delivery and release | `REPO-*`, `SPRING-DEV-*`, `REL-*`, `SPRING-REL-*` |
+| 7 | [Deployment view](07-deployment-view/README.md) | Repository and component layout, CI, local development environment, delivery and release | `REPO-*`, `SPRING-DEV-*`, `NEST-DEV-*`, `REL-*`, `SPRING-REL-*`, `NEST-REL-*` |
 | 8 | [Cross-cutting concepts](08-crosscutting-concepts/README.md) | API, security, configuration, observability, resilience, messaging, data protection, persistence, logging, mapping, testing, UI, development tooling, architecture enforcement | most rule prefixes |
 | 9 | [Architecture decisions](09-architecture-decisions/README.md) | ADR conventions; where the baseline records its own decisions | — |
 | 10 | [Quality requirements](10-quality-requirements/README.md) | Quality tree and scenarios, accessibility | `A11Y-*` |
@@ -29,7 +29,9 @@ Each stack page lists its files across the chapters, the skills to load and the 
 |---|---|
 | Java (any) | [stacks/java.md](stacks/java.md) |
 | Spring Boot | [stacks/spring.md](stacks/spring.md) |
-| TypeScript (any) | [stacks/typescript.md](stacks/typescript.md) |
+| Node.js (backend) | [stacks/node.md](stacks/node.md) |
+| NestJS | [stacks/nestjs.md](stacks/nestjs.md) |
+| TypeScript (frontend) | [stacks/typescript.md](stacks/typescript.md) |
 | Angular | [stacks/angular.md](stacks/angular.md) |
 
 ## Conventions for these docs

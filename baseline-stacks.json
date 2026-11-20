@@ -1,0 +1,76 @@
+{
+  "$comment": "Stacks a product can declare in its .baseline.json. The sync copies only the skills of the declared stacks (and the stacks they require) and keeps only the AGENTS.md lines tagged with one of them. See docs/baseline/08-crosscutting-concepts/development/agent-skills.md#declared-stacks. \"detect\" (used only when a product has no .baseline.json yet): \"<component-folder-glob>/<file>[#<text the file must contain>]\".",
+  "shared": [
+    "baseline-tdd",
+    "baseline-security",
+    "baseline-i18n",
+    "baseline-ide-setup"
+  ],
+  "stacks": {
+    "java": {
+      "requires": [],
+      "skills": [
+        "java-hibernate-jpa"
+      ],
+      "detect": []
+    },
+    "spring": {
+      "requires": [
+        "java"
+      ],
+      "skills": [
+        "baseline-spring",
+        "spring-boot-testing",
+        "spring-security",
+        "spring-observability"
+      ],
+      "detect": [
+        "backend*/pom.xml#spring-boot"
+      ]
+    },
+    "typescript": {
+      "requires": [],
+      "skills": [
+        "vitest",
+        "orval",
+        "accessibility",
+        "playwright-best-practices",
+        "playwright-cli"
+      ],
+      "detect": []
+    },
+    "angular": {
+      "requires": [
+        "typescript"
+      ],
+      "skills": [
+        "baseline-angular",
+        "angular-developer",
+        "angular-new-app",
+        "angular-material-design",
+        "ngrx-signals"
+      ],
+      "detect": [
+        "frontend*/angular.json"
+      ]
+    },
+    "node": {
+      "requires": [],
+      "skills": [
+        "vitest"
+      ],
+      "detect": []
+    },
+    "nestjs": {
+      "requires": [
+        "node"
+      ],
+      "skills": [
+        "baseline-nestjs"
+      ],
+      "detect": [
+        "backend*/package.json#@nestjs/core"
+      ]
+    }
+  }
+}

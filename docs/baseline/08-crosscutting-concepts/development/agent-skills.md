@@ -48,6 +48,8 @@ Every script is a Node.js file (`.mjs`, built-in modules only) with two launcher
 - **TOOL-SKL-07: Skills are updated deliberately** in the baseline repository, at least before each consuming project syncs the baseline: run `skills:check`, `skills:update` and `skills:upstream-diff`, review, and merge in one pull request.
 - **TOOL-SKL-08: Scripts and hooks shipped by the baseline or by own skills run on Linux, macOS and Windows.** Logic lives in a Node.js `.mjs` file that uses built-in modules only; it is started through a `.sh` launcher (bash, Git Bash) and a `.cmd` launcher (CMD, PowerShell), and Claude Code hooks call `node` directly. No `jq`, `rsync`, `python3` or GNU-only flags.
   *Why:* our teams develop on Linux and Windows, and Node.js is the only runtime every project already requires.
+- **TOOL-SKL-09: A product loads only the skills and stack docs of its declared stacks** ([declared stacks](#declared-stacks)). Every own entry skill routes only to its own stack chain (for example `baseline-nestjs` never points to Spring or frontend docs), and new stack docs are written so that a project of that stack never needs another stack's docs.
+  *Why:* every installed skill's description sits in each session's context, and every doc an agent reads costs tokens; another stack's rules are noise at best and wrong advice at worst.
 
 ## Distribution to consuming projects
 
@@ -73,15 +75,26 @@ Products get the baseline by running the sync from the baseline repository again
 | `SECURITY.md` | project | created once if missing (SEC-INC-02) |
 | Pull request template, from `templates/pull-request/` | project | created once if missing, at the host's path: GitHub `.github/pull_request_template.md`, GitLab `.gitlab/merge_request_templates/Default.md`, Azure DevOps `.azuredevops/pull_request_template.md`, Bitbucket `docs/pull-request-template.md` (Bitbucket reads no template file; paste it into the repository's default description) (SEC-REV-01, API-N1-02) |
 | `frontend/public/.well-known/security.txt` | project | created once if missing and a `frontend/` folder exists (SEC-INC-02); other web apps copy `templates/well-known/security.txt` into their static folder |
-| `AGENTS.md` | shared | the block between `<!-- baseline:start` and `<!-- baseline:end -->` is replaced; the project notes below it stay. Created if missing; without markers the block is prepended |
+| `AGENTS.md` | shared | the block between `<!-- baseline:start` and `<!-- baseline:end -->` is replaced, keeping only the lines for the declared stacks; the project notes below it stay. Created if missing; without markers the block is prepended |
 | `CLAUDE.md` | project | created with `@AGENTS.md` if missing; if it exists without that line, a manual step is printed |
 | `.gitattributes` | shared | the block between `# baseline:start` and `# baseline:end` is replaced, or appended if missing |
-| `.agents/skills/<name>` for baseline skills | baseline | replaced; skills the baseline dropped are removed (tracked in `.agents/skills/.baseline-skills`); the project's own skills stay |
+| `.baseline.json` | project | created once if missing, from the detected stacks ([declared stacks](#declared-stacks)); never changed afterwards |
+| `.agents/skills/<name>` for baseline skills | baseline | the shared skills and those of the declared stacks are replaced; skills the baseline dropped, or that belong only to stacks the project does not declare, are removed (tracked in `.agents/skills/.baseline-skills`); the project's own skills stay |
 | `.claude/skills/<name>` | baseline | symlinks recreated (on Windows without symlink rights: junctions, with a manual step) |
 | `skills-lock.json` | shared | baseline entries merged in (baseline wins for its own entries); entries of dropped baseline skills removed; the project's entries stay |
 | `.claude/hooks/baseline-*` and their entries in `.claude/settings.json` | baseline | replaced; the project's own hooks and settings stay |
 
-Everything else in the project (component folders, other docs, the project's skills) is never touched. Projects don't update baseline skills on their own: they re-sync. That keeps all projects on the reviewed versions.
+Everything else in the project (component folders, other docs, the project's skills) is never touched. `docs/baseline/` is always copied whole, so links between docs keep working; agents read only the stacks the project declares. Projects don't update baseline skills on their own: they re-sync. That keeps all projects on the reviewed versions.
+
+### Declared stacks
+
+A product lists its stacks in `.baseline.json` at the repository root (project-owned, committed):
+
+```json
+{ "stacks": ["nestjs", "angular"] }
+```
+
+Known stacks and what they bring are defined in the baseline's `baseline-stacks.json`: `java`, `spring` (requires `java`), `node`, `nestjs` (requires `node`), `typescript` (frontends), `angular` (requires `typescript`). Shared skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, `baseline-ide-setup`) are always copied. The sync copies only the skills of the declared stacks and the stacks they require, and keeps only the `AGENTS.md` lines tagged for them (`<!-- stack:<name> -->` in the baseline's `AGENTS.md`; the tag is removed in the product). Without `.baseline.json` the sync detects the stacks from the component folders and writes the file; if it detects nothing, it copies everything and prints a manual step. An unknown stack name stops the sync. Adding a stack later: edit `.baseline.json` and re-sync.
 
 ## Skill catalogue
 
@@ -98,6 +111,7 @@ Everything else in the project (component folders, other docs, the project's ski
 | `spring-boot-testing`, `spring-security`, `spring-observability`, `java-hibernate-jpa` | github/awesome-copilot | installed | Boot 4-aware know-how. Overrides in [stacks/spring.md](../../stacks/spring.md#skill-overrides) |
 | `baseline-angular` | own | own | Entry point for Angular work |
 | `baseline-spring` | own | own | Entry point for Java/Spring work, with project templates |
+| `baseline-nestjs` | own | own | Entry point for Node/NestJS work, with project templates validated in a template build |
 | `baseline-security` | own | own | Security rules by task, review checklist, ASVS/Top 10 mapping |
 | `baseline-i18n` | own | own | Multilingual products: keys, catalogs, formatting, Weblate workflow, per-locale tests |
 | `baseline-tdd` | own | own | TDD workflow per [08-crosscutting-concepts/testing/tdd.md](../testing/tdd.md) |
@@ -108,7 +122,7 @@ Everything else in the project (component folders, other docs, the project's ski
 | `wcag-audit-patterns` | wshobson/agents | rejected | Redundant with `accessibility`, weaker WCAG 2.2 coverage |
 | `typescript-advanced-types` | wshobson/agents | rejected | Generic knowledge; contains questionable advice |
 | `springboot-patterns`, `springboot-tdd`, `springboot-verification`, `springboot-security` | affaan-m/ecc | rejected | Entity-centric layering, `@MockBean`, 80% coverage target, custom error bodies; superseded by the awesome-copilot skills above |
-| `angular-security` | oguzhan18/angular-ecosystem-skills | rejected | Non-existent Angular APIs, `bypassSecurityTrustUrl` on arbitrary input, bearer-token interceptor against SPRING-SEC-08 |
+| `angular-security` | oguzhan18/angular-ecosystem-skills | rejected | Non-existent Angular APIs, `bypassSecurityTrustUrl` on arbitrary input, bearer-token interceptor against SPRING-SEC-08/NEST-SEC-12 |
 | `springboot-security` jabrena/plinth variants, `spring-security-configuration` (amplicode) | various | rejected | Overlap with `spring-security`, Maven command conflicts, third-party MCP dependency |
 | `security-review` | getsentry/skills | rejected | Broad tool grant, no stack fit |
 | `owasp-security`, `security-and-hardening` | agamm, addyosmani | not installed | Generic; `baseline-security` routes to our rules instead (one generic security skill would overlap in triggers) |
@@ -116,6 +130,7 @@ Everything else in the project (component folders, other docs, the project's ski
 | `create-spring-boot-java-project` | github/awesome-copilot | rejected | Its own project layout; `baseline-spring` templates replace it |
 | Hexagonal / clean-architecture skills (affaan-m/ecc, jabrena/plinth, giuseppe-trisciuoglio/developer-kit, …) | various | rejected | The architecture is defined in our docs; a second layout in a skill is the conflict TOOL-SKL-05 describes |
 | `spring-boot-4-migration` | github/awesome-copilot | not installed | Only for an explicit Boot 3 → 4 migration; install temporarily then |
+| NestJS skills (community collections) | various | not evaluated | No skill adopted yet; any candidate is reviewed against [stacks/nestjs.md](../../stacks/nestjs.md#skill-overrides) first (TOOL-SKL-03/05) |
 | `material-3` | hamen/material-3-skill | replaced | Compose-first, `@material/web`; replaced by `angular-material-design` |
 | `ngrx-signals` (original) | danielsogl/skills | replaced | Store calls HTTP directly; replaced by our adaptation |
 
@@ -126,6 +141,7 @@ Everything else in the project (component folders, other docs, the project's ski
 - [ ] Never edited a file under `.agents/skills/` that belongs to a third-party skill?
 - [ ] Added or changed a script or hook? Logic in `.mjs`, `.sh` and `.cmd` launchers present, tested on Linux and Windows (TOOL-SKL-08)?
 - [ ] Changed what the sync creates or replaces? The distribution table above updated; nothing else lists it.
+- [ ] New skill or stack? Its entry in `baseline-stacks.json` and its `AGENTS.md` lines tagged (TOOL-SKL-09)?
 
 ## Sources
 

@@ -18,17 +18,19 @@ What the sync creates, replaces and never touches: [agent-skills.md](../08-cross
     data-protection/                    ← processing record, deletion concept
   SECURITY.md                           ← how to report a vulnerability (SEC-INC-02)
   .editorconfig, .gitignore
+  .baseline.json                        ← the stacks this product uses; the sync and agents load only these (TOOL-SKL, agent-skills.md)
   .vscode/, .idea/                      ← shared IDE settings for all components (TOOL-IDE-07)
   CODEOWNERS (or the host's location)   ← owners of pipeline, ADRs, security docs, migrations, specs (REL-BR-05)
   <pipeline definition>                 ← one pipeline for the repo, at the CI system's path
   <pull request template>               ← PR checklist (SEC-REV-01, API-N1-02), at the host's path
   backend/                              ← Spring Boot: mvnw, pom.xml, compose.yaml, configuration-keys.yaml, src/
+                                          (NestJS: package.json, package-lock.json, .nvmrc, compose.yaml, configuration-keys.yaml, src/)
     openapi/orders-v1.yaml              ← committed spec (API-CON-03)
   frontend/                             ← Angular: package.json, angular.json, orval.config.ts, src/; bundle ships in the BFF image (REL-FE-01)
     public/.well-known/security.txt     ← served with the SPA (SEC-INC-02)
 ```
 
-Stack docs show paths relative to the component folder: `src/features/…` in the TypeScript docs means `frontend/src/features/…` here.
+Stack docs show paths relative to the component folder: `src/features/…` in the TypeScript docs means `frontend/src/features/…` here, and in the Node docs `backend/src/features/…`.
 
 ## Rules
 
@@ -55,23 +57,23 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
 
 - **REPO-TOOL-01:** The IDE opens the repository root; see [TOOL-IDE-07](../08-crosscutting-concepts/development/ide-setup.md).
 - **REPO-TOOL-02: Git hooks, if used, are installed from the component that owns the tooling and work from the git root.** Hooks run with the repo root as working directory. With husky in the frontend: `"prepare": "cd .. && husky frontend/.husky"` in `frontend/package.json`, and every hook starts with `cd frontend`. Hooks only speed up feedback; CI runs the same checks (TS-TOOL-09). With `ignore-scripts=true` (TS-TOOL-11) npm does not run `prepare` on install, so developers run `npm run prepare` once.
-- **REPO-TOOL-03: Agents run stack commands from the component folder** (`cd backend && ./mvnw …`, `cd frontend && npm run …`), and stack rules apply only to their component.
+- **REPO-TOOL-03: Agents run stack commands from the component folder** (`cd backend && ./mvnw …` or `npm run …`, `cd frontend && npm run …`), and stack rules apply only to their component.
 
 ### CI
 
-- **REPO-CI-01: The pipeline runs the jobs in this table.** Component jobs run in the component folder (REPO-TOOL-03) and only when the component is affected (REPO-CI-02). `verify` is the component's local gate: build, static checks and the tests that need no deployed system (TS-TOOL-10, JAVA-TOOL-20). E2E tiers and security scans are separate jobs. Caches are keyed on the component's lockfile or build file (`frontend/package-lock.json`, `backend/pom.xml`).
+- **REPO-CI-01: The pipeline runs the jobs in this table.** Component jobs run in the component folder (REPO-TOOL-03) and only when the component is affected (REPO-CI-02). `verify` is the component's local gate: build, static checks and the tests that need no deployed system (TS-TOOL-10, JAVA-TOOL-20, NODE-TOOL-07). E2E tiers and security scans are separate jobs. Caches are keyed on the component's lockfile or build file (`frontend/package-lock.json`, `backend/pom.xml` or `backend/package-lock.json`).
 
   | Job | Command or content | Trigger | Required for merge |
   |---|---|---|---|
   | Change detection | platform mechanism (REPO-CI-03) | every pull request and push to `main` | feeds the others |
   | Commit message | pull request title check (REL-BR-03) | every pull request | yes |
-  | Backend verify | `./mvnw verify` in `backend/` | backend affected | yes, when it runs |
+  | Backend verify | `./mvnw verify` (Spring) or `npm run verify` (NestJS) in `backend/` | backend affected | yes, when it runs |
   | Frontend verify | `npm run verify` in `frontend/` | frontend affected | yes, when it runs |
   | Frontend E2E (stubbed) | `npm run e2e` in `frontend/` (TS-TEST-10) | frontend with UI affected | yes, when it runs |
   | Security | dependency scan, secret scan, SAST (SEC-CI-01) | every pull request and push to `main`, no path filter | yes |
   | Migration lint | REL-DB-06 | migrations changed | yes, when it runs |
   | Image build | image with SBOM (REL-IMG-01/02), frontend bundle embedded in the BFF image (REL-FE-02) | push to `main` and release branches; pull requests that need `e2e:smoke` | via the jobs that use it |
-  | E2E smoke | `npm run e2e:smoke` against the image of this commit (REPO-CI-04, SPRING-DEV-10) | push to `main`, before a release, pull requests that touch the spec | yes, when it runs |
+  | E2E smoke | `npm run e2e:smoke` against the image of this commit (REPO-CI-04, SPRING-DEV-10, NEST-DEV-12) | push to `main`, before a release, pull requests that touch the spec | yes, when it runs |
   | Image scan | gate table in [secure-pipeline.md](../08-crosscutting-concepts/security/secure-pipeline.md) | after the image build (report); Release stage (gate) | release gate (REL-CD-02) |
   | Merge status | aggregates every job above (REPO-CI-03) | always | **the only required check** |
   | Deploy | REL-CD-02 stages | push to `main`, release tag, approval | — |
@@ -89,7 +91,7 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
   | `docs/**` only | nothing (or a docs lint job) |
 
 - **REPO-CI-03: The merge gate is one always-reported status.** A required check that a path filter skips either never reports and blocks the merge, or reports as skipped and lets a broken change through, depending on the platform. So: one pipeline with a change-detection step, component jobs that depend on it, and one final job that always runs, fails if any job it aggregates failed, and is the only required status. How each platform does this: [platform examples](#platform-examples).
-- **REPO-CI-04: The `e2e:smoke` tier runs against a backend built from the same commit** ([08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md), NG-TEST-08): the image, with the frontend bundle embedded, started with Docker Compose or Testcontainers in the pipeline (SPRING-DEV-10). It runs on the main branch and before releases, and on pull requests that touch the spec.
+- **REPO-CI-04: The `e2e:smoke` tier runs against a backend built from the same commit** ([08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md), NG-TEST-08): the image, with the frontend bundle embedded, started with Docker Compose or Testcontainers in the pipeline (SPRING-DEV-10, NEST-DEV-12). It runs on the main branch and before releases, and on pull requests that touch the spec.
 - **REPO-CI-05: Each release unit is versioned separately**, with tags prefixed by its component folder (`backend/v1.4.0`, `backend-admin/v2.1.0`). A frontend embedded in the BFF image has no tag of its own; it is released with the BFF (REL-FE-05). Components that always deploy together share one version tag.
 - **REPO-CI-06:** Security checks run as one job in the single pipeline; see [SEC-CI-01](../08-crosscutting-concepts/security/secure-pipeline.md).
 

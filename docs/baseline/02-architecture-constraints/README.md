@@ -7,9 +7,9 @@ Constraints every product inherits from the baseline. A project's own chapter 2 
 | Constraint | Details |
 |---|---|
 | Architecture style | Hexagonal (ports and adapters) in backends and frontends; dependencies point inward ([hexagonal-architecture.md](../04-solution-strategy/hexagonal-architecture.md)) |
-| Backend stack | Java 25, Maven (wrapper), Spring Boot 4.1 ([04-solution-strategy/java.md](../04-solution-strategy/java.md), [04-solution-strategy/spring.md](../04-solution-strategy/spring.md)) |
+| Backend stack | Java 25, Maven (wrapper), Spring Boot 4.1 ([04-solution-strategy/java.md](../04-solution-strategy/java.md), [04-solution-strategy/spring.md](../04-solution-strategy/spring.md)); alternative: Node.js 26 LTS, NestJS 12 ([04-solution-strategy/nestjs.md](../04-solution-strategy/nestjs.md)) |
 | Frontend stack | TypeScript, Angular (current major) with Angular Material ([04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md), [04-solution-strategy/angular.md](../04-solution-strategy/angular.md)) |
-| Data and messaging | PostgreSQL and Kafka by default ([persistence](../08-crosscutting-concepts/persistence/spring.md), [spring-libraries.md](../04-solution-strategy/spring-libraries.md)). A database or broker the customer mandates instead is a product ADR; it changes only the outgoing adapters and their tests, not the core (ARCH-DEP-01) |
+| Data and messaging | PostgreSQL and Kafka by default ([persistence](../08-crosscutting-concepts/persistence/spring.md), [spring-libraries.md](../04-solution-strategy/spring-libraries.md); NestJS: [persistence](../08-crosscutting-concepts/persistence/nestjs.md), [nestjs-libraries.md](../04-solution-strategy/nestjs-libraries.md)). A database or broker the customer mandates instead is a product ADR; it changes only the outgoing adapters and their tests, not the core (ARCH-DEP-01) |
 | API contracts | REST with OpenAPI, code-first, clients generated (D8, [openapi-contracts.md](../08-crosscutting-concepts/api/openapi-contracts.md)) |
 | Accessibility | WCAG 2.2 AA mandatory (D10) |
 | Developer platforms | Linux, macOS and Windows; every script runs on all three (TOOL-SKL-08); IDEs: VS Code and IntelliJ IDEA Ultimate (TOOL-IDE) |

@@ -5,22 +5,22 @@ description: Test-driven development the way the quality baseline defines it - r
 
 # TDD in the quality baseline
 
-Rules: `docs/baseline/08-crosscutting-concepts/testing/tdd.md` (`TEST-TDD-*`) and `docs/baseline/08-crosscutting-concepts/testing/testing-by-architecture-element.md` (`TEST-ARCH-*`), paths from the project root. Stack details: `docs/baseline/08-crosscutting-concepts/testing/typescript.md`, `docs/baseline/08-crosscutting-concepts/testing/typescript-e2e.md`, `docs/baseline/08-crosscutting-concepts/testing/angular.md`, `docs/baseline/08-crosscutting-concepts/testing/spring.md`. The docs win over this skill.
+Rules: `docs/baseline/08-crosscutting-concepts/testing/tdd.md` (`TEST-TDD-*`) and `docs/baseline/08-crosscutting-concepts/testing/testing-by-architecture-element.md` (`TEST-ARCH-*`), paths from the project root. Stack details: `docs/baseline/08-crosscutting-concepts/testing/typescript.md`, `docs/baseline/08-crosscutting-concepts/testing/typescript-e2e.md`, `docs/baseline/08-crosscutting-concepts/testing/angular.md`, `docs/baseline/08-crosscutting-concepts/testing/spring.md`, `docs/baseline/08-crosscutting-concepts/testing/nestjs.md`. Read only the files of the project's stacks. The docs win over this skill.
 
 ## Before the first test
 
 1. Identify the architecture element you are about to change (domain, use case, incoming adapter, outgoing adapter, main path).
 2. Look up test type, style and doubles in the element table of `testing-by-architecture-element.md` (section "Test type, style and doubles per element", TEST-TDD-15) and say which one you use. In short: Chicago for domain, pure code and outgoing adapters (against the real technology); London for use cases and incoming adapters; outside-in for main paths. The setup per stack:
 
-| Element | TypeScript / Angular | Java / Spring |
-|---|---|---|
-| Domain, pure functions | Vitest, `environment: 'node'` | JUnit + AssertJ, no Spring context |
-| Use case | Vitest + `mock<Port>()` | JUnit + Mockito on the port |
-| Controller, listener, component, page, Signal Store | TestBed + Testing Library, use-case contract mocked | `@WebMvcTest` + `@MockitoBean` for the incoming port |
-| Outgoing adapter (HTTP, DB, messaging) | MSW with Orval handlers | Testcontainers, WireMock / `MockRestServiceServer` |
-| Main path, frontend | Frontend system test: Playwright, backend stubbed from the contract (`npm run e2e`) | n/a |
-| Main path, API only | n/a | System test: `@SpringBootTest` + `RestTestClient`, third parties stubbed |
-| Critical path across both | Full-stack system test: Playwright smoke (`npm run e2e:smoke`) against the real backend | (same test) |
+| Element | TypeScript / Angular | Java / Spring | NestJS |
+|---|---|---|---|
+| Domain, pure functions | Vitest, `environment: 'node'` | JUnit + AssertJ, no Spring context | Vitest, no Nest testing module |
+| Use case | Vitest + `mock<Port>()` | JUnit + Mockito on the port | Vitest + `mock<Port>()`, service built with `new` |
+| Controller, listener, component, page, Signal Store | TestBed + Testing Library, use-case contract mocked | `@WebMvcTest` + `@MockitoBean` for the incoming port | `Test.createTestingModule` + Fastify `app.inject()`, use-case token mocked, production pipe and filter |
+| Outgoing adapter (HTTP, DB, messaging) | MSW with Orval handlers | Testcontainers, WireMock / `MockRestServiceServer` | Testcontainers (`*.it.test.ts`); `node:http` stub on port 0 for HTTP |
+| Main path, frontend | Frontend system test: Playwright, backend stubbed from the contract (`npm run e2e`) | n/a | n/a |
+| Main path, API only | n/a | System test: `@SpringBootTest` + `RestTestClient`, third parties stubbed | System test: `createApp()` + `app.inject()`, Testcontainers, third parties stubbed |
+| Critical path across both | Full-stack system test: Playwright smoke (`npm run e2e:smoke`) against the real backend | (same test) | (same test) |
 
 3. For a feature on a main path, start with a failing acceptance test (double loop, TEST-TDD-06): the frontend system test for a UI path, the backend system test for an API-only path. Not the full-stack smoke test.
 4. Write a short test list of behaviors. Don't write the tests yet (TEST-TDD-05).
@@ -57,3 +57,4 @@ Show each step to the user (TEST-TDD-14):
 |---|---|
 | TypeScript / Angular | `npm test -- <file>` (watch mode while cycling), `npm run e2e -- <spec>` for acceptance tests |
 | Java / Spring | `cd backend && ./mvnw test -Dtest=<Class>` (unit and slice tests); `./mvnw verify` for integration tests (`*IT`) |
+| NestJS | `cd backend && npm test -- <file>` (unit and adapter tests, no Docker); `npm run test:it -- <file>` for container-backed `*.it.test.ts` |

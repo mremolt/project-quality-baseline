@@ -40,26 +40,27 @@ What follows from this:
 - **Domain events** are handed to an outgoing port and published through the transactional outbox; use cases never call each other.
 - **Models are mapped at the boundaries.** The database entity is never the domain model; API types never reach the core.
 - **The frontend follows the same rings.** Components and the Signal Store are the UI adapter and hold view state only; use cases hold the logic; generated HTTP clients are outgoing adapters that map problem codes to domain errors.
-- **Boundaries are enforced by tests from day one**, not by convention. ArchUnit finds adapters by package, checks cycles, the application allow-list and that every class has a valid home. dependency-cruiser also sees type-only imports and covers the shared `platform` folder.
+- **Boundaries are enforced by tests from day one**, not by convention. ArchUnit finds adapters by package, checks cycles, the application allow-list and that every class has a valid home. dependency-cruiser does the same for TypeScript frontends and Node backends, also sees type-only imports and covers the shared `platform` folder.
+- **A NestJS backend keeps the same rings as Spring.** Each bounded context's Nest module is its composition root; use cases are plain classes without decorators, created by factories and injected by token; the transaction boundary is an outgoing port the use case calls.
 - **Shortcuts are allowed, but never silently.** Each one is proposed and recorded as an ADR; following a documented default needs none.
 
 ## Technology
 
 | Area | Choice |
 |---|---|
-| Backend | Java 25, Maven wrapper, Spring Boot 4.1 (Spring MVC on virtual threads) |
-| Data | PostgreSQL by default, Flyway forward-only migrations, Spring Data JPA for aggregates and `JdbcClient` for reads and bulk work |
-| Messaging | Kafka by default (rules phrased as broker capabilities), JSON payloads with a typed envelope, transactional outbox with a relay, AsyncAPI contract |
+| Backend | Java 25, Maven wrapper, Spring Boot 4.1 (Spring MVC on virtual threads) by default; NestJS 12 on Fastify (Node.js 26 LTS, TypeScript 6, ES modules) as the documented alternative, chosen per product |
+| Data | PostgreSQL by default with forward-only migrations. Spring: Flyway, Spring Data JPA for aggregates and `JdbcClient` for reads and bulk work. NestJS: Kysely (typed SQL, no ORM) and the Kysely migrator |
+| Messaging | Kafka by default (rules phrased as broker capabilities), JSON payloads with a typed envelope, transactional outbox with a relay, AsyncAPI contract. NestJS uses `@platformatic/kafka` (pure JavaScript) in own adapters |
 | Frontend | TypeScript (strict), Angular current major (standalone, signals, zoneless), Angular Material (Material Design 3), NgRx Signal Store |
-| API | REST with OpenAPI, code-first; the spec is committed; clients are generated (Orval), never hand-written; shared wire-format conventions (decimals as strings, dates, enums, paging, sorting, filtering, ETags, deprecation headers); errors as RFC 9457 problem details with a stable `code` |
-| Authentication | External identity provider (OIDC); backend validates JWTs as a resource server; browsers log in through a backend-for-frontend with a session cookie, fixed session lifetimes and logout at the identity provider |
-| Observability | Health probes on the serving port, Micrometer and OpenTelemetry (metrics and traces over OTLP), structured JSON logs on stdout, frontend error reporting |
-| Backend tests | JUnit, AssertJ, Mockito, Testcontainers, ArchUnit |
+| API | REST with OpenAPI, code-first (springdoc, or `@nestjs/swagger` from zod schemas); the spec is committed; clients are generated (Orval), never hand-written; shared wire-format conventions (decimals as strings, dates, enums, paging, sorting, filtering, ETags, deprecation headers); errors as RFC 9457 problem details with a stable `code` |
+| Authentication | External identity provider (OIDC); backend validates JWTs as a resource server (Spring Security, or `jose` in a NestJS guard); browsers log in through a backend-for-frontend with a session cookie, fixed session lifetimes and logout at the identity provider. The BFF is a Spring or a NestJS service |
+| Observability | Health probes on the serving port, OpenTelemetry metrics and traces over OTLP (Micrometer in Spring, the OpenTelemetry Node SDK in NestJS), structured JSON logs on stdout (Logback or pino), frontend error reporting |
+| Backend tests | Spring: JUnit, AssertJ, Mockito, Testcontainers, ArchUnit. NestJS: Vitest (with SWC), vitest-mock-extended, Testcontainers, dependency-cruiser |
 | Frontend tests | Vitest, Testing Library, Playwright with axe |
-| Code quality | Java: Spotless, Error Prone with NullAway, SpotBugs with FindSecBugs. TypeScript: ESLint (type-checked, SonarJS), Prettier, dependency-cruiser |
+| Code quality | Java: Spotless, Error Prone with NullAway, SpotBugs with FindSecBugs. TypeScript (frontend and Node): ESLint (type-checked, SonarJS; Node adds security and ReDoS rules), Prettier, dependency-cruiser |
 | Internationalisation (optional per product) | Transloco in the frontend, message bundles in the backend, Weblate for translators |
 | Local development | Docker Compose for the services a backend needs, images pinned |
-| Container images | OCI image, non-root, minimal pinned base, SBOM. Buildpacks by default; a Dockerfile or Jib when the customer platform dictates it. The BFF image also carries the frontend bundle |
+| Container images | OCI image, non-root, minimal pinned base, SBOM. Buildpacks by default; a Dockerfile or Jib when the customer platform dictates it. NestJS services use a multi-stage Dockerfile on distroless, because the Paketo Node buildpack cannot run Node 26 yet. The BFF image also carries the frontend bundle |
 
 CI/CD, registry, hosting, the orchestrator and the scanners are **not** fixed by the baseline. They depend on the customer's infrastructure. The baseline states what the pipeline and the application must do as capabilities, names replaceable reference tools, and each product records its concrete tools in a delivery platform mapping in its chapter 7.
 
@@ -80,13 +81,13 @@ CI/CD, registry, hosting, the orchestrator and the scanners are **not** fixed by
 | Deployments | Rolling, with at least two backend instances. Every version works alongside the previous one (API, events, database schema, frontend chunks), so rollouts and rollbacks are safe. Migrations run at start-up by default, or as a pre-deploy job with the same image. The schema is never rolled back; faulty releases are fixed forward by default, and rollback and restore are rehearsed. A container runtime contract covers privileges, read-only filesystem, resources, start-up and termination. |
 | Resilience | Every outbound call has explicit timeouts, fitted into one timeout ladder per product (gateway > request > transaction > statement). Only idempotent operations are retried, with a total time limit. Concurrency limits reject instead of queueing. No remote call inside a database transaction. Every message consumer is idempotent. |
 | Configuration | Typed and validated at start-up; every component keeps a machine-readable list of its keys. Secrets come from a secret manager, never from git, and are held in a self-masking type. The frontend loads its environment settings at runtime, so one build serves all environments. |
-| Builds | Reproducible on both stacks (fixed timestamps, `npm ci`, pinned toolchains and images), with an SBOM for backend and frontend. Dependency updates come from update automation covering all ecosystems. |
+| Builds | Reproducible on every stack (fixed timestamps, `npm ci`, pinned toolchains and images), with an SBOM for backend and frontend. Dependency updates come from update automation covering all ecosystems. |
 
 ## How the rules are kept
 
 - **In the build**: architecture tests, compiler checks, linters, accessibility tests, contract checks and security scans fail the build. None of them may be weakened to get a build green (SEC-REV-02). A component's `verify` command is its local gate; one pipeline jobs table says what CI runs.
 - **In review**: the pull request template carries the security, N+1 and delivery checklists; reviewers cite rule IDs.
-- **By agents**: entry skills (`baseline-spring`, `baseline-angular`, `baseline-security`, `baseline-i18n`, `baseline-tdd`) route agents to the right rules before they write code. A kickoff prompt (`prompts/project-kickoff.md`, not synced) starts an unattended implementation from a product's planning documents with the baseline as its technical specification, and has the agent log where the baseline fell short.
+- **By agents**: entry skills (`baseline-spring`, `baseline-nestjs`, `baseline-angular`, `baseline-security`, `baseline-i18n`, `baseline-tdd`) route agents to the right rules before they write code. Each product declares its stacks in `.baseline.json`; the sync installs only those stacks' skills and agent instructions, and each stack's docs are self-contained, so agents never load another stack's rules. A kickoff prompt (`prompts/project-kickoff.md`, not synced) starts an unattended implementation from a product's planning documents with the baseline as its technical specification, and has the agent log where the baseline fell short.
 - **By decision record**: any deviation from a MUST is an ADR in the product repository.
 
 ## What the baseline does not cover

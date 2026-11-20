@@ -1,6 +1,6 @@
 # TypeScript Tooling
 
-Compiler, linter and formatter settings for every TypeScript project. Framework additions: [08-crosscutting-concepts/development/angular-tooling.md](angular-tooling.md). Editor integration (format and fix on save): [08-crosscutting-concepts/development/ide-setup.md](ide-setup.md).
+Compiler, linter and formatter settings for every TypeScript project. Framework additions: [08-crosscutting-concepts/development/angular-tooling.md](angular-tooling.md). Node.js backends replace TS-TOOL-01's `target`/`lib`, TS-TOOL-02 and the frontend scripts of TS-TOOL-10 with [node-tooling.md](node-tooling.md). Editor integration (format and fix on save): [08-crosscutting-concepts/development/ide-setup.md](ide-setup.md).
 
 ## Compiler (default TS-D3)
 
@@ -151,7 +151,7 @@ export default defineConfig(
 - **TS-TOOL-13: Dependencies are added deliberately** (age, maintainers, install scripts, usage checked); apps pin exact versions in `package.json`.
 - **TS-TOOL-14: The toolchain guarantees an npm that knows the `.npmrc` keys.** `min-release-age` needs npm 11.10 and `allow-git` npm 11.9; an older npm ignores unknown keys with only a warning, so the protection silently disappears. `package.json` sets `engines` for Node and npm (`"npm": ">=11.10.0"`), `.npmrc` sets `engine-strict=true`, and CI asserts before installing that `npm config get min-release-age` prints the configured value. The Node version comes from a version file (`.nvmrc` or `.node-version`); if its bundled npm is older, the setup docs and CI install npm 11.10 or newer explicitly. A failing engine check of the root package under `engine-strict` is listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use); the CI assertion is the guarantee.
 - **TS-TOOL-15: Dependency updates are automated as a capability of the repository.** One update tool opens update pull requests for npm, Maven (JAVA-TOOL-16), container base images, Compose images and CI actions or plugins, grouped by ecosystem, and waits at least the `min-release-age` cooldown before proposing a release (reference tools, replaceable: Renovate, Dependabot). Update pull requests pass the same pipeline as any other change. Angular majors follow NG-TOOL-06.
-- **TS-TOOL-16: Builds are reproducible.** CI installs with `npm ci` from the committed lockfile, on the pinned Node and npm (TS-TOOL-14) in a build image pinned by digest (SEC-CI-02), so the same commit gives the same bundle. The release job produces a CycloneDX SBOM for the frontend (`npm sbom --sbom-format cyclonedx --omit dev`, or the CycloneDX npm tool) and publishes it with the artifact (SEC-CI-03, JAVA-TOOL-17 for Maven).
+- **TS-TOOL-16: Builds are reproducible.** CI installs with `npm ci` from the committed lockfile, on the pinned Node and npm (TS-TOOL-14) in a build image pinned by digest (SEC-CI-02), so the same commit gives the same bundle. The release job produces a CycloneDX SBOM with the CycloneDX npm tool (`@cyclonedx/cyclonedx-npm --omit dev`, a pinned dev dependency) and publishes it with the artifact (SEC-CI-03, JAVA-TOOL-17 for Maven). `npm sbom --omit dev` is not used: npm 11.13 drops production packages that are also peers of dev dependencies (in a NestJS service 196 of 285 components, `@nestjs/core` among the missing), and it fails without a `version` in `package.json`.
 
 ## Agent checklist
 

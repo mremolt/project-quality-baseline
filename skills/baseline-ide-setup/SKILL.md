@@ -1,6 +1,6 @@
 ---
 name: baseline-ide-setup
-description: Configures VS Code and IntelliJ IDEA Ultimate for a project that uses the quality baseline - format on save (Prettier, Java formatter), ESLint fix on save, EditorConfig, workspace TypeScript, recommended VS Code extensions and required IntelliJ plugins detected from the stack (Angular, Vitest, Playwright, Java/Spring, OpenAPI, Docker). Use when setting up a new project or developer machine, when asked to "set up the IDE", "format on save", "eslint on save", "recommended extensions", ".vscode", ".idea", or after adding a new technology to the stack.
+description: Configures VS Code and IntelliJ IDEA Ultimate for a project that uses the quality baseline - format on save (Prettier, Java formatter), ESLint fix on save, EditorConfig, workspace TypeScript, recommended VS Code extensions and required IntelliJ plugins detected from the stack (Angular, NestJS, Vitest, Playwright, Java/Spring, OpenAPI, Docker). Use when setting up a new project or developer machine, when asked to "set up the IDE", "format on save", "eslint on save", "recommended extensions", ".vscode", ".idea", or after adding a new technology to the stack.
 ---
 
 # Baseline IDE setup

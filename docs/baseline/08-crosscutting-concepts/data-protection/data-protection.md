@@ -39,7 +39,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 
 ### Data subject rights (Art. 12–22)
 
-- **DP-DSR-01: Data subject rights are use cases**, behind incoming ports, authorized for a dedicated role (or the user for self-service), audited (SPRING-SEC-22) and tested like any use case:
+- **DP-DSR-01: Data subject rights are use cases**, behind incoming ports, authorized for a dedicated role (or the user for self-service), audited (SPRING-SEC-22, NEST-SEC-33) and tested like any use case:
 
   | Right | Use case | Notes |
   |---|---|---|
@@ -50,7 +50,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 
 - **DP-DSR-02: Each module that stores personal data contributes to export and erasure through its own port**, so a new storage location cannot be forgotten: a test fails when an adapter holding personal data has no export/erase implementation (e.g. an architecture test or a registry test).
 - **DP-DSR-03: Requests are answered within one month** (Art. 12(3); extendable by two months with notice). The use cases run without developer involvement, so the deadline does not depend on a ticket. Erasure and rectification are passed on to recipients and processors listed in the inventory (Art. 19), through an outgoing port where they are systems.
-- **DP-DSR-04: Identity verification of the requester is part of the business process**, not something the export endpoint assumes. A self-service export only returns the authenticated caller's own data (SPRING-SEC-16).
+- **DP-DSR-04: Identity verification of the requester is part of the business process**, not something the export endpoint assumes. A self-service export only returns the authenticated caller's own data (SPRING-SEC-16, NEST-SEC-08).
 
 ### Non-production environments and test data
 
@@ -66,7 +66,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 
 ### Logging and telemetry
 
-- **DP-TEL-01: Logs, metrics, traces and frontend error reports contain no personal data beyond pseudonymous identifiers** (SPRING-LOG-08), and [the observability concept](../observability/observability.md) (OBS-08) applies the same rule to span attributes, metric labels and baggage. User IDs are allowed; names, e-mail addresses, free text and full payloads are not.
+- **DP-TEL-01: Logs, metrics, traces and frontend error reports contain no personal data beyond pseudonymous identifiers** (SPRING-LOG-08, NEST-LOG-09), and [the observability concept](../observability/observability.md) (OBS-08) applies the same rule to span attributes, metric labels and baggage. User IDs are allowed; names, e-mail addresses, free text and full payloads are not.
 - **DP-TEL-02: Personal data is never part of a URL path or query string** (`/customers?email=…`). URLs end up in access logs, proxies, traces and browser history; searches by personal data use a request body.
 - **DP-TEL-03: Telemetry stores have a retention period** in the deletion concept, and session replay or user-level analytics are off unless the inventory names them and consent exists.
 
@@ -78,7 +78,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 
 - **DP-REV-01: A pull request that touches personal data answers the "Personal data" row of the PR template's security section** (SEC-REV-01; rules per area in [security-review.md](../security/security-review.md)).
 - **DP-TEST-01: Deletion and data subject use cases are tested end to end through their adapters**: a persistence test seeds expired and non-expired records and asserts that exactly the expired ones are gone from every table of the category; the export test asserts that every inventoried field appears; the erasure test asserts that no inventoried field of the person remains, apart from restricted records.
-- **DP-TEST-02: Tests assert the absence of personal data where it must not appear**: log capture in tests of use cases that handle personal data (SPRING-LOG-09), and the fixtures of DP-ENV-01 use recognisable synthetic values so a leak is detectable.
+- **DP-TEST-02: Tests assert the absence of personal data where it must not appear**: log capture in tests of use cases that handle personal data (SPRING-LOG-09, NEST-DP-09), and the fixtures of DP-ENV-01 use recognisable synthetic values so a leak is detectable.
 
 ## Anti-patterns
 

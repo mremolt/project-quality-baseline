@@ -43,11 +43,12 @@ const anyExists = (re) => components.some((d) => (d === '.' ? fs.readdirSync('.'
 
 const ts = tsDirs.length > 0;
 const angular = hasDep('@angular/core');
+const nestjs = hasDep('@nestjs/core');
 const vitest = hasDep('vitest');
 const playwright = hasDep('@playwright/test');
 const java = buildFiles.length > 0;
 const spring = java && buildHas('spring-boot');
-const openapi = anyExists(/^openapi$/) || hasDep('orval') || buildHas('springdoc');
+const openapi = anyExists(/^openapi$/) || hasDep('orval') || hasDep('@nestjs/swagger') || buildHas('springdoc');
 const docker = anyExists(/^(Dockerfile|compose\.y.*ml|docker-compose\.y.*ml)$/);
 let jformat = 'none';
 if (java && buildHas('spotless')) {
@@ -57,7 +58,7 @@ if (java && buildHas('spotless')) {
 }
 
 console.log(`TypeScript components: ${tsDirs.join(' ') || 'none'}`);
-console.log(`Detected: ts=${ts} angular=${angular} vitest=${vitest} playwright=${playwright} java=${java} spring=${spring} openapi=${openapi} docker=${docker} java-formatter=${jformat}`);
+console.log(`Detected: ts=${ts} angular=${angular} nestjs=${nestjs} vitest=${vitest} playwright=${playwright} java=${java} spring=${spring} openapi=${openapi} docker=${docker} java-formatter=${jformat}`);
 
 // ---------------------------------------------------------------- .editorconfig
 if (!fs.existsSync('.editorconfig')) {

@@ -1,0 +1,82 @@
+# Keys a deployment sets (CFG-12); checked by src/configuration-keys.test.ts
+- key: HTTP_PORT
+  required: false
+  secret: false
+  description: Port of the API and the probes
+- key: HTTP_BODY_LIMIT_BYTES
+  required: false
+  secret: false
+  description: Maximum request body size
+- key: HTTP_REQUEST_TIMEOUT_MS
+  required: false
+  secret: false
+  description: Request budget (RES-TMO ladder)
+- key: HTTP_TRUSTED_PROXIES
+  required: false
+  secret: false
+  description: 'Comma-separated addresses or CIDRs of the proxies in front; empty:
+    none (NEST-SEC-11)'
+- key: CORS_ALLOWED_ORIGINS
+  required: false
+  secret: false
+  description: Comma-separated browser origins allowed to call the API
+- key: SHUTDOWN_DRAIN_MS
+  required: false
+  secret: false
+  description: Readiness drain before the server closes
+- key: LOG_LEVEL
+  required: false
+  secret: false
+  description: Log level
+- key: AUTH_ISSUER
+  required: true
+  secret: false
+  description: Expected iss of access tokens
+- key: AUTH_AUDIENCE
+  required: true
+  secret: false
+  description: Expected aud of access tokens
+- key: AUTH_JWKS_URI
+  required: true
+  secret: false
+  description: Key set of the identity provider
+- key: AUTH_CLOCK_TOLERANCE_SECONDS
+  required: false
+  secret: false
+  description: Clock skew allowed
+- key: AUTH_JWKS_TIMEOUT_MS
+  required: false
+  secret: false
+  description: Timeout of a key set fetch
+- key: DATABASE_HOST
+  required: true
+  secret: false
+  description: PostgreSQL host
+- key: DATABASE_PORT
+  required: false
+  secret: false
+  description: PostgreSQL port
+- key: DATABASE_NAME
+  required: true
+  secret: false
+  description: Database name
+- key: DATABASE_USER
+  required: true
+  secret: false
+  description: Runtime user (DML only)
+- key: DATABASE_PASSWORD
+  required: true
+  secret: true
+  description: Password of the runtime user
+- key: DATABASE_POOL_MAX
+  required: false
+  secret: false
+  description: Pool size per instance (RES-CAP-02)
+- key: DATABASE_MIGRATION_USER
+  required: false
+  secret: false
+  description: DDL user for migrations; only in the migration job
+- key: DATABASE_MIGRATION_PASSWORD
+  required: false
+  secret: true
+  description: Password of the DDL user; only in the migration job

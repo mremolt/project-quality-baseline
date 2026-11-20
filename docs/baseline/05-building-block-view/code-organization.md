@@ -38,7 +38,7 @@ Contexts talk to each other only through each other's **incoming ports**, never 
 
 ## Rules
 
-- **ARCH-ORG-01: Every class/module MUST live in exactly one of `domain`, `application`, `ports/in`, `ports/out`, `adapter/in/<tech>`, `adapter/out/<tech>`, the composition root, or a support location that a stack doc names** (Spring: `stereotype`, `config`, SPRING-ARCH-01; TypeScript: `index.ts`, `<feature>.tokens.ts`, `<feature>.providers.ts`, `<feature>.routes.ts`, `src/platform/domain/index.ts` and `shared/ui`, TS-ARCH and NG-ARCH). A file that fits nowhere is a design smell, not a reason for a `misc` package. The architecture test checks it with an allow-list of locations (Spring: `everyClassHasAHome`).
+- **ARCH-ORG-01: Every class/module MUST live in exactly one of `domain`, `application`, `ports/in`, `ports/out`, `adapter/in/<tech>`, `adapter/out/<tech>`, the composition root, or a support location that a stack doc names** (Spring: `stereotype`, `config`, SPRING-ARCH-01; NestJS: `index.ts`, `<context>.tokens.ts`, NODE-ARCH-03, NEST-ARCH-03; TypeScript: `index.ts`, `<feature>.tokens.ts`, `<feature>.providers.ts`, `<feature>.routes.ts`, `src/platform/domain/index.ts` and `shared/ui`, TS-ARCH and NG-ARCH). A file that fits nowhere is a design smell, not a reason for a `misc` package. The architecture test checks it with an allow-list of locations (Spring: `everyClassHasAHome`).
 - **ARCH-ORG-02: Adapters MUST be grouped by technology** (`rest`, `kafka`, `jpa`, `s3`, …) **and direction** (`in` / `out`).
   *Why:* when the team talks about "the S3 adapter", everyone knows where to look. Replacing a technology means replacing one package.
 - **ARCH-ORG-03: Versioned external APIs MUST be placed in version sub-packages** (`adapter/in/rest/v1`, `v2`).
@@ -55,7 +55,7 @@ Contexts talk to each other only through each other's **incoming ports**, never 
   - nothing else crosses: no shared adapters (ARCH-ADP-10), no access to B's application, outgoing ports or persistence;
   - a **shared kernel** (value objects both contexts use) is allowed only with an ADR (ARCH-SC-02). It looks like a context with only a `domain` ring (`sharedkernel/domain`) and depends on nothing else.
 
-  The architecture test checks it with a slice rule over the contexts (Spring template: `contextsMeetOnlyAtIncomingPorts`). Frontend features follow the same idea: TS-ARCH-19, TS-ARCH-20.
+  The architecture test checks it with a slice rule over the contexts (Spring template: `contextsMeetOnlyAtIncomingPorts`; NestJS: `features-only-via-index`). Frontend features follow the same idea: TS-ARCH-19, TS-ARCH-20.
   *Why:* the boundary stays cheap to cut into a separate service later, and one context cannot break the other's invariants or transactions.
 
 ## Why this layout (and not the alternatives)

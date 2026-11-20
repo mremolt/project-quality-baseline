@@ -1,6 +1,6 @@
 # REST Conventions (wire format)
 
-How REST APIs between our systems look on the wire, independent of the stack: data types, errors and status codes, paging, sorting, filtering, conditional requests and deprecation. Every API in every project follows them, so generated clients ([typescript-openapi-clients.md](typescript-openapi-clients.md)) and message payloads (MSG-ENV-02) can rely on them. The contract workflow is in [openapi-contracts.md](openapi-contracts.md); the Spring implementation is [spring-rest.md](spring-rest.md) (SPRING-REST-*), which keeps its own IDs and implements the rules below.
+How REST APIs between our systems look on the wire, independent of the stack: data types, errors and status codes, paging, sorting, filtering, conditional requests and deprecation. Every API in every project follows them, so generated clients ([typescript-openapi-clients.md](typescript-openapi-clients.md)) and message payloads (MSG-ENV-02) can rely on them. The contract workflow is in [openapi-contracts.md](openapi-contracts.md); the Spring implementation is [spring-rest.md](spring-rest.md) (SPRING-REST-*), the NestJS one [nestjs-rest.md](nestjs-rest.md) (NEST-REST-*); each keeps its own IDs and implements the rules below.
 
 ## Rules
 
@@ -14,7 +14,7 @@ How REST APIs between our systems look on the wire, independent of the stack: da
 
 ### Errors
 
-- **API-REST-05: Errors are RFC 9457 `application/problem+json`.** Members: `type`, `title`, `status`, `detail`, plus the extension members `code` (API-REST-07) and `traceId` (OBS-11). Validation failures add `errors`, a list of `{ field, code, message }`. Responses never contain stack traces, SQL, class names or exception messages (Spring: SPRING-SEC-18). Clients branch on `status` and `code`, never on `title`, `detail` or `message`, which may be localized (I18N-03).
+- **API-REST-05: Errors are RFC 9457 `application/problem+json`.** Members: `type`, `title`, `status`, `detail`, plus the extension members `code` (API-REST-07) and `traceId` (OBS-11). Validation failures add `errors`, a list of `{ field, code, message }`. Responses never contain stack traces, SQL, class names or exception messages (Spring: SPRING-SEC-18; NestJS: NEST-SEC-30). Clients branch on `status` and `code`, never on `title`, `detail` or `message`, which may be localized (I18N-03).
 - **API-REST-06: Status codes follow one table.** The category column is the error category of ARCH-UC-13 ([use-cases.md](../../05-building-block-view/use-cases.md#error-categories)); the adapter maps by category, never by concrete exception (ARCH-ADP-05).
 
 | Situation | Category | Status |
@@ -29,11 +29,11 @@ How REST APIs between our systems look on the wire, independent of the stack: da
 | `Idempotency-Key` still in progress after the bounded wait (RES-IDM-02; a duplicate first waits for the first request and replays its result) | conflict | 409 with its own conflict `code`; the client retries later |
 | `If-Match` does not match the current `ETag` | conflict | 412 |
 | `If-Match` required but missing | validation | 428 |
-| Rate limit exceeded (gateway by default; Spring: SPRING-SEC-21) | technical | 429 + `Retry-After` |
-| Temporarily unavailable (pool exhausted, dependency down, concurrency limit reached: SPRING-RES-06) | technical | 503 + `Retry-After` |
+| Rate limit exceeded (gateway by default; Spring: SPRING-SEC-21; NestJS: NEST-SEC-32) | technical | 429 + `Retry-After` |
+| Temporarily unavailable (pool exhausted, dependency down, concurrency limit reached: SPRING-RES-06, NEST-RES-05) | technical | 503 + `Retry-After` |
 | Unexpected exception (bug) or permanent technical failure | technical | 500, generic problem without `code` |
 
-- **API-REST-07: Every business error has a stable `code` from the API's catalogue.** The catalogue is an enum in the spec (`UPPER_SNAKE_CASE`, for example `ORDER_ALREADY_SHIPPED`), one entry per business error the API can return, documented on the operations that return it. A code is never renamed or reused for another meaning; removing one is a breaking change. Validation errors use generic codes per constraint (`REQUIRED`, `TOO_LONG`, `INVALID_FORMAT`, …) in `errors[].code`. The frontend translates by `code` (SPRING-I18N-02, I18N-03); the server text is a safety net.
+- **API-REST-07: Every business error has a stable `code` from the API's catalogue.** The catalogue is an enum in the spec (`UPPER_SNAKE_CASE`, for example `ORDER_ALREADY_SHIPPED`), one entry per business error the API can return, documented on the operations that return it. A code is never renamed or reused for another meaning; removing one is a breaking change. Validation errors use generic codes per constraint (`REQUIRED`, `TOO_LONG`, `INVALID_FORMAT`, …) in `errors[].code`. The frontend translates by `code` (SPRING-I18N-02, NEST-I18N-04, I18N-03); the server text is a safety net.
 
 ### Collections
 

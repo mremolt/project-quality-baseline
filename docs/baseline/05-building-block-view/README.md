@@ -16,5 +16,7 @@ The static structure every product uses: rings, packages and folders, and the ki
 |---|---|---|
 | Java | [java.md](java.md): package layout, visibility, records, ArchUnit, build modules | `JAVA-ARCH-*` |
 | Spring Boot | [spring.md](spring.md): package structure, wiring, transactions, persistence mapping, messaging, ArchUnit template, new service | `SPRING-ARCH-*` |
+| Node.js | [node.md](node.md): backend folder layout, core purity, commands, error classes, event loop, dependency-cruiser | `NODE-ARCH-*` |
+| NestJS | [nestjs.md](nestjs.md): modules as composition roots, tokens, wiring, transactions, dependency-cruiser template, new service | `NEST-ARCH-*` |
 | TypeScript | [typescript.md](typescript.md): hexagonal frontends, folder layout, dependency-cruiser | `TS-ARCH-*` |
 | Angular | [angular.md](angular.md): project layout, naming, DI and wiring, HTTP, routing, forms, setup | `NG-ARCH-*` |

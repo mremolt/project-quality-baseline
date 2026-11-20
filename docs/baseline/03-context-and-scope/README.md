@@ -26,7 +26,7 @@ flowchart LR
 
 ## Scope
 
-In scope: architecture, code organisation, testing, API contracts, accessibility, security, persistence, logging, tooling, repository layout and agent setup for our Java/Spring backends and TypeScript/Angular frontends.
+In scope: architecture, code organisation, testing, API contracts, accessibility, security, persistence, logging, tooling, repository layout and agent setup for our Java/Spring and Node/NestJS backends and TypeScript/Angular frontends.
 
 Also in scope: **application-side operability**, meaning what the application itself must provide so it can be run: health and readiness endpoints, metrics, externalised and validated configuration, graceful shutdown, database migrations at deploy time, resilience towards the systems it calls, and retention and deletion of the data it stores. The rules are in [configuration](../08-crosscutting-concepts/configuration/configuration.md), [observability](../08-crosscutting-concepts/observability/observability.md), [resilience](../08-crosscutting-concepts/resilience/resilience.md), [delivery and release](../07-deployment-view/delivery-and-release.md) and [data protection](../08-crosscutting-concepts/data-protection/data-protection.md).
 
