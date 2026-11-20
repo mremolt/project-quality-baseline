@@ -1,0 +1,69 @@
+# Implementing Adapters
+
+Adapters translate between one technology and the application core. They contain **no business logic**.
+
+## Incoming (driving) adapters
+
+Examples: REST controllers, message listeners, scheduled jobs, CLI commands, UI components.
+
+### Responsibilities (in this order)
+
+1. Accept the external request (HTTP, message, UI event) and deserialize it.
+2. Authenticate/authorize.
+3. Check that the external input **can be turned into** the use case's input model. Don't repeat the use case's own validation.
+4. Map to the command/query and call the **incoming port**.
+5. Map the result (or a business exception) back to the protocol: response body, HTTP status, ack/nack, UI state.
+
+### Rules
+
+- **ARCH-ADP-01: Protocol details MUST NOT leak into the core.** No HTTP types, message headers, UI types or serialization annotations in `ports`, `application` or `domain`.
+  *Why:* the same use case must stay callable from any other adapter. Writing the use case first, before the adapter, makes this boundary come naturally.
+- **ARCH-ADP-02: Incoming adapters call incoming ports only**, never application services or outgoing ports directly.
+- **ARCH-ADP-03: Slice incoming adapters narrowly.** Prefer one controller/handler per use case (or small cohesive group) over one controller per resource.
+  *Why:* small classes are easier to understand and test, they tempt nobody to reuse one "bucket" DTO for all operations, and they avoid merge conflicts.
+- **ARCH-ADP-04: Each handler owns its request/response models**, kept private to its package where the language allows. Sharing models across handlers is a conscious decision, not a default.
+- **ARCH-ADP-05: Translate errors centrally per adapter.** Business exceptions from `domain` are mapped to protocol errors in one place per adapter (e.g. an HTTP error handler).
+- **ARCH-ADP-06: If the core must actively push to an incoming adapter** (websocket, server-sent events), define an *outgoing* port that the adapter implements. An adapter may be both incoming and outgoing.
+
+## Outgoing (driven) adapters
+
+Examples: database/ORM, message producers, object storage (S3), third-party API clients, email.
+
+### Responsibilities
+
+1. Receive input through the outgoing port, using the port's model (which lives in the core).
+2. Map it to the technology's format (ORM entity, SQL, message payload, API DTO).
+3. Call the technology.
+4. Map the answer back to the port's output model.
+
+### Rules
+
+- **ARCH-ADP-07: Port input and output models live in the core** (`domain` or `ports/out`), never in the adapter.
+  *Why:* the adapter can be refactored or replaced without touching the core.
+- **ARCH-ADP-08: Outgoing ports are narrow (Interface Segregation).** Prefer `LoadAccountPort` and `UpdateAccountStatePort` over one `AccountRepository` with twenty methods. Bundle methods only when they are always used together.
+  *Why:* each service depends only on what it uses. Tests know exactly what to mock, with no "which methods do I need to stub?" research.
+- **ARCH-ADP-09: Slice outgoing adapters freely.** One adapter class may implement several ports. A good default is one persistence adapter **per aggregate**. Using different technologies for different ports (ORM for some, plain SQL for others) is allowed.
+- **ARCH-ADP-10: Bounded contexts don't share outgoing adapters.** Each context has its own persistence adapter(s). Cross-context access goes through the other context's incoming ports.
+- **ARCH-ADP-11: Outgoing adapters MUST NOT open or commit transactions for a use case.** They don't know which other operations belong to it. The application service owns the transaction (see [use-cases.md](use-cases.md), ARCH-UC-11).
+- **ARCH-ADP-12: Technology-specific models (ORM entities, API DTOs) stay inside their adapter**, with the narrowest visibility possible.
+- **ARCH-ADP-13: Choose the simplest technology that fits.** A full ORM is not mandatory. Use plain SQL or a lighter mapper when it serves the port better.
+
+## Anti-patterns
+
+- A controller that calls a repository "because it only updates one field".
+- A `@Transactional`/transaction scope on an adapter method.
+- One generic `XxxRepository` port used by all services.
+- Adapter returning ORM entities through a port.
+- An HTTP status exception thrown from the application layer.
+
+## Agent checklist
+
+- [ ] Adapter contains mapping, protocol and error translation only, with no business decisions?
+- [ ] Incoming adapter calls an incoming port; outgoing adapter implements outgoing port(s)?
+- [ ] Port models live in the core; technology models stay in the adapter?
+- [ ] Port is narrow (ideally one method, or a cohesive few)?
+- [ ] No transaction handling in the adapter?
+
+## Sources
+
+Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 5 (Implementing a Web Adapter), ch. 6 (Implementing a Persistence Adapter).

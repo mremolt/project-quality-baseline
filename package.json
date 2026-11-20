@@ -1,0 +1,20 @@
+{
+  "name": "project-quality-baseline",
+  "private": true,
+  "description": "Shared quality baseline: architecture, testing and tooling docs plus agent skills.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.20"
+  },
+  "scripts": {
+    "skills:check": "skills check",
+    "skills:update": "skills update -p -y",
+    "skills:restore": "skills experimental_install --frozen-lockfile",
+    "skills:link-own": "skills add ./skills --skill \"*\" -a universal -a claude-code -y",
+    "skills:upstream-diff": "node scripts/skills-upstream-diff.mjs",
+    "baseline:sync": "node scripts/sync-baseline.mjs"
+  },
+  "devDependencies": {
+    "skills": "1.9.0"
+  }
+}

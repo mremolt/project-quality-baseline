@@ -1,0 +1,12 @@
+# baseline-ide-setup:start (TOOL-IDE-03)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/*
+!.idea/prettier.xml
+!.idea/jsLinters/
+!.idea/externalDependencies.xml
+!.idea/codeStyles/
+!.idea/google-java-format.xml
+!.idea/palantir-java-format.xml
+# baseline-ide-setup:end

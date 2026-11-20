@@ -1,0 +1,134 @@
+{
+  "skill_name": "ngrx-signals",
+  "evals": [
+    {
+      "id": 1,
+      "name": "orders-store-optimistic-cancel-with-request-status",
+      "prompt": "Angular 22 app, hexagonal frontend layout per our baseline. In src/features/orders/ we already have: domain/order.ts (Order with branded OrderId, CustomerId, OrderFilter, pure functions canBeCancelled(order), markCancelled(order), matchesFilter(order, filter)), ports/in/load-order-history.ts (LoadOrderHistoryUseCase.loadOrderHistory(query: LoadOrderHistoryQuery): Promise<readonly Order[]>, LoadOrderHistoryQuery.of({ customerId })), ports/in/cancel-order.ts (CancelOrderUseCase.cancelOrder(command): Promise<void>, CancelOrderCommand.of({ orderId })), and orders.providers.ts exporting the tokens LOAD_ORDER_HISTORY and CANCEL_ORDER. There is also an OrdersErrorMessages mapper with messageFor(error: unknown): string. Build the OrdersStore with @ngrx/signals for the orders page: list of orders, a filter, visible orders, which orders can be cancelled, load(customerId), and cancel(id) with an optimistic update that rolls back when the backend rejects. Surface request status so the UI can show loading and error states (write the reusable withRequestStatus feature too). Also write the store test with Vitest.",
+      "expected_output": "orders-store.ts in src/features/orders/adapter/in/ui/ using signalStore without providedIn, withState<OrdersState> (interface), withEntities<Order>(), withRequestStatus from src/platform/adapter/in/ui/state/, withComputed calling the domain functions, withMethods injecting LOAD_ORDER_HISTORY / CANCEL_ORDER / OrdersErrorMessages, getState snapshot + rollback, setError(errors.messageFor(error)). Spec uses TestBed with { provide: LOAD_ORDER_HISTORY, useValue: mock<LoadOrderHistoryUseCase>() } and tests the rollback path.",
+      "files": [],
+      "expectations": [
+        "Store file lives in src/features/orders/adapter/in/ui/ and is named orders-store.ts exporting OrdersStore (NG-STATE-01)",
+        "Imports come from '@ngrx/signals' / '@ngrx/signals/entities' (not '@ngrx/store')",
+        "State is typed with an interface (interface OrdersState) passed to withState<OrdersState>(...); no `type OrdersState = {...}` (NG-STATE-05)",
+        "signalStore has NO { providedIn: 'root' }; the answer shows providers: [OrdersStore] on the page component or route (NG-STATE-12)",
+        "withMethods injects the use cases via inject(LOAD_ORDER_HISTORY) and inject(CANCEL_ORDER) imported from orders.providers.ts; the store does not import @angular/common/http, HttpClient, generated API code, ports/out or adapter/out (NG-STATE-02)",
+        "Uses withEntities<Order>() and entity updaters (setAllEntities, updateEntity) rather than a hand-rolled array (NG-STATE-06)",
+        "Cancellability and filtering call the domain functions canBeCancelled / matchesFilter inside withComputed; no business condition re-implemented in the store (NG-STATE-07)",
+        "cancel() snapshots with getState before the use-case call and restores entityMap and ids in the catch branch (NG-STATE-10)",
+        "Errors go through OrdersErrorMessages.messageFor(error) into setError(...); the store never shows error.message directly (NG-STATE-09)",
+        "withRequestStatus is a signalStoreFeature with standalone setPending/setFulfilled/setError updaters, placed in src/platform/adapter/in/ui/state/",
+        "Spec uses TestBed with OrdersStore in providers and { provide: LOAD_ORDER_HISTORY, useValue: mock<LoadOrderHistoryUseCase>() } (and CANCEL_ORDER likewise) using mock from 'vitest-mock-extended'; no hand-rolled vi.fn() objects, no vi.mock (NG-STATE-14, TS-TEST-01/02)",
+        "Spec asserts that a rejected cancelOrder restores the order's previous state and sets the mapped error message",
+        "`evals/checks/arch.sh <outputs>` (Windows: `evals\\checks\\arch.cmd`) passes",
+        "`evals/checks/tsc.sh <outputs>` (Windows: `evals\\checks\\tsc.cmd`) passes: every generated .ts file type-checks with strict tsc against @ngrx/signals 22 / Angular 22 / vitest-mock-extended. The script stubs relative modules the run never wrote as `any`; a remaining error that only exists because a stubbed module is untyped (e.g. withEntities<any>, getState returning `object` after an `any` feature) does not count"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "refactor-behaviorsubject-service-along-the-hexagon",
+      "prompt": "Refactor this legacy Angular service to @ngrx/signals, following our project's architecture baseline. Existing components use products$ and inStockProducts$ via the async pipe — show me how to migrate the template too. Here is the service:\n\n```typescript\n@Injectable({ providedIn: 'root' })\nexport class ProductsService {\n  private readonly _products$ = new BehaviorSubject<ProductDto[]>([]);\n  private readonly _isLoading$ = new BehaviorSubject<boolean>(false);\n  readonly products$ = this._products$.asObservable();\n  readonly isLoading$ = this._isLoading$.asObservable();\n  readonly inStockProducts$ = this.products$.pipe(map(p => p.filter(x => x.stock > 0)));\n\n  constructor(private http: HttpClient) {}\n\n  loadAll() {\n    this._isLoading$.next(true);\n    this.http.get<ProductDto[]>('/api/products').subscribe({\n      next: products => { this._products$.next(products); this._isLoading$.next(false); },\n      error: () => this._isLoading$.next(false),\n    });\n  }\n}\n```\n\nThe products list is only shown on the catalog page (src/features/catalog/).",
+      "expected_output": "A split along the hexagon: domain Product + isInStock(product) in domain/, LoadProductsUseCase contract in ports/in, LoadProductsPort in ports/out, HTTP adapter in adapter/out/http mapping ProductDto -> Product, application service, tokens in catalog.providers.ts, and a CatalogStore/ProductsStore in adapter/in/ui injecting the use-case token. Store provided on the catalog page/route. Template reads signals.",
+      "files": [],
+      "expectations": [
+        "Does NOT produce a 'ProductsApiService injected by the store' design; the store injects a use-case contract via an InjectionToken defined in the feature's providers file (NG-STATE-02, TS-ARCH-08/09)",
+        "HttpClient and ProductDto appear only in an adapter under adapter/out/http that implements an outgoing port and maps DTO to a domain Product (TS-ARCH-04/05)",
+        "The in-stock rule (stock > 0) becomes a pure domain function used from withComputed, not a condition inside the store (NG-STATE-07)",
+        "Store file is in src/features/catalog/adapter/in/ui/ with a -store.ts suffix and holds domain Products, never ProductDto (NG-STATE-01/04)",
+        "BehaviorSubjects are replaced by an interface-typed withState<...> (or withEntities<Product>() + request status) (NG-STATE-05/06)",
+        "Store is NOT providedIn 'root'; the answer provides it on the catalog page or route (NG-STATE-12)",
+        "loadAll awaits the use case and uses patchState for loading flag/status and result; error is surfaced via a mapped message, not swallowed",
+        "Component snippet reads store signals (e.g. store.entities(), store.inStock()) with no | async pipe",
+        "A store spec mocks the use case with mock<...>() from 'vitest-mock-extended' provided via its token",
+        "`evals/checks/arch.sh <outputs>` (Windows: `evals\\checks\\arch.cmd`) passes",
+        "`evals/checks/tsc.sh <outputs>` (Windows: `evals\\checks\\tsc.cmd`) passes: every generated .ts file type-checks with strict tsc against @ngrx/signals 22 / Angular 22 / vitest-mock-extended. The script stubs relative modules the run never wrote as `any`; a remaining error that only exists because a stubbed module is untyped does not count"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "custom-feature-with-selected-entity",
+      "prompt": "I have an OrdersStore in src/features/orders/adapter/in/ui/orders-store.ts using `@ngrx/signals` with `withEntities<Order>()`. I want a reusable custom feature `withSelectedEntity<T>()` that I can compose into any entity-based store. It should: (1) add a `selectedId` state slice, (2) expose a `selectedEntity` computed that returns the entity from `entityMap` for the current `selectedId` (or null), (3) add `select(id)` and `clearSelection()` methods, (4) be type-safe so it gives a compile error if I add it to a store without `withEntities`. Show the feature, the updated OrdersStore composing it, and a unit test that wraps the feature in a minimal signalStore and proves it works.",
+      "expected_output": "withSelectedEntity factory returning signalStoreFeature with the { state: type<EntityState<T>>() } prerequisite, interface-typed SelectedEntityState. OrdersStore composes withEntities<Order>() then withSelectedEntity<Order>(), still without providedIn. Test wraps the feature in a fresh signalStore provided in TestBed providers, seeds entities with unprotected.",
+      "files": [],
+      "expectations": [
+        "withSelectedEntity is implemented with signalStoreFeature from '@ngrx/signals'",
+        "The feature declares its prerequisite with { state: type<EntityState<T>>() } (or equivalent) to require withEntities upstream",
+        "selectedId slice is typed EntityId | null via an interface (interface SelectedEntityState), not a type literal (NG-STATE-05)",
+        "selectedEntity is a withComputed signal that reads entityMap and returns null when selectedId is null",
+        "select(id) and clearSelection() use patchState",
+        "OrdersStore composes withEntities<Order>() BEFORE withSelectedEntity<Order>() and does not gain { providedIn: 'root' } (NG-STATE-12)",
+        "Feature file is placed in adapter/in/ui (feature-local) or src/platform/adapter/in/ui/state/ (shared), never in domain or application",
+        "Test wraps the feature in a fresh signalStore (not the real OrdersStore), lists it in TestBed providers, and seeds entities via patchState(unprotected(store), ...) from '@ngrx/signals/testing'",
+        "Test verifies select() updates selectedEntity and clearSelection() resets it to null",
+        "`evals/checks/tsc.sh <outputs>` (Windows: `evals\\checks\\tsc.cmd`) passes: every generated .ts file type-checks with strict tsc against @ngrx/signals 22 / Angular 22. The script stubs relative modules the run never wrote as `any`; a remaining error that only exists because a stubbed module is untyped does not count"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "rxmethod-debounced-search-via-use-case",
+      "prompt": "Build an `OrderSearchStore` with @ngrx/signals for a typeahead on the orders search page (src/features/orders/). State: `query`, `results` (Order[]), loading and error state. The component calls `store.searchByQuery(query)` on every keystroke. Requirements: debounce by 300ms, drop duplicates, cancel the in-flight search when a new keystroke comes in (an old slow response must not overwrite a newer one), and keep working after an error. The search is the existing use case `SearchOrdersUseCase.searchOrders(query: SearchOrdersQuery, signal?: AbortSignal): Promise<readonly Order[]>` (contract in ports/in/search-orders.ts, token SEARCH_ORDERS in orders.providers.ts). Use the right tool for the job, explain the choice in a short comment, and provide a test.",
+      "expected_output": "Store using rxMethod with debounceTime, distinctUntilChanged, switchMap over an Observable wrapping the promise-returning use case with an AbortController (or equivalent) so cancellation reaches the use case, and tapResponse. Injects SEARCH_ORDERS. Test provides mock<SearchOrdersUseCase>() via the token and uses fake timers or polling.",
+      "files": [],
+      "expectations": [
+        "Uses rxMethod from '@ngrx/signals/rxjs-interop' with debounceTime(300), distinctUntilChanged and switchMap",
+        "Injects the use case via inject(SEARCH_ORDERS); no HttpClient, generated API client or outgoing port in the store (NG-STATE-02)",
+        "Bridges the Promise-returning use case into the stream and passes an AbortSignal so switchMap cancellation aborts the in-flight call (NG-STATE-08, TS-D1)",
+        "Uses tapResponse (or equivalent inner error handling) so an error doesn't terminate the rxMethod stream",
+        "Loading is set before the call and reset on success and error; the error message comes from a feature error mapper, not error.message (NG-STATE-09)",
+        "State typed with an interface; store not providedIn 'root' (NG-STATE-05/12)",
+        "Includes a brief comment justifying rxMethod over signalMethod / plain async",
+        "Test provides { provide: SEARCH_ORDERS, useValue: mock<SearchOrdersUseCase>() } (vitest-mock-extended), stubs a resolved Promise, and asserts results after advancing past the debounce",
+        "`evals/checks/arch.sh <outputs>` (Windows: `evals\\checks\\arch.cmd`) passes",
+        "`evals/checks/tsc.sh <outputs>` (Windows: `evals\\checks\\tsc.cmd`) passes: every generated .ts file type-checks with strict tsc against @ngrx/signals 22 / Angular 22 / vitest-mock-extended. The script stubs relative modules the run never wrote as `any`; a remaining error that only exists because a stubbed module is untyped (e.g. RxJS inferring `unknown` from an `any` use case) does not count"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "todos-entities-store-crud-via-use-cases",
+      "prompt": "Build a TodosStore using `@ngrx/signals/entities` for the todo list screen in src/features/todos/. Domain type Todo { id: TodoId; text: string; completed: boolean } lives in domain/todo.ts. Use cases already exist as contracts in ports/in with tokens in todos.providers.ts: LOAD_TODOS (LoadTodosUseCase.loadTodos(): Promise<Todo[]>), ADD_TODO (AddTodoUseCase.addTodo(command: AddTodoCommand): Promise<Todo>), TOGGLE_TODO (ToggleTodoUseCase.toggleTodo(command: ToggleTodoCommand): Promise<void>), REMOVE_COMPLETED_TODOS (RemoveCompletedTodosUseCase.removeCompleted(): Promise<void>). Store methods: loadAll(), addTodo(text), toggleCompleted(id) (optimistic), removeAllCompleted(). Computed: total, active and completed counts. Include request status for the load. Show the store and a unit test that exercises loadAll + toggleCompleted (including a failed toggle) + the computed counts.",
+      "expected_output": "TodosStore in adapter/in/ui using withEntities<Todo>() + withRequestStatus(), injecting the four tokens. Entity updaters: setAllEntities, addEntity (with the Todo returned by the use case), updateEntity function form, removeEntities predicate. Optimistic toggle with rollback. Test with mock<...>() per token.",
+      "files": [],
+      "expectations": [
+        "Imports withEntities and updaters from '@ngrx/signals/entities'",
+        "Injects use cases via inject(LOAD_TODOS), inject(ADD_TODO), inject(TOGGLE_TODO), inject(REMOVE_COMPLETED_TODOS); no HTTP or API service in the store (NG-STATE-02)",
+        "addTodo adds the Todo returned by the use case (no client-side id invention that bypasses the use case)",
+        "toggleCompleted uses updateEntity with function-form changes, snapshots with getState and rolls back on failure (NG-STATE-10)",
+        "removeAllCompleted calls the use case and then uses removeEntities with a predicate (not filter + setAllEntities)",
+        "loadAll combines setAllEntities with setPending/setFulfilled request-status updaters; errors are mapped to a user message (NG-STATE-09)",
+        "Computed counts use entities() (or ids().length) inside withComputed",
+        "Store not providedIn 'root'; any state beyond entities is typed with an interface (NG-STATE-05/12)",
+        "Test uses TestBed with TodosStore in providers and mock<...>() from 'vitest-mock-extended' for each token; asserts entities and computed counts, and that a rejected toggle restores the previous completed flag",
+        "`evals/checks/arch.sh <outputs>` (Windows: `evals\\checks\\arch.cmd`) passes",
+        "`evals/checks/tsc.sh <outputs>` (Windows: `evals\\checks\\tsc.cmd`) passes: every generated .ts file type-checks with strict tsc against @ngrx/signals 22 / Angular 22 / vitest-mock-extended. The script stubs relative modules the run never wrote as `any`; a remaining error that only exists because a stubbed module is untyped does not count"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "push-back-root-store-with-http-and-cache",
+      "prompt": "Quick one: make me a `ProductsStore` with @ngrx/signals, `providedIn: 'root'`, that injects HttpClient and loads `/api/products` once, then keeps them cached so when users navigate back to the catalog we don't refetch. Products are only shown on the catalog page.",
+      "expected_output": "The answer does not deliver the requested shape as-is. It explains (citing NG-STATE-02, NG-STATE-11, NG-STATE-12, TS-ARCH-15) that the store calls a use case via a token, is provided on the catalog page/route, and that caching goes into a caching decorator around the outgoing HTTP adapter. It then provides that design.",
+      "files": [],
+      "expectations": [
+        "Does not put HttpClient or '/api/products' inside the store; cites NG-STATE-02 (or TS-ARCH-03)",
+        "Does not make the catalog store providedIn 'root'; cites NG-STATE-12 and explains stale-data-on-revisit",
+        "Moves caching into the outgoing adapter as a decorator implementing the same port, wired in the feature's providers file; cites NG-STATE-11 / TS-ARCH-15",
+        "The delivered store injects a use-case token (e.g. inject(LOAD_PRODUCTS)) and holds domain Products, not DTOs",
+        "Explains where the cache must be provided to survive navigation (a longer-lived injector, as an adapter), without turning it into a root store",
+        "`evals/checks/arch.sh <outputs>` (Windows: `evals\\checks\\arch.cmd`) passes"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "events-plugin-requires-adr",
+      "prompt": "Our orders page has an OrdersStore and an OrderSummaryStore (both @ngrx/signals). When an order is cancelled, the summary should update too. I'd like to introduce the @ngrx/signals events plugin (withReducer / withEventHandlers) so both stores react to an orderCancelled event. Please set it up.",
+      "expected_output": "Points out that the events plugin needs an ADR (NG-STATE-13) and offers the baseline-conform alternatives first (one store for the page's view state, lifting state, or recomputing the summary via withComputed from the same entities; no cross-store injection, NG-STATE-02). If the user still wants the events plugin, drafts the ADR in docs/adr/ and shows the setup with handlers calling use cases via tokens.",
+      "files": [],
+      "expectations": [
+        "States that the events plugin requires an ADR in this baseline and cites NG-STATE-13; does not introduce it silently",
+        "Offers a non-events alternative that avoids cross-store injection (single page store, lifted state, or derived summary via withComputed); cites NG-STATE-02 for no store-to-store injection",
+        "If events code is shown, it uses withReducer / withEventHandlers / eventGroup / injectDispatch from '@ngrx/signals/events' (not withEffects, not @ngrx/store) and handlers call use cases via tokens, not HTTP",
+        "If events are pursued, includes an ADR draft (context, decision, consequences) for docs/adr/"
+      ]
+    }
+  ]
+}

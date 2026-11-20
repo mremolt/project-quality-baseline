@@ -1,0 +1,8 @@
+# baseline:start (managed by scripts/sync-baseline; project rules go outside this block)
+# Launchers must keep their line endings on every OS, whatever core.autocrlf says:
+# bash breaks on CRLF, CMD batch files are only reliable with CRLF.
+*.sh  text eol=lf
+*.mjs text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+# baseline:end
