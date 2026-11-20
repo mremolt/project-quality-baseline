@@ -86,7 +86,7 @@ CI/CD, registry, hosting, the orchestrator and the scanners are **not** fixed by
 
 - **In the build**: architecture tests, compiler checks, linters, accessibility tests, contract checks and security scans fail the build. None of them may be weakened to get a build green (SEC-REV-02). A component's `verify` command is its local gate; one pipeline jobs table says what CI runs.
 - **In review**: the pull request template carries the security, N+1 and delivery checklists; reviewers cite rule IDs.
-- **By agents**: entry skills (`baseline-spring`, `baseline-angular`, `baseline-security`, `baseline-i18n`, `baseline-tdd`) route agents to the right rules before they write code.
+- **By agents**: entry skills (`baseline-spring`, `baseline-angular`, `baseline-security`, `baseline-i18n`, `baseline-tdd`) route agents to the right rules before they write code. A kickoff prompt (`prompts/project-kickoff.md`, not synced) starts an unattended implementation from a product's planning documents with the baseline as its technical specification, and has the agent log where the baseline fell short.
 - **By decision record**: any deviation from a MUST is an ADR in the product repository.
 
 ## What the baseline does not cover

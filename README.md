@@ -40,13 +40,22 @@ npm ci
 
 Run the sync from this repository, pointing it at the project's repository root (never a component folder like `frontend/`, REPO-LAY-06). Commit or stash the project's changes first, so the sync shows up as a reviewable diff.
 
+**New project without a repository yet:** create it first, so the sync can detect the pull request host and its result can be reviewed:
+
+```bash
+git -C ../my-project init -b main
+git -C ../my-project remote add origin <url>   # optional now; without it, pass --host or re-run the sync later
+```
+
+A repository without commits has nothing to diff against, so the sync skips the uncommitted-changes check there; review its result with `git status` and make it (or the planning files plus it) the first commit.
+
 | | Command |
 |---|---|
 | Linux, macOS, Git Bash | `scripts/sync-baseline.sh ../my-project` |
 | Windows CMD, PowerShell | `scripts\sync-baseline.cmd ..\my-project` |
 | any OS | `npm run baseline:sync -- ../my-project` |
 
-Options: `--force` runs it despite uncommitted changes; `--host github|gitlab|azure|bitbucket` picks where the pull request template goes (default: detected from the `origin` remote). The sync replaces `docs/baseline/`, the managed block in `AGENTS.md`, the skills and the Claude Code hooks, and creates the project-owned files the rules require from `templates/` once, if they are missing. It never overwrites project-owned files. The complete list: [agent-skills.md](docs/baseline/08-crosscutting-concepts/development/agent-skills.md#distribution-to-consuming-projects).
+Options: `--force` runs it despite uncommitted changes (not needed in a repository without commits); `--host github|gitlab|azure|bitbucket` picks where the pull request template goes (default: detected from the `origin` remote). The sync replaces `docs/baseline/`, the managed block in `AGENTS.md`, the skills and the Claude Code hooks, and creates the project-owned files the rules require from `templates/` once, if they are missing. It never overwrites project-owned files. The complete list: [agent-skills.md](docs/baseline/08-crosscutting-concepts/development/agent-skills.md#distribution-to-consuming-projects).
 
 Then, in the project:
 
@@ -54,7 +63,8 @@ Then, in the project:
    - Linux/macOS/Git Bash: `.agents/skills/baseline-ide-setup/scripts/apply-ide-config.sh .`
    - Windows: `.agents\skills\baseline-ide-setup\scripts\apply-ide-config.cmd .`
 2. Fill in the created templates: `docs/security/requirements.md`, `docs/data-protection/` (with the DPO), `SECURITY.md`, `security.txt` (contact, expiry), the incident runbook's contacts.
-3. Review `git diff`, then commit.
+3. Review with `git status` and `git diff` (the sync adds new files, which `git diff` alone doesn't show), then commit.
+4. To start an agentic implementation from the product's planning documents, use the kickoff prompt in [prompts/project-kickoff.md](prompts/project-kickoff.md).
 
 To update a project later, pull this repository and run the sync again. Projects don't update baseline skills on their own.
 
@@ -73,6 +83,7 @@ skills/                 our own agent skills (edit here)
 .claude/skills/         symlinks for Claude Code
 .claude/hooks/          Claude Code hooks shipped to projects (baseline-*)
 scripts/                maintenance and sync scripts (.mjs + .sh/.cmd launchers)
+prompts/                prompts for agent sessions in projects (kickoff); not synced
 skills-lock.json        pinned third-party skills
 ```
 

@@ -58,7 +58,7 @@ Products get the baseline by running the sync from the baseline repository again
 | Linux, macOS, Git Bash | `scripts/sync-baseline.sh <project-dir> [--force] [--host <host>]` |
 | Windows CMD, PowerShell | `scripts\sync-baseline.cmd <project-dir> [--force] [--host <host>]` |
 
-`--force` runs despite uncommitted changes in the project (otherwise the sync stops, so its result is a reviewable diff). `--host` is `github`, `gitlab`, `azure` or `bitbucket` and decides where the pull request template goes; without it the host is detected from the `origin` remote, and if that fails the template is skipped with a manual step. The sync stops without changing anything if `AGENTS.md` or `.gitattributes` has a start marker without its end marker. The required Node.js version is the baseline's `package.json` `engines.node`; the sync checks it.
+`--force` runs despite uncommitted changes in the project (otherwise the sync stops, so its result is a reviewable diff). A project without commits has nothing to diff against: the check is skipped there, and a folder that isn't a git repository yet gets a manual step to run `git init`. `--host` is `github`, `gitlab`, `azure` or `bitbucket` and decides where the pull request template goes; without it the host is detected from the `origin` remote, and if that fails the template is skipped with a manual step. The sync stops without changing anything if `AGENTS.md` or `.gitattributes` has a start marker without its end marker. The required Node.js version is the baseline's `package.json` `engines.node`; the sync checks it.
 
 **This table is the one list of what the sync does.** Other docs and the script header point here.
 

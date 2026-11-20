@@ -34,7 +34,11 @@ if (!isDir(opts.target)) fail(`not a directory: ${opts.target}`);
 const target = fs.realpathSync(opts.target);
 if (target === fs.realpathSync(base)) fail('target is the baseline itself');
 
-if (git(target, 'rev-parse').ok && git(target, 'status', '--porcelain').out && !opts.force) {
+// The uncommitted-changes check only makes sense against a commit: a project without git or without a first
+// commit has nothing to diff against, so the sync runs and its result is reviewed with `git status`.
+const isRepo = git(target, 'rev-parse').ok;
+const hasCommit = isRepo && git(target, 'rev-parse', '--verify', '-q', 'HEAD').ok;
+if (hasCommit && git(target, 'status', '--porcelain').out && !opts.force) {
   fail('Project has uncommitted changes. Commit or stash first (or pass --force), so the sync is a reviewable diff.');
 }
 
@@ -50,6 +54,8 @@ const host = opts.host ?? detectHost(target);
 const log = (msg) => console.log(`  - ${msg}`);
 const rev = git(base, 'rev-parse', '--short', 'HEAD');
 console.log(`Syncing baseline ${rev.ok ? rev.out : '(uncommitted)'} into ${target}`);
+if (!isRepo) log('MANUAL: the project is not a git repository; run `git init` and add the remote, then re-run so the pull request template is created');
+else if (!hasCommit) log('the project has no commits yet: uncommitted-changes check skipped');
 
 // ---------------------------------------------------------------- docs
 // docs/baseline is baseline-owned and replaced as a whole (arc42 reference architecture).
@@ -250,7 +256,7 @@ if (settings && typeof settings === 'object') {
 }
 
 console.log(`
-Done. Review with: git -C "${target}" diff --stat
+Done. Review with: git -C "${target}" status   (new files are untracked, so \`git diff\` alone misses them)
 Next steps in the project:
   - Fill in the files created from templates above (SECURITY.md, docs/security/requirements.md, security.txt, …)
   - IDE config: run the baseline-ide-setup skill (or .agents/skills/baseline-ide-setup/scripts/apply-ide-config.sh / .cmd)
