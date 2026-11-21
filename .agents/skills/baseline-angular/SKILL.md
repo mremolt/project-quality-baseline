@@ -46,6 +46,7 @@ Always: `docs/baseline/stacks/angular.md`, `docs/baseline/05-building-block-view
 |---|---|
 | `httpResource`/`HttpClient` in components or services used by components | HTTP only in `adapter/out/http`; UI uses its store or `resource()` calling a use case (NG-ARCH-13, TS-ARCH-04) |
 | `@Service()` auto-provided everywhere | Use cases are plain classes; adapters use `inject()` and are bound to port tokens with `useExisting` in `<feature>.providers.ts`; tokens in `<feature>.tokens.ts` (NG-ARCH-09/10, TS-ARCH-17) |
+| Inline `template:` / `styles:` in components | `templateUrl` + `styleUrl` in dedicated files, always; inline only for test hosts in `*.spec.ts` (NG-ARCH-21) |
 | `core/`, `components/` folders | Ring layout per feature (`domain`, `application`, `ports`, `adapter`), `src/platform`, `src/shared/ui` (NG-ARCH-01/04) |
 | Store calls an API service | Store calls use-case contracts (NG-STATE-02) |
 | Root-provided feature stores | Component/route scope (NG-STATE-12) |

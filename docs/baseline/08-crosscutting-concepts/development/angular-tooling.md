@@ -43,6 +43,8 @@ export default defineConfig(
       '@angular-eslint/component-class-suffix': 'off', // suffixless naming (NG-ARCH-02)
       '@angular-eslint/directive-class-suffix': 'off',
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+      // NG-ARCH-21: templates and styles only in dedicated files
+      '@angular-eslint/component-max-inline-declarations': ['error', { template: 0, styles: 0, animations: 0 }],
       '@angular-eslint/prefer-signals': 'error',
       '@angular-eslint/no-developer-preview': 'error', // NG-TOOL-09
       '@angular-eslint/no-experimental': 'error',
@@ -56,6 +58,10 @@ export default defineConfig(
         },
       ],
     },
+  },
+  {
+    files: ['**/*.spec.ts'], // NG-ARCH-21: test host components may declare an inline template
+    rules: { '@angular-eslint/component-max-inline-declarations': 'off' },
   },
   {
     files: ['**/adapter/out/http/**/*.ts', 'src/platform/adapter/out/http/**/*.ts'],

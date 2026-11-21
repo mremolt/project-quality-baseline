@@ -47,6 +47,8 @@ src/
 ### Components and templates
 
 - **NG-ARCH-05: Standalone components, `OnPush`, zoneless**: the defaults of current Angular. No `NgModule`s in new code.
+- **NG-ARCH-21: Every component keeps its template and its styles in dedicated files**: `templateUrl: './<name>.html'` and, when the component has styles, `styleUrl: './<name>.scss'`, next to `<name>.ts`. Never `template:`, `styles:` or `styleUrls` with inline content, however short; a component without styles has no style file. Enforced by `@angular-eslint/component-max-inline-declarations` at 0 (NG-TOOL-02) and by the CLI defaults (`inlineTemplate`/`inlineStyle` `false`, NG-ARCH-17). Only test host components declared inside a `*.spec.ts` may use an inline `template`.
+  *Why:* templates get the HTML tooling (angular-eslint template and accessibility rules on `*.html`, Prettier's Angular parser, editor support) and readable diffs; one layout for every component, independent of size.
 - **NG-ARCH-06: Signal APIs only**: `input()`, `output()`, `model()`, `viewChild()`, `computed()`, `linkedSignal()`; `inject()` instead of constructor injection; built-in control flow (`@if`, `@for`, `@switch`, `@defer`).
 - **NG-ARCH-07: Components render and forward intent** (TS-ARCH-02). Derived values come from `computed()` or the store; templates don't do expensive work or business logic.
 - **NG-ARCH-08: `effect()` is for synchronizing with non-Angular APIs** (DOM, third-party widgets, logging), not for state propagation. Use `computed()`, `linkedSignal()` or store methods instead.
@@ -155,7 +157,7 @@ protected readonly cancelForm = form(this.model, (path) => validateStandardSchem
 
 ### Project setup
 
-- **NG-ARCH-17: New apps are created with** `ng new <name> --style=scss --ai-config=none` (plus `--ssr` only if the rendering decision says so), then the baseline is synced into the project ([08-crosscutting-concepts/development/agent-skills.md](../08-crosscutting-concepts/development/agent-skills.md)). `--ai-config=none` because the baseline's `AGENTS.md` and skills replace the generated agent files.
+- **NG-ARCH-17: New apps are created with** `ng new <name> --style=scss --inline-template=false --inline-style=false --ai-config=none` (plus `--ssr` only if the rendering decision says so), then the baseline is synced into the project ([08-crosscutting-concepts/development/agent-skills.md](../08-crosscutting-concepts/development/agent-skills.md)). `--ai-config=none` because the baseline's `AGENTS.md` and skills replace the generated agent files.
 - **NG-ARCH-18: The rendering strategy (CSR, SSR, prerendering) is a project decision recorded as an ADR.** Default: CSR.
 - **NG-ARCH-19: The Angular CLI MCP server SHOULD be configured** (`ng mcp`) for agents in the project's MCP configuration.
 
@@ -187,6 +189,7 @@ With these, `http-clients-only-in-http-adapter` lets only `adapter/out/http`, `s
 | Tailwind (`ng add tailwindcss`) | No Tailwind ([08-crosscutting-concepts/ui/angular-material.md](../08-crosscutting-concepts/ui/angular-material.md)) |
 | E2E with Cypress, Nightwatch, WebdriverIO, Puppeteer or Playwright | Playwright only ([08-crosscutting-concepts/testing/angular.md](../08-crosscutting-concepts/testing/angular.md)) |
 | `ng new --ai-config=agents` | `--ai-config=none`, baseline `AGENTS.md` (NG-ARCH-17) |
+| Inline `template:` / `styles:` in examples and generated components | `templateUrl` and `styleUrl` in dedicated files, always (NG-ARCH-21) |
 | Angular Aria for accordion, menu, tabs, … | Angular Material first (NG-UI-01/02) |
 | Run `ng build` after generating code | Run `npm run verify` (format, lint, architecture, tests, build) |
 
@@ -194,6 +197,7 @@ With these, `http-clients-only-in-http-adapter` lets only `adapter/out/http`, `s
 
 - [ ] File in the right ring and folder; suffixless Angular naming?
 - [ ] Signal APIs, `inject()`, control flow; no `NgModule`, no constructor DI?
+- [ ] Template and styles in dedicated `.html` / `.scss` files, no inline `template:` or `styles:` outside spec test hosts (NG-ARCH-21)?
 - [ ] Use cases plain, wired in `<feature>.providers.ts`; adapters use `inject()` and are bound with `useExisting`; tokens in `<feature>.tokens.ts`?
 - [ ] No `HttpClient`/`httpResource`/generated client outside `adapter/out/http`?
 - [ ] Forms validated with the command's zod schema; the factory typed `z.input<typeof Schema>`?

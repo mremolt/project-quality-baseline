@@ -123,7 +123,7 @@ expect(apiCalls.length, 'orders screen request budget').toBeLessThanOrEqual(2);
 ```
 
 - **TS-TEST-15: No fixed waits** (`waitForTimeout`). Use web-first assertions (`await expect(locator).toBeVisible()`).
-- **TS-TEST-16: The stubbed tier runs in Chromium, Firefox and WebKit; the smoke tier may use Chromium only.** Which browser runs at which viewport, theme and tier is defined once, by the matrix in TS-TEST-18.
+- **TS-TEST-16: The stubbed tier runs in Chromium, Firefox and WebKit; the smoke tier may use Chromium only.** WebKit stands in for Safari, which on iOS and iPadOS also underlies every other browser; it differs from Chromium in ways these tests assert (keyboard focus on click and Tab order, cookie handling for the BFF session, form controls, CSS support). Playwright's WebKit is not Safari itself; the manual release check with real browsers and screen readers (A11Y-24, L6 release checklist) stays the backstop. Which browser runs at which viewport, theme and tier is defined once, by the matrix in TS-TEST-18.
 
 Rules TS-TEST-17..27 and the matrix rules from TS-TEST-28 on are in [typescript-e2e.md](typescript-e2e.md): viewports and the tiered matrix, themes, reflow and text spacing, resize transitions, target size, visual regression, screen reader assertions, flaky tests and the time budget.
 
