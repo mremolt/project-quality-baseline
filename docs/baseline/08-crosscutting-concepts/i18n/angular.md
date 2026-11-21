@@ -25,7 +25,7 @@ The frontend-mechanism decision of [i18n.md](i18n.md#decisions) in Angular: runt
 
 ## Language, locale and formatting
 
-- **NG-I18N-07: The active language is one signal in `src/platform`** (fed by Transloco's active language) **and drives `<html lang>`, `dir`, the formatting pipes (NG-I18N-08), the Material date adapter (`DateAdapter.setLocale`) and the Material `*Intl` providers** (paginator, sort, stepper, datepicker labels), wired once in `src/platform`. `LOCALE_ID` is only the bootstrap default and is never switched at runtime.
+- **NG-I18N-07: The active language is one signal in `src/platform` that drives every locale-dependent setting** (fed by Transloco's active language): `<html lang>`, `dir`, the formatting pipes (NG-I18N-08), the Material date adapter (`DateAdapter.setLocale`) and the Material `*Intl` providers (paginator, sort, stepper, datepicker labels), wired once in `src/platform`. `LOCALE_ID` is only the bootstrap default and is never switched at runtime.
   *Why:* WCAG 3.1.1, formatting and Material's own strings must switch together. Angular reads `LOCALE_ID` once when the injector is created, and `DatePipe`, `DecimalPipe` and `CurrencyPipe` capture it, so changing it later formats nothing differently.
 - **NG-I18N-08: Format at the edge with own shared pipes on `Intl.*`, bound to the active-language signal** (NG-I18N-07): a date pipe on `Intl.DateTimeFormat` with the user's zone for instants, a `number` pipe on `Intl.NumberFormat`, a `money` pipe on `Intl.NumberFormat` for decimal strings, and an `Intl.Collator` wrapper for client-side sorting. They live in `src/shared/ui/format/` (stateless pipes, TS-ARCH-11) and re-format on a language switch in one of two ways: **impure** (`pure: false`) with the `Intl` formatter cached per locale, or **pure with the locale as an argument** (`value | money: lang()`). A pure pipe that only reads the signal inside `transform` is not called again while its arguments are unchanged, so it keeps the old format; TEST-I18N-08 catches that. Angular's `DatePipe`, `DecimalPipe` and `CurrencyPipe` are not used (NG-I18N-07). No `Number(amount)` for money, no `toLocaleDateString()` without an explicit locale, and date-only values never go through `new Date('yyyy-MM-dd')` with a zone.
   *Why:* precision, consistency, and the previous-day bug in negative-offset zones. Angular calls a pure pipe only when a primitive input or an object reference changes.
@@ -57,15 +57,4 @@ The Transloco version and testing helpers, and the `Intl` pipes and `DateAdapter
 | Switching `LOCALE_ID` at runtime; `DatePipe`/`DecimalPipe` for localized output | Own `Intl` pipes bound to the active-language signal (NG-I18N-07/08) |
 | Pure pipe that reads the language signal inside `transform` | Impure with a per-locale cache, or pure with the locale as an argument (NG-I18N-08) |
 
-## Agent checklist
-
-- [ ] Every new user-visible string, including `aria-label` and `title`, uses a key with context (NG-I18N-03/05)?
-- [ ] Stores and mappers return codes or keys only (NG-I18N-04)?
-- [ ] Money, dates and sorting go through the shared pipes or `Intl` with the active locale (NG-I18N-08)?
-- [ ] `lang`, `dir`, formatting pipes and Material locale follow the active-language signal (NG-I18N-07)?
-- [ ] Formatting pipes impure with a per-locale cache or pure with the locale as an argument; language-switch test (NG-I18N-08, TEST-I18N-08)?
-- [ ] Layout checked in the pseudo-locale; logical properties only (NG-I18N-11)?
-
-## Sources
-
-Angular i18n and `LOCALE_ID` guides (angular.dev/guide/i18n), Angular Material `DateAdapter`, angular-eslint `template/i18n` rule options, Angular pipes guide (pure and impure pipes, angular.dev/guide/templates/pipes), MDN `Intl`, Transloco docs (jsverse.gitbook.io/transloco), `@jsverse/transloco-messageformat`, `@jsverse/transloco-keys-manager`, WCAG 3.1.1, 3.1.2, 3.2.3, 3.2.6.
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular: Internationalization".*

@@ -128,17 +128,4 @@ import nextPlugin from '@next/eslint-plugin-next';
 | `size-limit`, `@next/bundle-analyzer` as a gate | `scripts/check-bundle.mjs` (NEXT-TOOL-08); an analyzer only for a one-off investigation |
 | Telemetry left at its default | Disabled everywhere (NEXT-TOOL-09) |
 
-## Agent checklist
-
-- [ ] `next.config.ts` has exactly the options of NEXT-TOOL-01, including `agentRules: false`; no `env`, `webpack` or caching options?
-- [ ] Compiler output present after a `next` or compiler upgrade (NEXT-TOOL-02)?
-- [ ] tsconfig: TS-TOOL-01 complete, Next.js additions accepted, `types` explicit; tests kept out of the image build (NEXT-TOOL-03/04)?
-- [ ] ESLint: React set plus `@next/eslint-plugin-next` as errors, no `next lint`, `process.env` only in config, directives only in suffix files (NEXT-TOOL-05/06)?
-- [ ] Scripts as in NEXT-TOOL-07, `dev` on loopback; `verify` green including `typecheck` and `check:bundle`?
-- [ ] Telemetry off; no `AGENTS.md` or `CLAUDE.md` in the component folder (NEXT-TOOL-09/10)?
-- [ ] Next.js API looked up in `node_modules/next/dist/docs/`, baseline docs followed where they differ (NEXT-TOOL-11)?
-- [ ] Upgrade done through the automation, codemods pinned, the post-upgrade checks run (NEXT-TOOL-12)?
-
-## Sources
-
-Next.js 16.4 documentation, bundled in `node_modules/next/dist/docs/` (`next.config.js` options `output`, `reactCompiler`, `poweredByHeader`, `images`, `serverActions`, `agentRules`, `agentFeedback`, `agentUpgrade`, `productionBrowserSourceMaps`, `typescript`; guides "AI Coding Agents", "Upgrading", "TypeScript", "ESLint"; Turbopack), Next.js 16.4.6 source `dist/server/lib/generate-agent-files.js` and `dist/server/lib/app-info-log.js`, Next.js telemetry (nextjs.org/telemetry), `@next/eslint-plugin-next` 16.4, `@mui/material-nextjs` 9.5, TypeScript 6.0 `types` default change (typescriptlang.org), ESLint `no-restricted-syntax` and ESTree `directive`. Verified in the baseline's Next.js validation project (2026-11-20) and, for `agentRules`, in a copy of it: `next dev` with and without an agent environment, with and without an existing `AGENTS.md`, and with `agentRules: false`.
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Tooling".*

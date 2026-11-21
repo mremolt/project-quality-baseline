@@ -159,16 +159,4 @@ export default defineConfig({
 | Generic habit: `size-limit` or a bundle analyzer service for budgets | `scripts/check-bundle.ts` without a dependency (REACT-TOOL-13) |
 | Vite habit: `vite build --mode staging`, `VITE_*` per environment, release version in `define` | One build; runtime values from `/config.json`; `define` only for deployment-independent constants (REACT-TOOL-11, REACT-CFG-01) |
 
-## Agent checklist
-
-- [ ] React plugin set in place with `warnAsError()`, `@eslint-react` hooks duplicates off, accessibility rules as errors (REACT-TOOL-01..04)?
-- [ ] `fetch` only in `adapter/out/http`, (React SPA) no `process` in `src/`, HTML-writing syntax banned (REACT-TOOL-05)?
-- [ ] New or upgraded lint plugin proven to fire with a probe file (REACT-TOOL-06)?
-- [ ] tsconfig deviations limited to REACT-TOOL-08; TypeScript inside typescript-eslint's peer range (REACT-TOOL-09)?
-- [ ] React Compiler output present after a build-tool upgrade (REACT-TOOL-10)?
-- [ ] `sourcemap: 'hidden'`, browser target of TS-TOOL-02, no release version or environment value in `define` (REACT-TOOL-11)?
-- [ ] `npm run verify` green, including `check:bundle`; a raised budget reviewed with its reason (REACT-TOOL-12/13)?
-
-## Sources
-
-eslint-plugin-react-hooks 7.1 (react.dev/reference/eslint-plugin-react-hooks), `@eslint-react/eslint-plugin` 5.30 (eslint-react.xyz), eslint-plugin-jsx-a11y-x 0.2 (github.com/es-tooling/eslint-plugin-jsx-a11y-x), `@tanstack/eslint-plugin-query` 5.107 (tanstack.com/query/latest/docs/eslint/eslint-plugin-query), ESLint 10 flat config (eslint.org/docs/latest/use/configure), typescript-eslint 8.72 peer range (typescript-eslint.io/users/dependency-versions), React Compiler (react.dev/learn/react-compiler), `@vitejs/plugin-react` 6.3 `reactCompilerPreset` and `@rolldown/plugin-babel` 0.3 (github.com/vitejs/vite-plugin-react), Vite 8.3 build options `target`, `sourcemap`, `define` (vite.dev/config/build-options), TypeScript `allowImportingTsExtensions` (typescriptlang.org/tsconfig), Node.js type stripping (nodejs.org/api/typescript.html).
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Tooling".*

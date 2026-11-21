@@ -62,16 +62,7 @@ Rules marked *verified* were built in the baseline's Next.js reference app (Next
 | Ladder | Review against the values in chapter 7 (the ingress is platform configuration); E2E: the first page arrives without a browser API call |
 | Caching | `next build` output lists no static (`○`) route that renders personal data (review of the build log in CI); cache adapter tests per RES-CCH-05 |
 
-## Agent checklist
-
-- [ ] New server-side call: deadline from configuration via `AbortSignal.timeout`, caller's signal combined, `redirect: 'error'`, timeout test (NEXT-RES-01/02)?
-- [ ] Values on the ladder: browser > ingress > `API_TIMEOUT_MS` > backend budget; `API_TIMEOUT_MS` is one deadline for session lookup, refresh and backend call; recorded in chapter 7 (NEXT-RES-03)?
-- [ ] Independent backend calls of a page start in parallel (NEXT-RES-03, NEXT-ARCH-09)?
-- [ ] No server-side retry unless idempotent and documented; queries retry only in the browser (NEXT-RES-04)?
-- [ ] Server action not retried; submit disabled while pending; `Idempotency-Key` per operation where the backend requires it (NEXT-RES-05)?
-- [ ] Bulkhead where a dependency has less capacity; no CPU-heavy work in the Next.js process (NEXT-RES-06)?
-- [ ] No `'use cache'`, ISR, `force-static` or `unstable_cache` on routes with personal data; static pages only by ADR (NEXT-RES-07)?
-- [ ] `fetch` without `next.revalidate`/`tags`, `cache: 'no-store'`; cross-request caches bounded and keyed by caller (NEXT-RES-08/09)?
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Resilience".*
 
 ## Skill overrides
 
@@ -84,7 +75,3 @@ Rules marked *verified* were built in the baseline's Next.js reference app (Next
 | Next.js cache workflow skills and docs: `'use cache'`, `cacheComponents`, ISR, `revalidateTag` | Dynamic by default; caching only for public pages by ADR (NEXT-D3, NEXT-RES-07/08) |
 | `tanstack-query-best-practices` `ssr-stale-time-server`: raise `staleTime` to avoid refetch after SSR | Server-rendered data goes in as `initialData`; `staleTime` per REACT-STATE-11 |
 | Generic habit: `fetch` without a timeout in a route handler, retry wrapper around every call | Deadline on every call, one retry layer (NEXT-RES-01/04) |
-
-## Sources
-
-Next.js 16 documentation (nextjs.org/docs): caching and revalidation, `fetch` options on the server, `'use cache'` and `cacheComponents`, route segment config (`dynamic`, `revalidate`), `after`, self-hosting guide. React 19.3 `cache` (react.dev). `openid-client` 6.9 (`discovery` `timeout` option, in seconds), `redis` 6.3 client options (`socket.connectTimeout`, `commandOptions.timeout`), MDN `AbortSignal.timeout` and `AbortSignal.any`, MSW 3.0 (`setupServer`, `onUnhandledFrame`), `lru-cache` README. AWS Builders' Library, *Timeouts, retries, and backoff with jitter*. Checked in the reference app on 2026-11-20 (Next.js 16.4.6, openid-client 6.9.0, redis 6.3.1, msw 3.0.5).

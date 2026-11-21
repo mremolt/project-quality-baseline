@@ -2,6 +2,8 @@
 
 Rules for NestJS services. They implement the shared docs and the Node docs ([stacks/node.md](node.md)) and may tighten them, never contradict them. Stack at a glance and defaults (`NEST-D*`): [04-solution-strategy/nestjs.md](../04-solution-strategy/nestjs.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [node](../rule-index/node.md), [nestjs](../rule-index/nestjs.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 A NestJS project reads the shared docs, [stacks/node.md](node.md) and the docs below. It never needs the Spring, Java or frontend stack docs.
 
 | Doc | Covers | Rule IDs |

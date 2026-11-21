@@ -148,14 +148,4 @@ Our own `ngrx-signals` skill already follows this doc. For reference, the origin
 | `type FooState = {…}` | `interface` (NG-STATE-05, stylistic lint) |
 | Tests mock services with hand-written `vi.fn()` objects | `mock<Contract>()` from vitest-mock-extended (NG-STATE-14) |
 
-## Agent checklist
-
-- [ ] Store in `adapter/in/ui`, injecting only use-case tokens (from `<feature>.tokens.ts`, never the providers file)?
-- [ ] Error mapper provided in `<feature>.providers.ts`, not root; no `adapter/out` or deep platform imports?
-- [ ] No DTOs, no HTTP, no other stores, no business rules in the store?
-- [ ] Scoped to component/route unless genuinely app-wide?
-- [ ] Error and rollback paths tested with mocked use cases; the store holds error keys, not text?
-
-## Sources
-
-NgRx Signal Store guide (ngrx.io/guide/signals/signal-store). API patterns adapted from the `ngrx-signals` skill by Daniel Sogl (github.com/danielsogl/skills, MIT). Architecture placement: this baseline.
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular State Management: NgRx Signal Store".*

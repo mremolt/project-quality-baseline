@@ -6,7 +6,7 @@ How a Spring Boot service binds, validates and receives its configuration and se
 
 ### Binding and validation
 
-- **SPRING-CFG-01: Own configuration is bound with `@ConfigurationProperties` on records, annotated `@Validated`,** with Jakarta constraints on the components (`@NotNull`, `@NotBlank`, `@Positive`, `@URL` from Hibernate Validator) and `@Valid` on nested records (validation does not cascade without it). Use `Duration`, `DataSize` and `URI` instead of numbers and strings. An invalid or missing value makes the context fail at startup (CFG-08). `spring-boot-starter-validation` is present (SPRING-LIB-03).
+- **SPRING-CFG-01: Own configuration is bound with `@ConfigurationProperties` on records, annotated `@Validated`.** Jakarta constraints sit on the components (`@NotNull`, `@NotBlank`, `@Positive`, `@URL` from Hibernate Validator) and `@Valid` on nested records (validation does not cascade without it). Use `Duration`, `DataSize` and `URI` instead of numbers and strings. An invalid or missing value makes the context fail at startup (CFG-08). `spring-boot-starter-validation` is present (SPRING-LIB-03).
 
 ```java
 // adapter/out/http/PaymentClientProperties.java
@@ -88,15 +88,4 @@ public final class Secret {
 | `/config.json` | `@WebMvcTest`: 200 without authentication, exact JSON keys, `Cache-Control: no-store` (SPRING-REST-13, SPRING-SEC-10) |
 | Deployed defaults (TEST-CFG-02) | The `e2e:smoke` start of the image (SPRING-DEV-10) runs without the `local` profile and with the required keys of `configuration-keys.yaml` only (CFG-12) |
 
-## Agent checklist
-
-- [ ] New setting: record with `@ConfigurationProperties("app.…")`, `@Validated`, constraints, `@Valid` on nested (SPRING-CFG-01/04)?
-- [ ] Record next to its adapter, enabled on that adapter's `@Configuration`; no `@Value` (SPRING-CFG-02/03)?
-- [ ] No new `application-<env>.yaml`; local values only in `application-local.yaml` (SPRING-CFG-05)?
-- [ ] Secret read from the config tree, typed `Secret` (SPRING-CFG-07/11, CFG-07)?
-- [ ] New `app.*` key in `configuration-keys.yaml` (CFG-12, TEST-CFG-04)?
-- [ ] `ApplicationContextRunner` test for valid, invalid and missing values?
-
-## Sources
-
-Spring Boot reference: externalized configuration (config tree, relaxed binding, `@ConfigurationProperties` validation, constructor binding with records), common application properties appendix (4.1); Spring Boot `ApplicationContextRunner` (test utilities); Hibernate Validator; The Twelve-Factor App.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Configuration".*

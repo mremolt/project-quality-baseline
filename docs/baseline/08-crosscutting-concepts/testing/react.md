@@ -268,19 +268,4 @@ Verified with React 19.3, Vitest 5.1, jsdom 31, Testing Library 16.3, user-event
 | Generic React testing habits | `vi.mock('./use-orders')`, mocking hooks, `getByTestId`, snapshotting rendered output | No module mocks of our code (TS-TEST-02), role queries (TS-TEST-07), no component snapshots (TS-TEST-06) |
 | `playwright-best-practices`, Vite docs | Run E2E against the dev server or `vite preview` | (React SPA) Built `dist/` behind the CSP server (REACT-TEST-18) |
 
-## Agent checklist
-
-- [ ] Spec in the right Vitest project: core specs in `node`, everything else in `jsdom` (REACT-TEST-01)?
-- [ ] Screen rendered with `renderWithProviders`; an object of mocked use cases in the feature's context, not the store, hooks or HTTP (REACT-TEST-05/06)?
-- [ ] Commands verified by value, value-object queries stubbed with `matches` (REACT-TEST-07)?
-- [ ] axe on main states, dialogs scanned outside the container (REACT-TEST-08)?
-- [ ] Announcements on the mocked `Announcer`; form errors via `toBeInvalid`, accessible description and focus; focus after dialogs (REACT-TEST-09/10/11)?
-- [ ] Slice tests through the store and selectors; every error class of a command covered in the page test, unexpected ones reported (REACT-TEST-12/13)?
-- [ ] (React SPA) Route options tested with a memory router; route-change handler tested with several navigations (REACT-TEST-14/15)?
-- [ ] HTTP adapter specs with Orval handlers, `onUnhandledFrame: 'error'`, every documented problem code (REACT-TEST-16)?
-- [ ] Architecture canary green and still failing on its fixtures (REACT-TEST-17)?
-- [ ] E2E against the built app behind the CSP server, zero CSP violations, stubs typed by `operationId`, T1 projects in `npm run e2e`, tags `@responsive`/`@theme`/`@shell` on main screens (REACT-TEST-18..21)?
-
-## Sources
-
-Vitest projects and environments (vitest.dev/guide/projects, vitest.dev/guide/environment), React Testing Library (testing-library.com/docs/react-testing-library/intro) and user-event 14, jest-dom (github.com/testing-library/jest-dom), Redux "Writing Tests" (redux.js.org/usage/writing-tests), TanStack Query testing (tanstack.com/query/latest/docs/framework/react/guides/testing), TanStack Router history types (tanstack.com/router/latest/docs/framework/react/guide/history-types), MSW 3 (mswjs.io), Orval MSW output (orval.dev), dependency-cruiser API (github.com/sverweij/dependency-cruiser), Playwright `webServer` and fixtures (playwright.dev/docs/test-webserver, playwright.dev/docs/test-fixtures), `@axe-core/playwright` 4.14.
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Testing".*

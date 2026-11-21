@@ -47,7 +47,7 @@ Decided for the baseline:
 
 ### Frontend errors
 
-- **OBS-14: Frontends report unhandled errors and failed backend calls** through one global handler to an error-reporting tool, with release version, environment, route template and trace id, and no tokens, personal data or form values (TS-SEC-06).
+- **OBS-14: Frontends report unhandled errors and failed backend calls through one global handler to an error-reporting tool.** Reports carry release version, environment, route template and trace id, and no tokens, personal data or form values (TS-SEC-06).
 - **OBS-15: Source maps are uploaded privately to the error-reporting tool by CI and never served publicly** (TS-SEC-05). The release version in reports matches the uploaded maps.
 
 ### SLOs, dashboards, alerts
@@ -70,18 +70,4 @@ Decided for the baseline:
 | Business metrics | OBS-07 counters | per product |
 | Frontend | error reports per release, failed-call share | yes, on a spike after a release |
 
-## Agent checklist
-
-- [ ] Probes reach the instance through the serving connector (OBS-19)?
-- [ ] New dependency check: in readiness only if the instance is useless without it; never in liveness (OBS-02/03)?
-- [ ] New consumer or long-running work: stops within the shutdown budget, and the budget still fits the grace period (OBS-04)?
-- [ ] New metric: needed, named, low-cardinality tags with a cardinality test, emitted outside `domain`/`ports` (OBS-07..09)?
-- [ ] New outbound call or producer: built from the instrumented client so the trace propagates (OBS-10)?
-- [ ] No personal data in tags, span attributes or error reports (OBS-08, OBS-14)?
-- [ ] New user-facing journey: SLO and dashboard panel considered (OBS-16/17)?
-
-## Sources
-
-OpenTelemetry specification and semantic conventions (opentelemetry.io), W3C Trace Context (w3.org/TR/trace-context), Google SRE Workbook (implementing SLOs, alerting on SLOs), Kubernetes probe and pod termination documentation, The RED Method (Tom Wilkie), Spring Boot actuator and observability reference.
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Observability and Operability".*

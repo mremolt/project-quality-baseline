@@ -26,12 +26,7 @@ Architecture erodes when nothing stops it. Code review and good intentions are n
   The finer the cut, the stronger the control and the more mapping is required.
 - **ARCH-ENF-07: Adding an inter-module dependency is a reviewed decision**, never a quick fix for a compile error.
 
-## Agent checklist
-
-- [ ] Do architecture tests exist and run in CI?
-- [ ] Did my change require loosening an architecture test? Then stop and raise it, or record an ADR. Don't silently relax the rule.
-- [ ] Are new adapter classes as hidden as the language allows?
-- [ ] Does every new class or file land in a location the tests allow (ARCH-ORG-01), so no rule silently skips it?
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Enforcing Architecture Boundaries".*
 
 ## Tech-specific implementation
 
@@ -40,7 +35,3 @@ Architecture erodes when nothing stops it. Code review and good intentions are n
 - Node.js/NestJS: dependency-cruiser template: [05-building-block-view/nestjs.md](../../05-building-block-view/nestjs.md#architecture-test-template)
 - TypeScript frontend: dependency-cruiser / ESLint boundaries, `index.ts` public APIs: [05-building-block-view/typescript.md](../../05-building-block-view/typescript.md)
 - React and Next.js: the TypeScript template with their constants and additions: [05-building-block-view/react.md](../../05-building-block-view/react.md), [05-building-block-view/nextjs.md](../../05-building-block-view/nextjs.md)
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 10 (Enforcing Architecture Boundaries), ch. 1 (shortcuts in layered architectures).

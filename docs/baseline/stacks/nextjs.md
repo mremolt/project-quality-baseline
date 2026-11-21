@@ -2,6 +2,8 @@
 
 Rules for Next.js apps (App Router). Next.js builds on the React layer ([stacks/react.md](react.md)): a Next.js project reads the shared docs, [stacks/typescript.md](typescript.md), the React docs (skipping rules marked **(React SPA)** and files whose intro says "Scope: React SPA") and the docs below. A Next.js rule never repeats a React rule; where it replaces an SPA default it says so. It never needs another frontend or backend stack's docs. Stack at a glance and defaults (`NEXT-D*`): [04-solution-strategy/nextjs.md](../04-solution-strategy/nextjs.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [typescript](../rule-index/typescript.md), [react](../rule-index/react.md), [nextjs](../rule-index/nextjs.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 A Next.js app is its own image and the BFF for its browser users (NEXT-D2), so it carries backend concerns: login and session, server-side calls with timeouts, probes, logs, telemetry and its own deployment. A product records the choice of Next.js and its reason (public pages that need server rendering, first-paint budgets, streaming) in its chapter 4; choosing a documented stack needs no ADR.
 
 | Doc | Covers | Rule IDs |

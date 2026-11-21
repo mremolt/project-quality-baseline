@@ -152,19 +152,4 @@ create index outbox_unsent on outbox_messages (position) where sent_at is null;
 
 Items of this file that are written from reference docs and not yet exercised in a service are listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use).
 
-## Agent checklist
-
-- [ ] `@platformatic/kafka` pinned exactly, no `@nestjs/microservices` Kafka transport, no `kafkajs`, no `@confluentinc/kafka-javascript`, no schema-registry API (NEST-MSG-01)?
-- [ ] Plain `npm ci` with `ignore-scripts=true`, no rebuild step, no compiler in the image (NEST-MSG-02)?
-- [ ] Client imported only under `adapter/(in|out)/messaging`; consumer dispatches on `type`, skips unknown types, calls one use-case token; no catch-log, no commit in the handler (NEST-MSG-03/04)?
-- [ ] Producer `idempotent: true` with `retries` ≥ 2 and explicit connect/request timeouts; consumer `autocommit: false`, `mode: 'committed'`, `fallbackMode: 'earliest'`, read committed, small `highWaterMark`, no topic auto-creation (NEST-MSG-05)?
-- [ ] Bytes decoded strictly, JSON parsed and checked by zod; envelope tolerant, decimals as strings (NEST-MSG-06)?
-- [ ] Runner uses `for await`, commits after each outcome, classifies by base class, retries bounded with jitter, nothing leaves the loop; failed dead-letter send restarts the consumer; dead-letter topic owned, counted, logged without payload (NEST-MSG-07/08)?
-- [ ] Event tied to a DB change goes through the outbox; one relay under `withClusterLock`, parking by `apiId`, gauges, trace context restored; inbox or natural idempotency stated (NEST-MSG-09/10/11)?
-- [ ] Shutdown: abort, `stream.close()`, await the loop, `consumer.close()` without force in `onModuleDestroy` within 20 s; producer in `onApplicationShutdown` (NEST-MSG-12)?
-- [ ] AsyncAPI regenerated, committed, validated; examples updated (NEST-MSG-13, MSG-CON)?
-- [ ] `*.it.test.ts` with the Kafka container covering success, unknown type, validation, invalid JSON, transient retry, stop with a record in progress, outbox commit and rollback, parking, duplicate (NEST-MSG-14)?
-
-## Sources
-
-`@platformatic/kafka` 2.15.0 package (README, `dist/**/*.d.ts`, `clients/producer/producer.js` idempotent defaults, `clients/consumer/messages-stream.js` autocommit and close, `clients/consumer/consumer.js` close and leave group, `clients/base/options.js` defaults, `errors.js`, `protocol/crc32c.js`) and `npm view @platformatic/kafka` (scripts, engines, release dates). `@testcontainers/kafka` 12.2 source. `@asyncapi/cli` 6.3.1 (`validate`, `diff`). zod 4 `toJSONSchema`. Kysely 0.29 (`onConflict`, `InsertResult`). OpenTelemetry JS API (`propagation`, `context`). All checked on 2026-11-20. Exercised with Node 26.1, TypeScript 6.0.3, vitest 5.1.0, zod 4.6.7 and `@testcontainers/kafka` 12.2.1 against `confluentinc/cp-kafka:8.1.0`: install with `ignore-scripts=true`; produce and consume; idempotent producer with `acks: -1`; `traceparent` injected and extracted; zod envelope; loss with `autocommit: true`; commit after processing; no redelivery after a clean stop; stop and force close with a record in progress; stall after an error leaves the loop; `'data'` listener skipping; dead letter with original bytes, partition and headers; `MESSAGE_TOO_LARGE`, unknown topic, connect and request timeouts and the unbounded retries of an idempotent producer with `retries` ≤ 1; loading under `node --permission` without `--allow-addons`.
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Messaging with Kafka".*

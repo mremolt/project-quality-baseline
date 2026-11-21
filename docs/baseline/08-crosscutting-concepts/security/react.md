@@ -77,16 +77,7 @@ React rules on top of [typescript.md](typescript.md) (`TS-SEC-*`). Decisions: th
 
   Specs cover at least: an XSS payload in a user-controlled field is shown as text and does not execute; a deep link reloaded in the browser loads the app and its lazy chunk; the XSRF header is sent on a mutating call and not on a `GET` (Vitest on the mutator plus one E2E request assertion); a `401` leads to the login path. The full-stack tier asserts the CSP and every header the BFF sets on the real BFF; header checks run on every pull request.
 
-## Agent checklist
-
-- [ ] No `dangerouslySetInnerHTML`, no `innerHTML`-like write, no DOM write through a ref (REACT-SEC-01/03)?
-- [ ] URLs from data go through the URL helper; `target="_blank"` has `rel="noopener noreferrer"` (REACT-SEC-02)?
-- [ ] CSP change: nonce in `script-src` and `style-src`, no `'unsafe-inline'`, `trusted-types 'none'` or a reviewed named policy, `index.html` uncached, Emotion cache still nonced (REACT-SEC-04/05)?
-- [ ] New schema module or dependency: still no violation under Trusted Types (zod jitless first, strict execution order kept) (REACT-SEC-05)?
-- [ ] Mutating calls go through the mutator, relative URLs, XSRF header kept, no token or persisted cache in the browser (REACT-SEC-06)?
-- [ ] Route checks treated as UX; the backend enforces the rule (REACT-SEC-07)?
-- [ ] Error UI generic, no `error.message` on screen (REACT-SEC-08)?
-- [ ] E2E violation fixture still active and security specs updated (REACT-SEC-09)?
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Security".*
 
 ## Skill overrides
 
@@ -99,7 +90,3 @@ React rules on top of [typescript.md](typescript.md) (`TS-SEC-*`). Decisions: th
 | `material-ui-theming` `InitColorSchemeScript` and Emotion `<style>` injection without a nonce | Emotion cache with the nonce from the meta tag; no `InitColorSchemeScript` in the SPA (REACT-SEC-04) |
 | `material-ui-theming` colour-scheme preference in `localStorage` | Allowed (not personal data); never extended to tokens or personal data (TS-SEC-01) |
 | Generic React habit: token in `localStorage` and an `Authorization` header in a fetch wrapper | BFF cookie session; the mutator adds only the XSRF header (REACT-SEC-06) |
-
-## Sources
-
-React DOM components and `dangerouslySetInnerHTML` (react.dev/reference/react-dom/components/common), React 19.3; Vite 8.3 `html.cspNonce` (vite.dev/config/shared-options); Rolldown `output.strictExecutionOrder` (rolldown.rs); Emotion 11.14 `@emotion/cache` `nonce`, `prepend`; MUI 9.5 Content Security Policy guide (mui.com/material-ui/guides/content-security-policy); zod 4.6 `z.config({ jitless: true })` (zod.dev); `@eslint-react/eslint-plugin` 5.30 DOM rules; `@react-aria/live-announcer` 3.5; Trusted Types (w3c.github.io/trusted-types); OWASP Content Security Policy Cheat Sheet (strict policy); OWASP Cross-Site Request Forgery Prevention Cheat Sheet; OWASP ASVS 5.0 V3 and V7.

@@ -124,15 +124,4 @@ Items to confirm in the first service (SPRING-OBS-02, SPRING-OBS-07) are listed 
 | `Observation` and `MeterRegistry` used inside an `@Service` | Business metrics through an outgoing port; Observation API only in `application` (SPRING-OBS-06) |
 | Developer console dependency (BootUI) | Not used; Compose profile `observability` (SPRING-DEV-03) |
 
-## Agent checklist
-
-- [ ] Probes on the server port (`/livez`, `/readyz`), not routed by the ingress; actuator on the management port, `health,info` only, dedicated chain whose `permitAll` lines match the exposure list and `denyAll` for the rest (SPRING-OBS-01/02)?
-- [ ] Nothing added to liveness; readiness additions have a reason (SPRING-OBS-03)?
-- [ ] `server.shutdown` not set to `immediate`; sum of shutdown phases plus pre-stop delay fits the platform grace period (SPRING-OBS-04)?
-- [ ] New Kafka listener: observation on, poll batch fits the shutdown phase (SPRING-OBS-05/09)?
-- [ ] New business metric: outgoing port, adapter with `MeterRegistry`, closed-set tags, cardinality test (SPRING-OBS-06/11)?
-- [ ] New HTTP client built from the injected builder (SPRING-OBS-09)?
-
-## Sources
-
-Spring Boot reference 4.2 (actuator endpoints: Kubernetes probes, health groups, additional paths; tracing; graceful shutdown) and the 4.1 common application properties appendix, Micrometer documentation (naming conventions, Observation API, `SimpleMeterRegistry`, tracing test), Spring for Apache Kafka reference and source (observation, container stop, `AbstractMessageListenerContainer.DEFAULT_PHASE`), Spring Boot source (`WebServerApplicationContext.GRACEFUL_SHUTDOWN_PHASE`), Spring Boot `EndpointRequest` Javadoc (`toAdditionalPaths`), Spring Security reference (`EndpointRequest`), Kubernetes pod lifecycle (termination grace period), `spring-observability` skill.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Observability and Operability".*

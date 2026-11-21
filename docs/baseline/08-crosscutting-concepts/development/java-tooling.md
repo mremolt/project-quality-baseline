@@ -109,14 +109,4 @@ SAST next to FindSecBugs: JAVA-TOOL-21 under [Security tooling](#security-toolin
 - **JAVA-TOOL-21: A SAST tool runs in CI next to FindSecBugs** with an agreed rule set (SEC-CI-01, [secure-pipeline.md](../security/secure-pipeline.md); reference tool, replaceable: Semgrep CE); suppressions carry a reason or point at `docs/security/exceptions.md` (SEC-VUL-03).
 - **JAVA-TOOL-22:** Deprecated, see [JAVA-TOOL-05](#jdk-and-maven-defaults-java-d1-java-d2) (versions from the BOM, review of new dependencies).
 
-## Agent checklist
-
-- [ ] Used `./mvnw`, from the component folder?
-- [ ] No Lombok, no new `@SuppressWarnings`/`@SuppressFBWarnings` without a reason, no check switched off?
-- [ ] New package has `@NullMarked`?
-- [ ] New dependency reviewed, version from the BOM or `<properties>` (JAVA-TOOL-05)?
-- [ ] `./mvnw verify` green before finishing?
-
-## Sources
-
-Error Prone (errorprone.info), NullAway (github.com/uber/NullAway), JSpecify (jspecify.dev), Spotless Maven plugin (github.com/diffplug/spotless), palantir-java-format, SpotBugs and FindSecBugs, JaCoCo, maven-enforcer-plugin, OSV-Scanner (google.github.io/osv-scanner), CycloneDX Maven plugin, Maven guide to reproducible builds (maven.apache.org/guides/mini/guide-reproducible-builds.html), Spring Boot Maven plugin `build-info` goal (`time` defaults to `project.build.outputTimestamp`).
+*Agent checklist in [checklists/java.md](../../checklists/java.md) and sources in [sources.md](../../sources.md), section "Java Tooling".*

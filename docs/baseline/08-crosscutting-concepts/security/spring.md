@@ -47,16 +47,4 @@ The cookie, CSRF and session details of the BFF are SPRING-SEC-24/25 and SPRING-
 - **SPRING-SEC-12: The forwarded-header strategy is set explicitly per deployment**, never left to the default: on Boot 4.1 `server.forward-headers-strategy` (`native` behind a trusted reverse proxy or load balancer, `none` when nothing sits in front). The proxy strips client-supplied `Forwarded`/`X-Forwarded-*` headers before setting its own. Boot 4.2 deprecates that property for `server.request.header.forwarded.strategy` (values `web-server`, formerly `native`, `framework`, `none`; setting both properties fails the start-up), reads only `X-Forwarded-*` by default (RFC 7239 `Forwarded` needs `server.request.header.forwarded.naming=rfc-7239`, which Tomcat does not support), and ignores `X-Forwarded-Prefix` unless `server.request.header.forwarded.use-prefix=true`. Switch the property name in the same change as the Boot upgrade.
   *Why:* scheme, host and client address from forwarded headers drive redirects, generated links, cookie `Secure` flags and audit logs; trusting them from the client is a spoofing hole, ignoring them behind a proxy breaks the BFF login redirects.
 
-## Agent checklist
-
-- [ ] Security config only in `adapter.in.rest`; deny-by-default ends the rule list?
-- [ ] No Spring Security types in `domain`/`ports`; `Caller` carried in the command?
-- [ ] No hand-rolled token handling, no secrets in the repo, nothing sensitive logged?
-- [ ] 401/403/success tests for each new endpoint?
-- [ ] Actuator exposure unchanged (allow-list), every exposed endpoint permitted by name?
-- [ ] New deployment target: forward-headers strategy set explicitly (SPRING-SEC-12)?
-- [ ] Hardening checklist ([spring-hardening.md](spring-hardening.md)) answered for headers, limits, injection, object-level access, sessions, errors?
-
-## Sources
-
-Spring Security reference (docs.spring.io/spring-security), OAuth 2.1 and OpenID Connect Core, OAuth 2.0 for Browser-Based Applications (IETF draft, BFF pattern), OWASP ASVS.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Security".*

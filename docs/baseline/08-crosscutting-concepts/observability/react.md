@@ -44,13 +44,7 @@ How a React frontend implements [observability.md](observability.md) (`OBS-*`, i
 | E2E stubbed | Playwright: a stubbed 503 with `traceId` produces one request to the configured reporting path, with route template `/orders`, `traceId`, and no query string in its body (`page.waitForRequest`) |
 | Build | `check:bundle`: no `sourceMappingURL`; release job: no `.map` file in the handed-over bundle |
 
-## Agent checklist
-
-- [ ] New error path: ends in `ReportErrorUseCase` through a boundary, the route `errorComponent`, the `window` listeners or the mutator; no direct SDK call (REACT-OBS-01/02)?
-- [ ] New HTTP adapter: calls through the mutator, problem `code`s mapped to domain errors, the `TechnicalError`s it creates reported once, those it receives passed on unreported (REACT-OBS-04, TS-ARCH-18)?
-- [ ] Reporting reached through `useReportError()` or the platform composition only (REACT-OBS-02)?
-- [ ] Report fields: route template and ids only, no personal data (REACT-OBS-05)?
-- [ ] Build change: `sourcemap: 'hidden'` kept, maps uploaded and removed, `check:bundle` still checks (REACT-OBS-06)?
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Error Reporting and Correlation".*
 
 ## Skill overrides
 
@@ -59,7 +53,3 @@ How a React frontend implements [observability.md](observability.md) (`OBS-*`, i
 | Error-tracking SDK snippets (`Sentry.init` in `main.tsx`, the SDK's own React error boundary, DSN to an external host) | The SDK, if chosen by ADR, lives only in the `ErrorReportingPort` adapter; reports go to the same-origin path (REACT-OBS-02/03) |
 | `tanstack-query-best-practices`: error handling on HTTP status in `onError` or `retry` | The UI sees domain errors only; technical failures are reported once where they are created (REACT-OBS-04, TS-ARCH-18) |
 | Vite habit: `build.sourcemap: true` for debuggable production | `'hidden'`, uploaded and removed (REACT-OBS-06) |
-
-## Sources
-
-React 19.3 error boundaries (react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary); TanStack Router 1.170 `errorComponent`, `ErrorComponentProps`, `lazyRouteComponent` (tanstack.com/router); Vite 8.3 `build.sourcemap` (vite.dev/config/build-options); MDN `unhandledrejection`, `fetch` `keepalive`; OpenTelemetry JavaScript browser status (opentelemetry.io/docs/languages/js); W3C Trace Context; OWASP Logging Cheat Sheet.

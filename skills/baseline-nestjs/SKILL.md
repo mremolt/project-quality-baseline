@@ -9,7 +9,7 @@ The baseline docs are the rules; skills and the NestJS documentation supply fram
 
 ## 1. Read the rules for the task
 
-Always: `docs/baseline/stacks/nestjs.md`, `docs/baseline/05-building-block-view/node.md`, `docs/baseline/05-building-block-view/nestjs.md`.
+Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule index in `docs/baseline/rule-index/` (`shared.md`, `node.md`, `nestjs.md`), one line per rule ID, and `docs/baseline/05-building-block-view/node.md`, `docs/baseline/05-building-block-view/nestjs.md`. Then only the docs of the rows below that match the task; for a rule from a doc you have not read, search the doc for its ID and read that bullet.
 
 | Task | Also read |
 |---|---|
@@ -72,6 +72,7 @@ Full table: `docs/baseline/stacks/nestjs.md#skill-overrides`.
 6. **Contract**: changed controller or schema → `npm run openapi` and commit the spec with the change.
 7. **Shortcuts**: propose and draft an ADR; never take one silently (ARCH-SC-06).
 8. **Finish** with `cd backend && npm run verify` green, and no dependency-cruiser rule, compiler check, lint rule or security check loosened.
+9. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New service
 

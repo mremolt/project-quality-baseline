@@ -152,22 +152,7 @@ const written = await this.redis.eval(COMPARE_AND_SET, {
 - **NEXT-SEC-12: Request limits that Next.js does not offer are set at the ingress.** Next.js limits only server-action bodies (`experimental.serverActions.bodySizeLimit`, NEXT-SEC-04); route handlers have no body, header or time limit of their own (only the client-error intake reads at most 16 KiB itself, NEXT-OBS-18), and the API proxy reads the whole body (`request.arrayBuffer()`) before relaying it. The ingress in front of the app therefore sets a body-size limit (the largest API request plus margin), header-size and request-time limits on the timeout ladder ([NEXT-RES-03](../resilience/nextjs.md)), and rate limits for `/auth/*`, `/client-errors`, the CSP report endpoint and action `POST`s (`/client-errors` also has a per-instance limit of its own, NEXT-OBS-18). The values are recorded in the product's chapter 7. *To verify before first use* (not built in the reference app).
 - **NEXT-SEC-13: Test stubs ship in the one image but can only start in a test or local environment; the start-up refuses them anywhere else.** The production build contains MSW and faker in its server chunks (Turbopack bundles the dynamic import; accepted to keep one build, CFG-02). `register()` in `src/instrumentation.ts` parses the server configuration first and starts the stubs only when `APP_TEST_STUBS` is on; the schema rejects `APP_TEST_STUBS=1` unless `APP_ENVIRONMENT_KIND` is `test` or `local`, and an invalid configuration ends the process with exit code 1 (keys and mechanism: [NEXT-CFG-07](../configuration/nextjs.md)). A unit test asserts that the schema refuses the flag with `APP_ENVIRONMENT_KIND=deployed`; the image smoke test starts with stubs off ([NEXT-REL-21](../../07-deployment-view/nextjs-delivery.md)). *Verified* in a copy of the reference app: `APP_TEST_STUBS=1` with `deployed` → exit 1 before the first request; with `test` → the stubbed E2E suite passes.
 
-## Agent checklist
-
-- [ ] Login, callback, logout, API proxy as route handlers that call the session and relay use cases; cookies set only in route handlers or `proxy.ts` (NEXT-SEC-01/02)?
-- [ ] Session store behind the port, Redis `compareAndSet` in Lua, 256-bit id, no tokens in cookies; pre-login state under `__Host-login`, session cookie only from a successful callback; one refresh per session (in-process map plus Redis lock), touches without a generation bump (NEXT-SEC-01)?
-- [ ] XSRF synchronizer token checked with `timingSafeEqual` on every unsafe API-proxy call and on logout (NEXT-SEC-02)?
-- [ ] Nonce created in `proxy.ts`, passed as request headers, read by the root layout and given to `AppRouterCacheProvider` (NEXT-SEC-03)?
-- [ ] New server action: module-level, session re-resolved, `unknown` input parsed `.strict()`, one use case, error codes only (NEXT-SEC-04/07)?
-- [ ] Cross-origin writes to page paths (actions, no-JS form posts) rejected in `proxy.ts`; new route handler prefixes added to `isRouteHandlerPath()` with their own checks; `allowedOrigins` unset (NEXT-SEC-05)?
-- [ ] Client props and action results hold no token, session, configuration object or raw backend response; secret-holding modules import `server-only` (NEXT-SEC-06)?
-- [ ] No `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in the build (NEXT-SEC-07)?
-- [ ] Security headers from `security-headers.ts`, `poweredByHeader: false` (NEXT-SEC-08)?
-- [ ] Threat model and the security tests in CI before go-live (NEXT-SEC-09)?
-- [ ] `instrumentation-client.ts`: zod jitless first, `default` policy allows only `/_next/static/chunks/`, returns the input unchanged (NEXT-SEC-10)?
-- [ ] No elevated MUI surface rendered on the server; no `'unsafe-inline'` (NEXT-SEC-11)?
-- [ ] Body, header, time and rate limits at the ingress recorded in chapter 7 (NEXT-SEC-12)?
-- [ ] `APP_TEST_STUBS` refused outside test and local environments, with a test (NEXT-SEC-13)?
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Security".*
 
 ## Skill overrides
 
@@ -183,7 +168,3 @@ const written = await this.redis.eval(COMPARE_AND_SET, {
 | Next.js docs: `experimental.taint` as the protection against leaking data | Not enabled by default (experimental React channel); structural rules instead (NEXT-SEC-06) |
 | Next.js docs: Trusted Types with `trusted-types nextjs` / pass-through `default` policy | `default` policy that allow-lists `/_next/static/chunks/` only (NEXT-SEC-10) |
 | `material-ui-theming` / `material-ui-styling`: elevation on server-rendered `Paper`, `InitColorSchemeScript` | `variant="outlined"` on server-rendered surfaces, `colorSchemeSelector: 'media'` (NEXT-SEC-11) |
-
-## Sources
-
-Next.js 16 documentation (nextjs.org/docs): Content Security Policy guide (nonces through `proxy.ts`), `proxy.ts` file convention, Server Actions security ("Data Security" guide: Origin check, closures and encryption, `allowedOrigins`, `bodySizeLimit`), `instrumentation-client.ts`, `experimental.taint`, `poweredByHeader`. Next.js 16.4.6 source in `next/dist` (`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `server-reference-manifest.json`, configuration types). React 19.3 serializable props of client components and taint APIs (react.dev). `@mui/material-nextjs` 9.5 `v16-appRouter` `AppRouterCacheProvider`; MUI Content Security Policy guide. `openid-client` 6.9 and `redis` 6.3 documentation. W3C Trusted Types, Fetch Metadata (`Sec-Fetch-Site`). OWASP ASVS 5.0 (V3, V4, V7, V10), OWASP CSRF Prevention, Session Management and Content Security Policy Cheat Sheets. Checked in the reference app and a copy of it on 2026-11-20 (Next.js 16.4.6, React 19.3.1, MUI 9.5.0, zod 4.6.7, openid-client 6.9.0, redis 6.3.1 against Redis 8.4, Playwright 1.65 with Chromium and Firefox).

@@ -30,12 +30,12 @@
     "baseline-angular": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "585049c51a867fec9800f99727ef73b2239442817425c0eaa1ba3e91347ad5f4"
+      "computedHash": "4158916c5cf875dd97c9fb8c8514afb97a5381ee597e99ac92693ed9d01b7122"
     },
     "baseline-codebase-review": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "b7dcfad3db426cd989b9fbc00245ac23be1bb4cc8d0c40fb4ea76cd1eabd3c16"
+      "computedHash": "541a4bdf84966e1db6c24e97ddcdafbbd488cae073cfe4fd86c848278c1bb3e8"
     },
     "baseline-i18n": {
       "source": "./skills",
@@ -45,22 +45,22 @@
     "baseline-ide-setup": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "ca619aec3d064fe1d27fe66da383dc8513db875cc4c62f2ee1742cf100d7cfa2"
+      "computedHash": "0ca3118e47aadc2b1da607a599a7730e713fd7ffe5b7a4c2b672a304f0aa0f3a"
     },
     "baseline-nestjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "10c346d56ffa6c505854cd9aa891f3b1d921fdadf20adcdd78e81f361225c69b"
+      "computedHash": "7c3701c410c85d67d6c1a8927a3f7c5772e7b9e83a3631563d382d86b8626839"
     },
     "baseline-nextjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "2fd19103186315f8b8773ce110aeb5aa524c819aedfd54d42213ab8c5d37d74a"
+      "computedHash": "c244641159ac200121c28b2afde9f367bdea9aa9023c8f078ea8ffeb7cf8843e"
     },
     "baseline-react": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "8f04dab0c962a1179d9e53bf77827cd43b27b9afa4a9d0c96f605d2293e47a34"
+      "computedHash": "36eaf2335cf6541b4118958678fa53bf4c4cd804f3d65126df970478769e65e0"
     },
     "baseline-security": {
       "source": "./skills",
@@ -70,7 +70,7 @@
     "baseline-spring": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "c030d15a154afa9447301525cb486b6219ab701cd72b9904465d5bdb5c0a0ae5"
+      "computedHash": "e36b00ab082f7da70b5fca1487e542351c730db11e71e4d4b1369799fea358c0"
     },
     "baseline-tdd": {
       "source": "./skills",

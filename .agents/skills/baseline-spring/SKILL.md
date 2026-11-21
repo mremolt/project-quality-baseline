@@ -9,7 +9,7 @@ The baseline docs are the rules; skills supply framework know-how. **Where a ski
 
 ## 1. Read the rules for the task
 
-Always: `docs/baseline/stacks/spring.md`, `docs/baseline/05-building-block-view/spring.md`, `docs/baseline/05-building-block-view/java.md`.
+Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule index in `docs/baseline/rule-index/` (`shared.md`, `java.md`, `spring.md`), one line per rule ID, and `docs/baseline/05-building-block-view/spring.md`, `docs/baseline/05-building-block-view/java.md`. Then only the docs of the rows below that match the task; for a rule from a doc you have not read, search the doc for its ID and read that bullet.
 
 | Task | Also read |
 |---|---|
@@ -78,6 +78,7 @@ Full table: `docs/baseline/stacks/spring.md#skill-overrides`.
 6. **Contract**: changed controller → regenerate the spec with `./mvnw verify -Dopenapi.update=true` (`OpenApiSpecIT`) and commit it with the change (SPRING-API-08).
 7. **Shortcuts**: if you need one (e.g. skipping a use case for trivial CRUD), propose it and draft an ADR; never take it silently (ARCH-SC-06).
 8. **Finish** with `cd backend && ./mvnw verify` green, and no architecture test, compiler check, SpotBugs rule or formatter setting loosened.
+9. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New service
 

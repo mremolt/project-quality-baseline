@@ -56,15 +56,4 @@ Examples: database/ORM, message producers, object storage (S3), third-party API 
 - Adapter returning ORM entities through a port.
 - An HTTP status exception thrown from the application layer.
 
-## Agent checklist
-
-- [ ] Adapter contains mapping, protocol and error translation only, with no business decisions?
-- [ ] Incoming adapter calls an incoming port; outgoing adapter implements outgoing port(s)?
-- [ ] Port models live in the core; technology models stay in the adapter?
-- [ ] Port is narrow (ideally one method, or a cohesive few)?
-- [ ] No transaction handling in the adapter?
-- [ ] Incoming adapter authenticates and passes the caller; object-level authorization left to the use case (ARCH-UC-15)?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 5 (Implementing a Web Adapter), ch. 6 (Implementing a Persistence Adapter).
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Implementing Adapters".*

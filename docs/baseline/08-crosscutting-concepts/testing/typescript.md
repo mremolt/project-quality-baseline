@@ -137,16 +137,4 @@ Rules TS-TEST-17..27 and the matrix rules from TS-TEST-28 on are in [typescript-
 | `playwright-best-practices` | Playwright component testing | Component tests run in Vitest with Testing Library |
 | `playwright-best-practices` (accessibility, mobile-testing, visual-regression) | ARIA attribute locators and checks, `getByTestId`, breakpoints 375 / 768 / 1920, `setViewportSize` loops, `networkidle` waits, screenshots as a default, screen readers "periodically" | Locators by role and name (TS-TEST-11); web-first assertions (TS-TEST-15); everything else as overridden in [typescript-e2e.md](typescript-e2e.md#skill-overrides) |
 
-## Agent checklist
-
-- [ ] Doubles via `mock<Contract>()`; no `vi.mock` of our own modules?
-- [ ] Component tests query by role; every component spec runs axe on its main states?
-- [ ] E2E: axe fixture on new screens/states, keyboard journey, request budget as an upper bound?
-- [ ] Responsive, theme and screen reader checks as in [typescript-e2e.md](typescript-e2e.md#agent-checklist)?
-- [ ] Contract change → stubs still compile (typed by `operationId`)?
-
-## Sources
-
-Vitest (vitest.dev), vitest-mock-extended (github.com/eratio08/vitest-mock-extended), Testing Library guiding principles (testing-library.com), MSW (mswjs.io), Playwright (playwright.dev), `@axe-core/playwright` (github.com/dequelabs/axe-core-npm).
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript Testing".*

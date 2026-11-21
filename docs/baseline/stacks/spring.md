@@ -2,6 +2,8 @@
 
 Rules for Spring Boot services. They implement the shared docs and the Java docs ([stacks/java.md](java.md)) and may tighten them, never contradict them. Stack at a glance and defaults (`SPRING-D*`): [04-solution-strategy/spring.md](../04-solution-strategy/spring.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [java](../rule-index/java.md), [spring](../rule-index/spring.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 | Doc | Covers | Rule IDs |
 |---|---|---|
 | [05-building-block-view/spring.md](../05-building-block-view/spring.md) | Package structure, wiring, transactions, persistence mapping, messaging, ArchUnit template | `SPRING-ARCH-*` |

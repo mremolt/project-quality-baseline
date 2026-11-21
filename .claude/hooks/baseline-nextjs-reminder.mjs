@@ -37,6 +37,6 @@ try { fs.writeFileSync(marker, ''); } catch { /* reminder still useful without t
 process.stdout.write(`${JSON.stringify({
   hookSpecificOutput: {
     hookEventName: 'PreToolUse',
-    additionalContext: 'Baseline reminder: before creating or editing Next.js code, load the `baseline-nextjs` skill (it loads the React skills and routes to the Next.js docs) and follow docs/baseline/stacks/nextjs.md (and the docs it lists). The baseline docs override the skills and the Next.js docs. Check for N+1 requests on data loading, work test-first (baseline-tdd), and finish with `npm run verify` from the component folder.',
+    additionalContext: 'Baseline reminder: before creating or editing Next.js code, load the `baseline-nextjs` skill (it loads the React skills and routes to the Next.js docs) and read the rule index in docs/baseline/rule-index/ (shared, typescript, react and nextjs); open full docs only for the topics the task touches, from the task table of the skill (TOOL-SKL-10). The baseline docs override the skills and the Next.js docs. Check for N+1 requests on data loading, work test-first (baseline-tdd), and finish with `npm run verify` from the component folder.',
   },
 }, null, 2)}\n`);

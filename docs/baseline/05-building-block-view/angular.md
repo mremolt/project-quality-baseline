@@ -193,18 +193,4 @@ With these, `http-clients-only-in-http-adapter` lets only `adapter/out/http`, `s
 | Angular Aria for accordion, menu, tabs, … | Angular Material first (NG-UI-01/02) |
 | Run `ng build` after generating code | Run `npm run verify` (format, lint, architecture, tests, build) |
 
-## Agent checklist
-
-- [ ] File in the right ring and folder; suffixless Angular naming?
-- [ ] Signal APIs, `inject()`, control flow; no `NgModule`, no constructor DI?
-- [ ] Template and styles in dedicated `.html` / `.scss` files, no inline `template:` or `styles:` outside spec test hosts (NG-ARCH-21)?
-- [ ] Use cases plain, wired in `<feature>.providers.ts`; adapters use `inject()` and are bound with `useExisting`; tokens in `<feature>.tokens.ts`?
-- [ ] No `HttpClient`/`httpResource`/generated client outside `adapter/out/http`?
-- [ ] Forms validated with the command's zod schema; the factory typed `z.input<typeof Schema>`?
-- [ ] Feature routes loaded lazily from `app.routes.ts`, not via `index.ts`; another feature's use cases only via its `provide<Feature>Api()`?
-- [ ] Failed chunk load reloads once, guarded by the release version (NG-ARCH-20)?
-- [ ] N+1 check done?
-
-## Sources
-
-Angular documentation (angular.dev), Angular style guide (angular.dev/style-guide), `angular-developer` skill (github.com/angular/skills). Architecture mapping: this baseline.
+*Agent checklist in [checklists/angular.md](../checklists/angular.md) and sources in [sources.md](../sources.md), section "Angular: Architecture and Project Structure".*

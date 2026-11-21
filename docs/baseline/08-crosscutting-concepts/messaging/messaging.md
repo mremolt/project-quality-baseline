@@ -90,7 +90,7 @@ Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): 
 - **MSG-ERR-02: Retries for a consumer are bounded, with exponential backoff and jitter** (RES-RTY-03), and happen in the consumer's error handler (one retry layer: RES-RTY-04). Blocking retries keep per-key order; retries through separate retry topics break it and need a stated reason.
 - **MSG-ERR-03: A poison message never blocks a partition.** After classification or exhausted retries, it goes to the dead-letter topic and the consumer moves on.
 - **MSG-DLT-01: Dead-letter topics belong to the consuming service.** Name: `<source-topic>.<consumer-service>-dlt` (`orders.order-events.v1.billing-dlt`), so two consumers of one topic never share a dead-letter topic. The consuming team creates it (Kafka: at least as many partitions as the source, SPRING-MSG-05; NestJS: [nestjs.md](nestjs.md)), monitors it and handles its records. The dead letter keeps the original key, payload and headers and adds the failure reason, original topic, partition and offset.
-- **MSG-DLT-02: Every dead letter raises an alert** to the owning team (a metric on the DLT's record count or the consumer's dead-letter counter), and dead letters are logged once by the error handler at `ERROR` without the payload (SPRING-LOG-07/08, NEST-LOG-08/09).
+- **MSG-DLT-02: Every dead letter raises an alert to the owning team and is logged once.** The alert is a metric on the DLT's record count or the consumer's dead-letter counter; the error handler logs each dead letter once at `ERROR` without the payload (SPRING-LOG-07/08, NEST-LOG-08/09).
 - **MSG-DLT-03: Replay is a documented, tested procedure.** After the cause is fixed, records are re-published from the DLT to the source topic (or fed to the consumer) by an operator tool or admin endpoint, keeping the original `id`, so the consumer's deduplication (MSG-IDM-02) makes a replay safe. The runbook lives in the product's chapter 8 and names who may replay.
 
 ## Anti-patterns
@@ -103,17 +103,4 @@ Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): 
 - A shared `orders-dlt` that three teams read, and nobody alerts on.
 - Infinite retries on a validation error that will fail the same way forever.
 
-## Agent checklist
-
-- [ ] Event named in past tense, business language, on a `<context>.<stream>.v<N>` topic (MSG-EVT)?
-- [ ] Envelope fields present; key = aggregate id (MSG-ENV-01, MSG-ORD-01)?
-- [ ] Contract change additive, AsyncAPI regenerated and examples updated; breaking → new type version and topic (MSG-CON)?
-- [ ] Publishing consistent with the database through the outbox; relay metrics, alert and parking of non-retryable rows (MSG-PUB)? Also for an e-mail or HTTP outbox without a broker: backoff over hours, rows claimed before sending (MSG-PUB-04)?
-- [ ] Broker other than Kafka: ADR with the capability mapping, own adapter packages?
-- [ ] Consumer idempotent and tested with a duplicate (MSG-IDM)?
-- [ ] Failure classification, bounded retries, dead-letter topic owned, alerted and replayable (MSG-ERR, MSG-DLT)?
-- [ ] New topic consumed or produced: threat model note for the new data flow (SEC-TM-02), ACLs (SPRING-SEC-28, NEST-SEC-39)?
-
-## Sources
-
-Gregor Hohpe, Bobby Woolf, *Enterprise Integration Patterns* (event message, command message, dead letter channel, idempotent receiver). Chris Richardson, *Microservices Patterns*, ch. 3 (transactional outbox). Martin Fowler, *Tolerant Reader*; *What do you mean by "Event-Driven"?*. AsyncAPI Specification 3.0 (asyncapi.com). CloudEvents 1.0 (cloudevents.io). W3C Trace Context. Apache Kafka documentation (producer idempotence, ordering).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Messaging and Event Contracts".*

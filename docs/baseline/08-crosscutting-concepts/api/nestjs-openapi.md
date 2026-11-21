@@ -145,16 +145,4 @@ export default defineConfig({
 
 - **NEST-API-14: The outgoing adapter owns the generated client and never lets its types out** (API-CON-09, ARCH-ADP-12). It passes its own `fetch` function to the factory, which adds the base URL from configuration, the timeout (`AbortSignal.timeout(…)`, RES-TMO-01) and authentication; resilience policies wrap the calls (NEST-RES rules in [resilience/nestjs.md](../resilience/nestjs.md)). It parses every response with the generated zod schema before mapping to domain types (API-CON-10); a parse failure is a technical error. Decimal strings map to the domain's decimal type, problem `code` values to domain errors. Adapter tests use responses built from the same spec (API-CON-11).
 
-## Agent checklist
-
-- [ ] Handler named after the use case (= `operationId`); schemas with unique `…VN` ids; tag and security scheme on the controller (NEST-API-01/02/07)?
-- [ ] Every error status documented with `ApiProblemResponse` and its codes; new business code added to `errorCodes` (NEST-API-05)?
-- [ ] Spec regenerated with `npm run openapi` and committed in the same change (NEST-API-09)?
-- [ ] Breaking change? New version folder and spec file, or an explicit decision (NEST-API-10)?
-- [ ] No `SwaggerModule.setup()` (NEST-API-11)?
-- [ ] N+1 check done for read endpoints (NEST-API-12)?
-- [ ] Provider with a spec: client generated with Orval into `adapter/out/http/generated/`, responses parsed with the generated zod schemas, timeouts set (NEST-API-13/14)?
-
-## Sources
-
-OpenAPI 3.0, `@nestjs/swagger` 12 (`SwaggerDocumentOptions.operationIdFactory` and `include`, `standardSchema` on response decorators, the Standard Schema converter with target `openapi-3.0`), zod 4 (`z.toJSONSchema`, `.meta`), `yaml` (`stringify` with `sortMapEntries`), RFC 9457, oasdiff (github.com/oasdiff/oasdiff), Orval 8 (orval.dev; `client: 'fetch'`, `httpClientInjection`, `client: 'zod'`).
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Producing the OpenAPI Contract (code-first)".*

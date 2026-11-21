@@ -10,7 +10,7 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 
 - **REACT-UI-01: Use an MUI component when one exists for the job.** Don't build a custom button, select, dialog, menu, table, tabs or autocomplete. Prefer native semantics where MUI renders them (`Button`, `TextField`, `Table`).
   *Why:* MUI components come with keyboard support and ARIA; custom widgets have to earn all of that (A11Y-07, A11Y-08).
-- **REACT-UI-02: Patterns MUI does not ship** (navigation rail, search bar, split button, carousel) are built once as a shared component in `src/shared/ui/` from MUI building blocks (`ButtonBase`, `List`, `ListItemButton`, `Popper`), styled only with theme tokens, following the matching WAI-ARIA pattern, with a keyboard journey test (TS-TEST-13, A11Y layer L5). No second component library without an ADR (REACT-D5).
+- **REACT-UI-02: Patterns MUI does not ship are built once as a shared component in `src/shared/ui/`** (navigation rail, search bar, split button, carousel): from MUI building blocks (`ButtonBase`, `List`, `ListItemButton`, `Popper`), styled only with theme tokens, following the matching WAI-ARIA pattern, with a keyboard journey test (TS-TEST-13, A11Y layer L5). No second component library without an ADR (REACT-D5).
 - **REACT-UI-03: Styling goes from narrow to wide: `sx` for one element, `styled()` for a reusable wrapper, theme `components` (`defaultProps`, `styleOverrides`) for every instance.** Global CSS (`GlobalStyles`) only for element baselines that `CssBaseline` does not cover. Target MUI parts only through documented slots, `slotProps` and the exported class objects (`buttonClasses.root`, `.Mui-focused`), never through generated Emotion class names or DOM structure. No `!important`.
   *Why:* documented slots and classes are MUI's supported customization API; generated names and structure change between versions.
 
@@ -112,21 +112,4 @@ The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); t
 | MUI docs | MUI default breakpoints (600/900/1200/1536) | Size-class breakpoints (REACT-UI-14) |
 | Generic habit | Announce the new page on route change | Title and focus only (REACT-UI-30, A11Y-21) |
 
-## Agent checklist
-
-- [ ] MUI component used where one exists; gap components in `shared/ui` with a keyboard test (REACT-UI-01/02)?
-- [ ] Only theme tokens in `sx`/`styled`; no generated class names, no `!important`, logical properties (REACT-UI-03/05/22)?
-- [ ] Theme with `cssVariables` and both color schemes; AAA contrast kept after palette changes (REACT-UI-04/07)?
-- [ ] Density, focus outline, reduced motion respected (REACT-UI-08..10)?
-- [ ] Emotion cache with the CSP nonce (React SPA); fonts and icons self-hosted (REACT-UI-12/13)?
-- [ ] Breakpoints are the size classes; `useWindowSize()` only for structure, never in slices or query keys (REACT-UI-14/17..19)?
-- [ ] `TextField` with visible label, `type`, `autoComplete`, `inputMode`; errors in `helperText` (REACT-UI-26)?
-- [ ] Status through a visible region or the `Announcer`; route `titleKey`; focus only on path changes; no extra route announcement (REACT-UI-29/30)?
-- [ ] Snackbars polite and never the only channel; progress and tables labelled (REACT-UI-31)?
-- [ ] Dialog labelled by its title; focus restored when the trigger can vanish (REACT-UI-32)? Dirty form guards `onClose`; unchangeable control `readOnly` with a reason (REACT-UI-36)?
-- [ ] Loading, empty and error states from `src/shared/ui/states/` (REACT-UI-33)?
-- [ ] Role-based component tests; theme projects cover the screen (REACT-UI-34/35)?
-
-## Sources
-
-Material UI 9.5 documentation (mui.com/material-ui: theming, CSS theme variables, dark mode, palette incl. Windows High Contrast mode, breakpoints, container queries, spacing, transitions and reduced motion, focus visible, density, `Dialog`, `Snackbar`, `TextField`; the docs bundled in `@mui/material` 9.5), Emotion 11.14 (`@emotion/cache` `nonce`, `prepend`), `@react-aria/live-announcer` 3.5, TanStack Router 1.170 (`createLink`, `staticData`, `scrollRestoration`, `router.subscribe`), Material Design 3 (m3.material.io), WAI-ARIA Authoring Practices (dialog pattern), WCAG 2.2. Validated in the React SPA reference build (2026-11-20). Skills: `material-ui-theming`, `material-ui-styling` (mui/material-ui, MIT).
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React UI: Material UI and Material Design".*

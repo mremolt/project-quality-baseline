@@ -23,16 +23,4 @@ z.config({ jitless: true });
 
 Supply chain and scanning: [TS-TOOL-11..16](../development/typescript-tooling.md).
 
-## Agent checklist
-
-- [ ] No storage, URL or log line with a token or personal data?
-- [ ] No `eval`-like call, no `innerHTML` with data, no unchecked redirect target?
-- [ ] No secret in `environment` files, no new third-party script without nonce (or trusted loader) and SRI; its other hosts in `connect-src`/`img-src`/`font-src`?
-- [ ] Error reports and client logs scrubbed?
-- [ ] zod configured jitless by the entry's first import, bundler keeps the execution order (TS-SEC-09)?
-
-## Sources
-
-OWASP ASVS 5.0 V3 (Web Frontend Security), V14, V15; OWASP DOM based XSS Prevention Cheat Sheet; OWASP HTML5 Security Cheat Sheet; MDN Subresource Integrity; CSP Level 3 `'strict-dynamic'` (w3.org/TR/CSP3); zod 4 `z.config({ jitless: true })` (zod.dev).
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript: Browser Security".*

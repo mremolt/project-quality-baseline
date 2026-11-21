@@ -16,7 +16,7 @@ How an Angular frontend implements [observability.md](observability.md) (`OBS-*`
 
 ### Content
 
-- **NG-OBS-05: A report contains** error type, message and stack, release version and environment (from `RUNTIME_CONFIG`, injected at deploy time, REL-VER-05), commit (a build constant, identical in every environment, NG-CFG-01), route **template** (`/orders/:orderId`, not the URL), status and `traceId` for HTTP failures, browser family. **Never** query strings, URLs with ids, form values, request or response bodies, tokens, cookies, names or e-mail addresses (TS-SEC-06). The scrubber is a pure function in `platform/application` with Chicago-style tests.
+- **NG-OBS-05: A report contains the following fields, and never the data listed after them:** error type, message and stack, release version and environment (from `RUNTIME_CONFIG`, injected at deploy time, REL-VER-05), commit (a build constant, identical in every environment, NG-CFG-01), route **template** (`/orders/:orderId`, not the URL), status and `traceId` for HTTP failures, browser family. **Never** query strings, URLs with ids, form values, request or response bodies, tokens, cookies, names or e-mail addresses (TS-SEC-06). The scrubber is a pure function in `platform/application` with Chicago-style tests.
 
 ### Source maps
 
@@ -34,14 +34,4 @@ How an Angular frontend implements [observability.md](observability.md) (`OBS-*`
 | E2E stubbed | Playwright: a stubbed 500 with `traceId` produces one request to the configured reporting path, without PII in its body (`page.waitForRequest`) |
 | Build | CI check: no `.map` file and no `sourceMappingURL` in the packaged artifact |
 
-## Agent checklist
-
-- [ ] New error path: ends in `GlobalErrorHandler` / `ReportErrorUseCase`, no direct SDK call (NG-OBS-01/02)?
-- [ ] New HTTP adapter: errors flow through the platform interceptor, problem `code`s mapped to domain errors, the rest to `TechnicalError`; the `TechnicalError`s it creates (malformed body, a 4xx it cannot map) reported once through `REPORT_ERROR`, those from a 5xx, a network failure or a time-out passed on unreported (NG-OBS-04, TS-ARCH-18)?
-- [ ] Reporting reached through the `REPORT_ERROR` token only (NG-OBS-02)?
-- [ ] Report fields: route template and ids only, no personal data (NG-OBS-05)?
-- [ ] Build change: source maps still hidden, uploaded and removed (NG-OBS-06)?
-
-## Sources
-
-Angular API reference (`ErrorHandler`, `provideBrowserGlobalErrorListeners`, workspace configuration `sourceMap`; angular.dev), OpenTelemetry JavaScript browser status (opentelemetry.io/docs/languages/js), W3C Trace Context, OWASP Logging Cheat Sheet.
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular: Error Reporting and Correlation".*

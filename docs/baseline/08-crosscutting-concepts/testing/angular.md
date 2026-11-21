@@ -26,9 +26,9 @@ Test type, style and doubles: [element table](testing-by-architecture-element.md
 - **NG-TEST-06: Router behavior is tested with `RouterTestingHarness`** against the real route config of the feature, with use cases mocked.
 - **NG-TEST-07: E2E tests locate overlays by role** (`getByRole('dialog')`, `getByRole('listbox')`, `getByRole('option', { name })`), never by `.cdk-overlay-container` or `.mat-mdc-*` classes.
 - **NG-TEST-08: The stubbed E2E tier serves the app with `ng serve`** (or the built app) and stubs `/api/**` through the typed fixture (TS-TEST-10); the smoke tier runs against the deployed or containerized backend.
-- **NG-TEST-09: A component whose structure changes with the window size gets one component test per variant**, with `WindowSize` replaced by a stub whose size class is a writable signal, and assertions by role and name, not by CSS. `WindowSize` is a contract we own (an abstract class in `src/shared/ui/layout`, NG-UI-19), so stubbing it follows TEST-TDD-07.
+- **NG-TEST-09: A component whose structure changes with the window size gets one component test per variant.** `WindowSize` is replaced by a stub whose size class is a writable signal, and assertions are by role and name, not by CSS. `WindowSize` is a contract we own (an abstract class in `src/shared/ui/layout`, NG-UI-19), so stubbing it follows TEST-TDD-07.
   *Why:* jsdom can render the component tree for a size class, but it can't lay it out.
-- **NG-TEST-10: The `WindowSize` implementation is tested as a pure function plus the service with a fake `MediaMatcher`**, at the boundary widths 599 / 600, 839 / 840, 1199 / 1200 and 1599 / 1600.
+- **NG-TEST-10: The `WindowSize` implementation is tested as a pure function plus the service with a fake `MediaMatcher`.** The tests cover the boundary widths 599 / 600, 839 / 840, 1199 / 1200 and 1599 / 1600.
   *Why:* off-by-one at a breakpoint is the typical bug; the CDK designed `MediaMatcher` to be faked.
 - **NG-TEST-11: CSS-only responsive behavior (media and container queries) is not asserted in jsdom**: no layout assertions on `getComputedStyle` or `getBoundingClientRect`. The E2E viewport projects cover it ([TS-TEST-17](typescript-e2e.md#matrix)); real-browser component tests (Vitest browser mode) are not used for now.
   *Why:* jsdom has no layout, so such tests pass without testing anything.
@@ -104,17 +104,4 @@ describe('OrderHistoryPage', () => {
 | E2E frameworks: Cypress, Nightwatch, WebdriverIO, Puppeteer, Playwright | Playwright only |
 | Test examples use `TestBed` + `querySelector` | Testing Library queries; `querySelector` only for non-semantic structure checks |
 
-## Agent checklist
-
-- [ ] Right test type for the element ([element table](testing-by-architecture-element.md#test-type-style-and-doubles-per-element)) and the setup above?
-- [ ] Zoneless pattern, no `detectChanges`/`fakeAsync` in new tests?
-- [ ] Use cases mocked at the token, not the store?
-- [ ] HTTP adapter test: exactly one report for a malformed body and for an unknown problem `code`, none for a passed-on error (NG-OBS-04, TS-ARCH-18)?
-- [ ] Material widgets via harnesses, everything else by role?
-- [ ] axe on main states including overlays?
-- [ ] Announcements verified on a mocked `Announcer`; route titles in router tests, `RouteFocus` with two navigations; Material errors via accessible description?
-- [ ] One component test per size-class variant with a stubbed `WindowSize`; no layout assertions in jsdom?
-
-## Sources
-
-Angular testing guide (angular.dev/guide/testing), `angular-developer` skill references (testing-fundamentals, component-harnesses, router-testing), Testing Library for Angular (testing-library.com/docs/angular-testing-library/intro), Angular CDK testing harnesses (material.angular.dev/cdk/testing/overview).
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular Testing".*

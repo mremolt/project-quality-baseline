@@ -47,13 +47,4 @@ TEST-I18N-05 (per-locale contract tests) and TEST-I18N-06 (bundle parity) in [i1
 | Message text built in the use case or exception | Exceptions carry a code and parameters (I18N-02, SPRING-ARCH-03) |
 | Default Spring ProblemDetail message codes (`problemDetail.title.<fqcn>`) for domain errors | Own stable codes (SPRING-I18N-02) |
 
-## Agent checklist
-
-- [ ] No `Locale`, `MessageSource` or `LocaleContextHolder` outside `adapter.*` (SPRING-I18N-04)?
-- [ ] New business error: code in the enum and the OpenAPI spec, `error.<code>.*` in every bundle (SPRING-I18N-02/07)?
-- [ ] Outgoing mail or document uses the recipient's stored language (SPRING-I18N-05)?
-- [ ] Contract test per locale and bundle parity test updated (TEST-I18N-05/06)?
-
-## Sources
-
-Spring Framework REST exceptions and `ErrorResponse` (message codes), Spring MVC locale resolution, Spring Boot internationalization (`spring.messages.*`), RFC 9457 (localized titles), Hibernate Validator reference (message interpolation).
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring: Internationalization".*

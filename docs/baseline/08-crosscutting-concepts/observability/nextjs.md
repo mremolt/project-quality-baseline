@@ -175,20 +175,7 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
 | Error pages (NEXT-OBS-14) | E2E: a stubbed 5xx in a server component shows the generic message and sends one report with `digest` and route template, without query string |
 | Source maps (NEXT-OBS-17) | `check:size` (or the bundle check) fails when `.next/static` contains a `.map` file or `sourceMappingURL` |
 
-## Agent checklist
-
-- [ ] Telemetry only in `register()` on the Node.js runtime, configured through `OTEL_*`, sampler explicit (NEXT-OBS-01/02)?
-- [ ] New business metric: outgoing port, `Meter` adapter, closed-set attributes, cardinality test (NEXT-OBS-03)?
-- [ ] Outbound calls through `fetch` so the trace propagates; incoming `traceparent` dropped at the ingress or by the propagator (NEXT-OBS-04/05)?
-- [ ] Logging only through the platform's pino logger, values in the object, constant message, no `console.*` (NEXT-OBS-07, NEXT-OBS-10)?
-- [ ] A `TechnicalError` reported once, by the code that creates it, through `serverReportError`; other unexpected errors left to `onRequestError`, not logged and rethrown (NEXT-OBS-09, TS-ARCH-18)?
-- [ ] No token, session id, cookie, XSRF token, body, query string or personal data in a log line; redaction paths extended for new fields (NEXT-OBS-10)?
-- [ ] `/livez` plain, `/readyz` with shutdown flag and session store only, not routed by the ingress (NEXT-OBS-11)?
-- [ ] Pre-stop delay, request budget and grace period recorded in chapter 7 and adding up (NEXT-OBS-12)?
-- [ ] `error.tsx` and `global-error.tsx` show the generic message and report with `digest`, never the server's message (NEXT-OBS-14)?
-- [ ] `instrumentation-client.ts` holds only zod jitless and the Trusted Types policy (NEXT-OBS-15)?
-- [ ] `productionBrowserSourceMaps` still `false` (NEXT-OBS-17)?
-- [ ] Browser reports go to `/client-errors` (path from `PublicConfig`), which checks origin, rate, size and schema and logs a scrubbed line (NEXT-OBS-18)?
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Observability and Operability".*
 
 ## Skill overrides
 
@@ -201,7 +188,3 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
 | Generic habit | `productionBrowserSourceMaps: true` for debuggable production | Off; private upload only per tool ADR (NEXT-OBS-17) |
 | Error-tracking SDK wizards (`instrumentation-client.ts` with `Sentry.init`, DSN to an external host) | SDK in the client instrumentation file | The SDK, if chosen by ADR, lives only in the reporting adapter; reports go to the same-origin path `/client-errors` (REACT-OBS-02/03, NEXT-OBS-18) |
 | Health-check habit | `/api/health` that checks the backend and the IdP | `/livez` plain, `/readyz` with the session store only (NEXT-OBS-11) |
-
-## Sources
-
-Next.js 16.4 documentation: `instrumentation.ts` (`register`, `onRequestError`, `Instrumentation.onRequestError`), `instrumentation-client.ts`, OpenTelemetry guide, `error.tsx` and `global-error.tsx`, `productionBrowserSourceMaps`, self-hosting (standalone output, graceful shutdown). OpenTelemetry JS READMEs (`@opentelemetry/sdk-node` 0.301, `instrumentation-http`, `instrumentation-undici`, `exporter-trace-otlp-http`), OpenTelemetry SDK environment variable specification, W3C Trace Context, pino 10 documentation (`redact`, `mixin`, destinations), Kubernetes pod termination and `preStop` `sleep` action. Checked in the Next.js reference build on 2026-11-20 (Next 16.4.6, Node 26.1, `@opentelemetry/sdk-node` 0.301.2, pino 10.4.0): spans exported to a local OTLP sink, `onRequestError` line with `digest`, SIGTERM measurement (exit 143 after 3.0 s with one in-flight request), no browser source maps.

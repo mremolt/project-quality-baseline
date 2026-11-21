@@ -28,14 +28,4 @@ What "secure enough" means for a product, written down and testable. Standards u
 - **SEC-TM-02: A feature that adds an external entry point, an outbound call, a role, or personal data gets a short threat model in its pull request**, answering four questions: what are we working on, what can go wrong, what will we do about it, did we do a good job. Thirty minutes, a whiteboard-level data-flow sketch is enough.
 - **SEC-TM-03: Abuse cases are written next to the use cases and become tests** (a user reading another user's data, replaying a request, sending oversized input). The test type follows the architecture element ([testing-by-architecture-element.md](../testing/testing-by-architecture-element.md)).
 
-## Agent checklist
-
-- [ ] `docs/security/requirements.md` states level, data classification and CRA applicability; does the change keep it true?
-- [ ] New entry point, outbound call, role or personal data: threat model in the PR (SEC-TM-02)?
-- [ ] Abuse cases covered by tests?
-- [ ] Architecture change: `docs/security/threat-model.md` updated?
-- [ ] New stored secret, key, token or encrypted field: algorithm, key location and rotation per SEC-CRY-01..05?
-
-## Sources
-
-OWASP ASVS 5.0 (github.com/OWASP/ASVS, chapters V1 to V17; V11 cryptography), OWASP Top 10:2025 (top10.owasp.org/2025), OWASP Password Storage Cheat Sheet, OWASP Cryptographic Storage Cheat Sheet, BSI TR-02102-2 (TLS), Threat Modeling Manifesto and the four questions (A. Shostack), OWASP Developer Guide (threat modelling), NIST SP 800-218 SSDF, Regulation (EU) 2024/2847 (Cyber Resilience Act), Art. 14 and Art. 71 (eur-lex.europa.eu).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Security Requirements and Threat Modelling".*

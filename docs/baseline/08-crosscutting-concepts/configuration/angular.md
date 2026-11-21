@@ -55,13 +55,4 @@ providers: [
 | E2E smoke | Runs against the real BFF, which serves the real `/config.json` (REPO-CI-04) |
 | Build | NG-CFG-01 test on `angular.json`; CI asserts the build output contains no `config.json` |
 
-## Agent checklist
-
-- [ ] No `fileReplacements` or per-environment build configuration (NG-CFG-01)?
-- [ ] New value: added to the schema, the server's `app.frontend.*` record (NestJS: `FRONTEND_*` schema) and its test, public only (NG-CFG-03/05, SPRING-CFG-10, NEST-CFG-11)?
-- [ ] Read through `RUNTIME_CONFIG` in an adapter or providers file, never in the core (NG-CFG-04)?
-- [ ] Tests provide the token or stub `/config.json`?
-
-## Sources
-
-Angular API reference: `provideAppInitializer` (stable; `APP_INITIALIZER` deprecated), `isDevMode`, workspace configuration and dev-server proxy (angular.dev); zod; The Twelve-Factor App.
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular: Runtime Configuration".*

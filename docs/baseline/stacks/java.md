@@ -2,6 +2,8 @@
 
 Rules for every Java project, framework-independent. Spring Boot additions are in [stacks/spring.md](spring.md). They implement the shared docs and may tighten them, never contradict them. Defaults (`JAVA-D*`): [04-solution-strategy/java.md](../04-solution-strategy/java.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [java](../rule-index/java.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 | Doc | Covers | Rule IDs |
 |---|---|---|
 | [05-building-block-view/java.md](../05-building-block-view/java.md) | Package layout, visibility, records, ArchUnit, build modules | `JAVA-ARCH-*` |

@@ -51,14 +51,4 @@ How REST APIs between our systems look on the wire, independent of the stack: da
 
 - **API-REST-13: Checks answer in a fixed order: 401, then request-shape errors that need no data (400 for malformed input, 428 for a missing `If-Match`), then 403/404 decided by the use case, then 409/412 from the current state.** Authentication is a filter and always first. Because the use case authorizes (ARCH-UC-15) and needs the expected version to be called, a `PUT` without `If-Match` answers 428 before the role check; that discloses only what the spec already states, that the operation requires `If-Match`. A test per operation asserts the order for an unauthenticated caller, a caller without the role and a missing header.
 
-## Agent checklist
-
-- [ ] Decimals and money as strings (`format: decimal`), instants in UTC, enums as `UPPER_SNAKE_CASE` strings (API-REST-01..03)?
-- [ ] Errors as problem+json with `code` from the catalogue and `traceId`; status from the table (API-REST-05..07)?
-- [ ] Collection paged or bounded in the query; sort and filter parameters allow-listed in the spec (API-REST-08..10)?
-- [ ] Concurrent updates carry a version or `If-Match` (API-REST-11)?
-- [ ] Removing something: deprecated first, `Deprecation`/`Sunset` headers, consumers migrated (API-REST-12)?
-
-## Sources
-
-RFC 9457 (Problem Details for HTTP APIs), RFC 9110 (HTTP Semantics: conditional requests, status codes), RFC 3339 / ISO 8601, ISO 4217, RFC 9745 (Deprecation header), RFC 8594 (Sunset header), OpenAPI Specification 3.1 and the OpenAPI format registry (`decimal`), Microsoft REST API Guidelines and Zalando RESTful API Guidelines (paging, sorting, filtering).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "REST Conventions (wire format)".*

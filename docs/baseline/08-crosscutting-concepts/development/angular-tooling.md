@@ -113,15 +113,4 @@ Prettier formats the templates with the Angular parser (TS-TOOL-08):
 - **NG-TOOL-09: `@angular-eslint/no-developer-preview` and `@angular-eslint/no-experimental` are errors.** An API that the baseline mandates while it is still in preview goes on a named allow-list in `eslint.config.ts`: one wrapper file per API in `src/platform` that re-declares it (`export const form = previewForm;`, a plain re-export may still be reported), with the rules off for that file only and a comment giving the reason. The allow-list is reviewed on every Angular update and an entry is removed once the API is stable. With Angular 22 it is empty: Signal Forms (`form`, `validateStandardSchema`), `resource` and `httpResource` are stable since v22.0.
   *Why:* preview APIs may break in patch releases; the rules have no per-API option (`no-experimental` only ignores whole packages), so the wrapper file is the narrowest exception.
 
-## Agent checklist
-
-- [ ] Strict template checking green, extended diagnostics clean; browser matrix re-checked on a new major (NG-TOOL-10)?
-- [ ] No `httpResource` outside the HTTP adapter, no classic `@ngrx/store`?
-- [ ] Template a11y rules green without new disables?
-- [ ] Security lint rules green, `bypassSecurityTrust*` not suppressed?
-- [ ] No developer-preview or experimental API outside the allow-list (NG-TOOL-09)?
-- [ ] `npm run verify` green?
-
-## Sources
-
-angular-eslint (github.com/angular-eslint/angular-eslint; `no-developer-preview`, `no-experimental` and their options), API stability labels (angular.dev/api), Angular release and support policy (angular.dev/reference/releases), `@ngrx/eslint-plugin` (ngrx.io/guide/eslint-plugin), Angular compiler options (angular.dev/reference/configs/angular-compiler-options), Angular CLI unit-test builder (angular.dev/guide/testing).
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular Tooling".*

@@ -17,7 +17,7 @@ export default getRequestConfig(async () => {
 });
 ```
 
-- **NEXT-I18N-02: Catalogs are nested JSON in `messages/<lang>.json` at the component root, one top-level namespace per feature or area** (`app`, `platform`, `orders`), loaded per request by the dynamic `import()` above, so only the active language is read. The translator context sits in `messages/context.json` (TOOL-I18N-07). The supported locales (`LOCALES = ['en', 'de'] as const`, I18N-04) and the negotiation live next to `request.ts` in `src/platform/adapter/in/i18n/`. Replaces the catalog location of REACT-I18N-02; the namespace rules stay.
+- **NEXT-I18N-02: Catalogs are nested JSON in `messages/<lang>.json` at the component root, one top-level namespace per feature or area** (`app`, `platform`, `orders`). They are loaded per request by the dynamic `import()` above, so only the active language is read. The translator context sits in `messages/context.json` (TOOL-I18N-07). The supported locales (`LOCALES = ['en', 'de'] as const`, I18N-04) and the negotiation live next to `request.ts` in `src/platform/adapter/in/i18n/`. Replaces the catalog location of REACT-I18N-02; the namespace rules stay.
 - **NEXT-I18N-03: Keys are typed against the source catalog** (REACT-I18N-05) by augmenting `next-intl`'s `AppConfig`: `declare module 'next-intl' { interface AppConfig { Locale: (typeof LOCALES)[number]; Messages: typeof en } }` in `src/platform/adapter/in/i18n/`. The reference build had no augmentation (keys were untyped); to verify before first use that `getTranslations` and `useTranslations` then reject a missing key, including template-literal keys from a union type.
 
 ## Locale and time zone per request
@@ -44,7 +44,7 @@ export default getRequestConfig(async () => {
 The shared test rules are TEST-I18N-01..04, 07 and 08; REACT-I18N-14/15 apply with these Next.js specifics:
 
 - **NEXT-I18N-14: Component tests wrap the screen in `<NextIntlClientProvider locale="en" messages={en} timeZone="Europe/Berlin">`** inside `renderWithProviders` ([testing/nextjs.md](../testing/nextjs.md)), with the real source catalog (TEST-I18N-01, verified). Server components' translations, the negotiation and `<html lang>` are covered by E2E: Playwright's `locale` option sets the browser's `Accept-Language`, so a locale project (`locale: 'de-DE'`, TEST-I18N-02) gets German server HTML. The negotiation function is a pure function with a node spec (header with and without a supported language, region subtags, empty header). Locale projects and the negotiation spec were not built: to verify before first use.
-- **NEXT-I18N-15: The language-switch E2E test** (TEST-I18N-08, REACT-I18N-15) switches through the selector and asserts the new text, the new date and amount format, `<html lang>` and the kept focus, without a document load (`page.on('load')` not fired). To verify before first use.
+- **NEXT-I18N-15: The language-switch E2E test switches through the selector without a document load** (TEST-I18N-08, REACT-I18N-15): it asserts the new text, the new date and amount format, `<html lang>` and the kept focus, and that `page.on('load')` does not fire. To verify before first use.
 
 ## Tooling
 
@@ -66,17 +66,4 @@ Verify before first use ([chapter 11](../../11-risks-and-technical-debt/README.m
 | Generic habit | Server action returns a translated error message | Codes only; the client translates (NEXT-I18N-09) |
 | Generic habit | Language switch with `window.location.reload()` or a redirect to `/de/…` | Server action plus `router.refresh()` (NEXT-I18N-10) |
 
-## Agent checklist
-
-- [ ] New text: key in `messages/en.json` with context, typed key, no literal in JSX, metadata or the title template (NEXT-I18N-02/03/08, REACT-I18N-06)?
-- [ ] Locale read only through `getLocale()`/`useLocale()`; no own parsing of `Accept-Language` or the cookie (NEXT-I18N-04)?
-- [ ] Time zone from the request configuration, not a literal and not the browser's (NEXT-I18N-05)?
-- [ ] Domain values, not formatted strings, passed from server to client components (NEXT-I18N-07)?
-- [ ] Server actions and route handlers return codes (NEXT-I18N-09)?
-- [ ] Backend calls send the active locale (NEXT-I18N-11)?
-- [ ] No `[locale]` segment or i18n middleware without the public-pages ADR (NEXT-I18N-13)?
-- [ ] Component tests with the real `en` catalog in `NextIntlClientProvider`; locale projects for server-rendered text (NEXT-I18N-14)?
-
-## Sources
-
-next-intl 4.15 documentation (next-intl.dev: App Router setup without i18n routing, `createNextIntlPlugin`, `getRequestConfig`, `getTranslations`, `getLocale`, `getMessages`, `getFormatter`, `NextIntlClientProvider` inheritance in server components, `AppConfig` augmentation, routing and middleware), Next.js 16.4 documentation (`headers()`, `generateMetadata`, `router.refresh()`), Playwright `locale` option, MUI 9.5 localization, WCAG 3.1.1, 3.1.2, 3.2.3, 3.2.6. Validated in the Next.js reference build (2026-11-20, next-intl 4.15.1).
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Internationalization".*

@@ -15,7 +15,7 @@ Which libraries a NestJS service uses for which job, and which it does not. Usag
 - **NEST-LIB-08: Resilience policies use cockatiel**, only in outgoing adapters.
 - **NEST-LIB-09: Database access uses Kysely with `pg`**; no ORM.
 - **NEST-LIB-10: Kafka uses `@platformatic/kafka`** (pure JavaScript, no native build) in own messaging adapters. `@confluentinc/kafka-javascript` is not used: it has no prebuilt binary for Node 26, so it needs a librdkafka source build with a compiler toolchain.
-- **NEST-LIB-11: The service ships as an OCI image** that runs as non-root on a minimal base image pinned by digest, contains no build tools, sources or secrets, and comes with an SBOM (REL-IMG-01/02). It is built with the multi-stage Dockerfile of [nestjs-delivery.md](../07-deployment-view/nestjs-delivery.md) (NEST-REL-07/08), not with Buildpacks.
+- **NEST-LIB-11: The service ships as a minimal, non-root OCI image with an SBOM** (REL-IMG-01/02): the base image is pinned by digest, and the image contains no build tools, sources or secrets. It is built with the multi-stage Dockerfile of [nestjs-delivery.md](../07-deployment-view/nestjs-delivery.md) (NEST-REL-07/08), not with Buildpacks.
 
 ## Library map
 
@@ -78,13 +78,4 @@ Pinned in the template `package.json` of `baseline-nestjs` (validated on 2026-11
 | `@testcontainers/postgresql` | 12.2.1 |
 | dependency-cruiser | 18.7.2 |
 
-## Agent checklist
-
-- [ ] All `@nestjs/*` packages on one version; TypeScript 6.0.x (NEST-LIB-01/02)?
-- [ ] No Express, class-validator, ORM, axios, kafkajs or Jest added?
-- [ ] New outbound REST call: generated client if the provider has a spec (NEST-LIB-07)?
-- [ ] New dependency checked for age, maintainers and install scripts (TS-TOOL-13)?
-
-## Sources
-
-NestJS documentation (docs.nestjs.com), npm registry metadata (peer dependencies of `@nestjs/swagger` 12.1.2 and `nestjs-zod` 5.6.0), Fastify documentation (fastify.dev), versions read from a validated template build.
+*Agent checklist in [checklists/nestjs.md](../checklists/nestjs.md) and sources in [sources.md](../sources.md), section "NestJS: Libraries".*

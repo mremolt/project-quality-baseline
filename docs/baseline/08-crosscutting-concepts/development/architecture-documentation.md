@@ -50,14 +50,4 @@ The sync creates these project-owned files from the baseline's templates once; a
 | 11 Risks and technical debt | Risks, shortcut ADRs, debt | [11-risks-and-technical-debt](../../11-risks-and-technical-debt/README.md) |
 | 12 Glossary | Domain terms | [12-glossary](../../12-glossary/README.md) |
 
-## Agent checklist
-
-- [ ] Did the change add or change a component, adapter, external system, deployment target or quality requirement? Then the matching chapter in `docs/architecture/` is updated in the same change.
-- [ ] New decision or shortcut? ADR drafted and linked in chapter 9 (and chapter 11 for shortcuts)?
-- [ ] Linked to the baseline instead of copying it?
-- [ ] Diagrams as Mermaid in the Markdown file?
-- [ ] In the baseline repository: did the change alter architecture, technology or a decision? Then `ARCHITECTURE.md` is updated in the same change, current state only (DOC-ARC-09).
-
-## Sources
-
-arc42 (arc42.org, docs.arc42.org, "arc42 by Example"), C4 model (c4model.com), Michael Nygard, "Documenting Architecture Decisions" (2011).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Architecture Documentation (arc42)".*

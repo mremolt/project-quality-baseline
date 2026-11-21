@@ -22,13 +22,4 @@ How services log: API, backend, format, correlation, and what is logged where. O
 - **SPRING-LOG-08: Never log secrets, tokens, passwords, full request/response bodies or personal data.** Pseudonymous identifiers are fine; e-mail addresses, names and free text are not ([data-protection.md](../data-protection/data-protection.md), DP-TEL-01).
 - **SPRING-LOG-09: Logs are asserted in tests only where they matter,** with Boot's `OutputCaptureExtension`: security and audit events are present (SPRING-SEC-22), and personal data of use cases that handle it is absent (SPRING-DP-07, DP-TEST-02).
 
-## Agent checklist
-
-- [ ] SLF4J logger, parameterized message, no Lombok, no `System.out`?
-- [ ] No logging in `domain`/`ports`; exception logged once?
-- [ ] No sensitive or personal data beyond pseudonymous ids in the message or key-values; absence tested where personal data is handled (SPRING-LOG-09)?
-- [ ] New log level or format change done through configuration?
-
-## Sources
-
-SLF4J manual (slf4j.org/manual.html, fluent API), Spring Boot logging and structured logging reference (docs.spring.io/spring-boot/reference/features/logging.html), Micrometer Tracing.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Logging".*

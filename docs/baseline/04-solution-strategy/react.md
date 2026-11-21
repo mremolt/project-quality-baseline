@@ -25,12 +25,4 @@ Versions are major.minor of the validated setup; the exact pins live in the temp
 | REACT-D9 | Delivery (React SPA) | Static bundle embedded in and served by the BFF (REL-FE-01..05 unchanged); `/config.json` from the BFF (CFG-11) | [08-crosscutting-concepts/configuration/react.md](../08-crosscutting-concepts/configuration/react.md), [container-runtime.md](../07-deployment-view/container-runtime.md) |
 | REACT-D10 | Lint | The TS-TOOL-04 set plus `eslint-plugin-react-hooks` (`recommended-latest`, runs the React Compiler checks), `@eslint-react` (`strict-type-checked`), `eslint-plugin-jsx-a11y-x` (`strict`) and `@tanstack/eslint-plugin-query` (`recommended-strict`) | [08-crosscutting-concepts/development/react-tooling.md](../08-crosscutting-concepts/development/react-tooling.md) |
 
-## Agent checklist
-
-- [ ] New code uses the libraries above; a different router, state library, UI kit, form library or client mode has an ADR?
-- [ ] SPA-only defaults (REACT-D1, D2, D9, the SPA part of D7) replaced only in a Next.js project, as its defaults say?
-- [ ] Versions taken from the `baseline-react` template, not from memory or `latest`?
-
-## Sources
-
-React (react.dev), React Compiler (react.dev/learn/react-compiler), Vite (vite.dev), TanStack Router and Query (tanstack.com), Redux Toolkit (redux-toolkit.js.org), MUI (mui.com), React Hook Form (react-hook-form.com), use-intl (next-intl.dev), Orval (orval.dev), MSW (mswjs.io). Versions as installed and verified in the baseline's React SPA validation project (2026-11-20).
+*Agent checklist in [checklists/react.md](../checklists/react.md) and sources in [sources.md](../sources.md), section "Solution Strategy: React".*

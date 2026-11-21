@@ -44,17 +44,4 @@ The Spring Boot 4 specifics of [08-crosscutting-concepts/testing/testing-by-arch
 - **SPRING-TEST-13: Integration tests control background work and reset state in one place.** Scheduling is switched off in tests by a property on the `@EnableScheduling` configuration (`@ConditionalOnProperty(name = "app.scheduling.enabled", matchIfMissing = true)`, set to `false` by the shared test infrastructure), and tests call the job's incoming port directly (RES-JOB-01). Database state between ITs is reset by one shared helper that truncates all application tables (`TRUNCATE … CASCADE` over the tables from `information_schema`, without the Flyway history table), not by DELETE lists per test class. Migrations are structure only: they insert no reference or default rows, because `TRUNCATE … CASCADE` also empties tables that cascade from a truncated table and a test would then depend on rows the helper just deleted. Rows the application needs in every environment come from an idempotent bootstrap runner (an `ApplicationRunner`), which tests start or replace with fixtures. A product that keeps seed rows in a migration records an ADR naming this rule, and the helper re-inserts exactly those rows after the truncate.
   *Why:* a job running in the background of a shared test context races with the assertions; hand-kept DELETE lists break in order-dependent ways when a table is added.
 
-## Agent checklist
-
-- [ ] Test type per element from the element table, setup from the table above; no Spring context for domain and use cases?
-- [ ] Boot 4 imports and `*-test` starters; `@MockitoBean`; Testcontainers 2 names?
-- [ ] Persistence test against real PostgreSQL with migrations; statement count asserted for query ports?
-- [ ] No `@DirtiesContext`, no `Thread.sleep`, no H2?
-- [ ] Test that starts a container or `@SpringBootTest` named `*IT` (SPRING-TEST-07)?
-- [ ] New controller named in a `@WebMvcTest(controllers = …)` (or `<Controller>Test`), enforced by the architecture test (SPRING-TEST-12)?
-- [ ] Scheduling off in ITs, jobs called through their port, one shared database reset (SPRING-TEST-13)?
-- [ ] `./mvnw verify` green (unit and integration tests)?
-
-## Sources
-
-Spring Boot testing reference (docs.spring.io/spring-boot/reference/testing), Spring Boot 4.0 Migration Guide (modular test starters), Testcontainers for Java 2.x (java.testcontainers.org), Spring Framework 7 testing (`MockMvcTester`, `RestTestClient`). Package names read from the Boot 4.1.3 artifacts.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Testing".*

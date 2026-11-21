@@ -162,19 +162,4 @@ it('rejects a type-only adapter import in domain and Nest in application', async
 | `vitest` skill | `vi.mock` module mocking as the standard | Contracts mocked through tokens with `vitest-mock-extended` (NEST-TEST-03) |
 | Common Node examples | In-memory database or SQLite for repository tests | Real PostgreSQL in a container (NEST-TEST-06) |
 
-## Agent checklist
-
-- [ ] Test type per element from the element table, setup from the table above; no Nest for domain and use cases (NEST-TEST-04)?
-- [ ] Vitest with `unplugin-swc` and `reflect-metadata`; no Jest, no supertest (NEST-TEST-01/05)?
-- [ ] Container tests named `*.it.test.ts`; `npm test` runs without Docker (NEST-TEST-02)?
-- [ ] Contracts mocked with `mock<T>()` by token; no `vi.mock` of own modules (NEST-TEST-03)?
-- [ ] REST test with the production pipe and filter through `app.inject()` (NEST-TEST-05)?
-- [ ] Real PostgreSQL with the real migrations, containers shared through `globalSetup` (NEST-TEST-06/07)?
-- [ ] Fixed clock and ids; no sleeps (NEST-TEST-08/09)?
-- [ ] Architecture canary still fails; spec test and system tests updated (NEST-TEST-10/11/12)?
-- [ ] `cross-user` tag on object-level security tests; metrics tests for new business metrics (NEST-TEST-14)?
-- [ ] `npm run verify` green?
-
-## Sources
-
-Vitest 5 documentation (projects, `globalSetup`, `provide`/`inject`, `vi.waitFor`, `expect.poll`, fake timers, coverage), `unplugin-swc` 2.0, `vitest-mock-extended` 6, `@nestjs/testing` 12 (`Test.createTestingModule`, `overrideProvider`), Fastify `inject` (light-my-request), Testcontainers for Node 12 (`@testcontainers/postgresql`, reuse), dependency-cruiser 18. Examples run on 2026-11-20 with Node 26, NestJS 12.6 and Vitest 5.1.1 (REST adapter test, use-case test, persistence test with a shared container, architecture canary).
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Testing".*

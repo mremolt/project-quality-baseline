@@ -43,13 +43,4 @@ services:
 
 An S3 emulator for the `adapter.out.s3` tests: the free-tier terms of LocalStack and MinIO have been changing. Check the current terms before adding one to a project's `compose.yaml` (and to this baseline).
 
-## Agent checklist
-
-- [ ] New infrastructure dependency added to `compose.yaml` (core: no profile; extra: profile) with pinned image?
-- [ ] Production and local PostgreSQL major version equal?
-- [ ] No connection settings or secrets added to the repository for local use?
-- [ ] No new start-up script?
-
-## Sources
-
-Spring Boot Docker Compose support (docs.spring.io/spring-boot/reference/features/dev-services.html), Docker Compose file reference and profiles (docs.docker.com/compose), Apache Kafka Docker image (hub.docker.com/r/apache/kafka), PostgreSQL 18 image notes (hub.docker.com/_/postgres).
+*Agent checklist in [checklists/spring.md](../checklists/spring.md) and sources in [sources.md](../sources.md), section "Spring Boot: Local Development".*

@@ -87,14 +87,4 @@ The book nests ports under `application/port/{in,out}` and services under `appli
 - API DTOs of version `v1` reused by `v2` "because they're almost the same".
 - Business exceptions extending framework exceptions (e.g. an HTTP status exception).
 
-## Agent checklist
-
-- [ ] New file placed per ARCH-ORG-01 and ARCH-ORG-02?
-- [ ] Access to another bounded context only through its incoming port, from an outgoing adapter of the own context (ARCH-ORG-09)?
-- [ ] Class name states the use case / business term?
-- [ ] Visibility as narrow as possible?
-- [ ] No new dependency that the table above marks ✘?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 3 (Organizing Code), ch. 9 (Assembling the Application), ch. 10 (Enforcing Architecture Boundaries). Package layout: internal proposal from our Java team.
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Code Organization".*

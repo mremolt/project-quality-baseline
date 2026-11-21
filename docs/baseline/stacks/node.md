@@ -2,6 +2,8 @@
 
 Rules for every Node.js backend, framework-independent. NestJS additions are in [stacks/nestjs.md](nestjs.md). They implement the shared docs and may tighten them, never contradict them. Defaults (`NODE-D*`): [04-solution-strategy/node.md](../04-solution-strategy/node.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [node](../rule-index/node.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 | Doc | Covers | Rule IDs |
 |---|---|---|
 | [05-building-block-view/node.md](../05-building-block-view/node.md) | Folder layout, core purity, commands, error classes, event loop, unhandled rejections, dependency-cruiser | `NODE-ARCH-*` |

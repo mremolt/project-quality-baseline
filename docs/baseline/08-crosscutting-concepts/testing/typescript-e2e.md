@@ -136,7 +136,7 @@ export async function expectTextSpacingTolerant(page: Page) {
   - after a link click: `toHaveTitle` with the new title, and the routed `h1` is focused;
   - after `goBack()`: the previous page's title, its `h1` is focused, and `window.scrollY` equals the value recorded before leaving;
   - after a navigation that changes only query parameters (a filter or paging control): the control that triggered it is still focused.
-- **TS-TEST-27 (opt-in per project): Real screen reader smoke tests** live in `e2e/screen-reader/`, use `@guidepup/playwright` with its own config (`withGuidepup`, which forces serial, headed runs), run nightly against the stubbed app (TS-TEST-10) on a Windows runner with NVDA + Chrome, cover one to three critical journeys, and assert that the phrase log *contains* the key phrases (title, heading, status message, error), never equality with the whole log. Guidepup and setup versions are pinned. Cost and stability are measured on the first product before the next one adopts it (A11Y-25).
+- **TS-TEST-27 (opt-in per project): Real screen reader smoke tests run nightly with NVDA on Windows for one to three critical journeys.** They live in `e2e/screen-reader/`, use `@guidepup/playwright` with its own config (`withGuidepup`, which forces serial, headed runs), run nightly against the stubbed app (TS-TEST-10) on a Windows runner with NVDA + Chrome, cover one to three critical journeys, and assert that the phrase log *contains* the key phrases (title, heading, status message, error), never equality with the whole log. Guidepup and setup versions are pinned. Cost and stability are measured on the first product before the next one adopts it (A11Y-25).
   *Why:* catches announcement regressions the DOM checks can't see, without slowing pull requests. Guidepup cannot drive JAWS, TalkBack or iOS VoiceOver, so it never replaces A11Y-24.
 
 ```ts
@@ -186,16 +186,4 @@ A shell with a footer adds `- contentinfo` to its landmark snapshot.
 | `playwright-best-practices` (visual-regression) | `waitForLoadState('networkidle')` before screenshots; screenshots as a default | Web-first assertions (TS-TEST-15); visual regression is opt-in (TS-TEST-22) |
 | `playwright-best-practices` (flaky tests) | Raise retries or timeouts to stabilise a test | Retries 0 locally, at most 1 in CI; a flaky test gets a ticket and a fix date (TS-TEST-31) |
 
-## Agent checklist
-
-- [ ] New main screen or state: in the inventory (A11Y-27), spec tagged `@responsive`, and `@theme` where it scans a state?
-- [ ] New project in `playwright.config.ts` changes only one dimension from the default cell, and sits in the tier of TS-TEST-18?
-- [ ] Reflow and text-spacing checks on `@responsive` screens; resize-transition test for shells and list-detail screens?
-- [ ] Target size asserted at `compact`; `target-size` proven to have run?
-- [ ] Status messages, route title and focus (link, back, query-only change) and form errors asserted (TS-TEST-23/24/26); shell and screen ARIA snapshots (TS-TEST-25)?
-- [ ] No new retries or timeouts to hide a flaky test; pull-request tier within its time budget?
-- [ ] Shared fixture fails on unstubbed API calls, page errors, `console.error` and missing translations (TS-TEST-32)?
-
-## Sources
-
-Playwright test options `colorScheme`, `contrast`, `forcedColors`, projects and retries (playwright.dev/docs/api/class-testoptions, playwright.dev/docs/test-retries), ARIA snapshots (playwright.dev/docs/aria-snapshots), Guidepup (github.com/guidepup/guidepup-playwright), `@axe-core/playwright` (github.com/dequelabs/axe-core-npm).
+*Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript E2E: Matrix, Responsive, Themes, Screen Readers".*

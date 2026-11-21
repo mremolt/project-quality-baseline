@@ -116,16 +116,4 @@ expect(listed.filter((k) => !libraryKey(k.key)).map(pick).sort(byKey)).toEqual(o
 | `/config.json` | Controller test: 200 without authentication, exact JSON keys, `Cache-Control: no-store` |
 | Deployed defaults (TEST-CFG-02) | The smoke start of the image ([../../07-deployment-view/nestjs-delivery.md](../../07-deployment-view/nestjs-delivery.md)) sets only the required keys of `configuration-keys.yaml` and no `.env.local` |
 
-## Agent checklist
-
-- [ ] New setting: key in a zod schema next to its adapter, constrained, `.describe()`d, unit in the name (NEST-CFG-01/05)?
-- [ ] Read through `loadConfig` in a provider, injected by token; nothing in the core imports config (NEST-CFG-02/03)?
-- [ ] No `process.env`, no `NODE_ENV` branch, no per-environment file (NEST-CFG-02/06)?
-- [ ] Secret built with `secret()`, delivered as `KEY_FILE`, `reveal()` only at the client library (NEST-CFG-07/08); minimum length and key format checked in the schema (NEST-CFG-12)?
-- [ ] Local-only switch: refused unless `APP_ENVIRONMENT_KIND` is `local` or `test` (NEST-CFG-13)?
-- [ ] Key added to `configuration-keys.yaml` and to `src/config-schemas.ts` (NEST-CFG-10)?
-- [ ] Binding test for valid, invalid and missing values (TEST-CFG-01)?
-
-## Sources
-
-zod 4 documentation (`z.coerce`, `z.url`, `.meta`, `z.toJSONSchema` with `io: 'input'`), Node.js documentation (`util.inspect.custom`, `--env-file`), NestJS documentation (custom providers, `useFactory`), ESLint rules `no-restricted-properties` and `no-restricted-imports`, The Twelve-Factor App. Code above checked in a scratch build on 2026-11-21 (zod 4.6.7, Node 26.13, ESLint 9.39, the version NODE-TOOL-04 and the template pin).
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Configuration".*

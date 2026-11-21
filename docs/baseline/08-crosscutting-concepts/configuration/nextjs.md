@@ -128,16 +128,7 @@ export default async function RootLayout({ children }: { readonly children: Reac
 | Key list (TEST-CFG-04) | `configuration-keys.spec.ts` (NEXT-CFG-09) |
 | Deployed defaults (TEST-CFG-02) | The image smoke start with only the required keys and stubs off ([NEXT-REL-21](../../07-deployment-view/nextjs-delivery.md)) |
 
-## Agent checklist
-
-- [ ] No `NEXT_PUBLIC_*` or `next.config.ts` `env` for a per-environment value; no `.env`/`.env.production` committed (NEXT-CFG-01)?
-- [ ] New key in `ServerConfigSchema`: constrained, `.describe()`d, unit in the name, no default unless right everywhere (NEXT-CFG-02)?
-- [ ] Parsed in `register()`; nothing parses or connects at import; error names keys only (NEXT-CFG-03)?
-- [ ] `process.env` only in `src/platform/config` (and the listed exceptions); values reach adapters through the composition (NEXT-CFG-04)?
-- [ ] Browser value: added to `PublicConfig` and `publicConfig()` explicitly, public only (NEXT-CFG-05)?
-- [ ] Secret: `secret()`, `KEY_FILE`, `reveal()` only at the client library, never in public config or logs (NEXT-CFG-06)?
-- [ ] Stubs gated by `APP_ENVIRONMENT_KIND`; nothing else branches on it (NEXT-CFG-07)?
-- [ ] `configuration-keys.yaml`, `.env.development` and the binding test updated (NEXT-CFG-09, NEXT-DEV-03)?
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Configuration".*
 
 ## Skill overrides
 
@@ -148,7 +139,3 @@ export default async function RootLayout({ children }: { readonly children: Reac
 | `vercel-react-best-practices` (implied): `process.env.X` read in shared or client-reachable modules | Only `src/platform/config` reads the environment, behind `server-only` (NEXT-CFG-02/04) |
 | `vercel-react-best-practices` `advanced-init-once`: module-level initialisation | Parse in `register()`, never at import (NEXT-CFG-03) |
 | Generic habit: `if (process.env.NODE_ENV === 'test')` or an environment-name switch to turn on mocks | `APP_TEST_STUBS` guarded by `APP_ENVIRONMENT_KIND` in the validated schema (NEXT-CFG-07) |
-
-## Sources
-
-Next.js 16 documentation (nextjs.org/docs): environment variables (load order, `NEXT_PUBLIC_` inlining, runtime environment for dynamic rendering), `next.config.ts` `env`, `instrumentation.ts` `register()`, `server-only`. zod 4.6 documentation (`z.coerce`, `z.url`, `.describe`, `.refine`, `z.toJSONSchema` with `io: 'input'`). Node.js documentation (`util.inspect.custom`, `process.exit`). ESLint `no-restricted-properties`, `no-restricted-imports`. The Twelve-Factor App (III Config). Checked in the reference app and a copy of it on 2026-11-20 (Next.js 16.4.6 standalone server, zod 4.6.7, Node 26.1).

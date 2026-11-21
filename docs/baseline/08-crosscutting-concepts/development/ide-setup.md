@@ -42,11 +42,4 @@ coverage/
 .env*.local
 ```
 
-## Agent checklist
-
-- [ ] Changed formatter/linter config? IDE settings still only reference it?
-- [ ] New technology in the stack or new component folder? Re-run `baseline-ide-setup` from the repository root to update plugins and paths.
-
-## Sources
-
-VS Code workspace settings and recommended extensions (code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions), vscode-eslint, prettier-vscode, IntelliJ IDEA docs: Prettier, ESLint, Required plugins, Actions on Save (jetbrains.com/help/idea), EditorConfig (editorconfig.org).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "IDE Setup: VS Code and IntelliJ IDEA Ultimate".*

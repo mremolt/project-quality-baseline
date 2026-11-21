@@ -98,13 +98,4 @@ Runtime, compiler, lint and build settings for Node.js backends. The TypeScript 
 - **NODE-TOOL-09: Production dependencies are kept apart from dev dependencies.** The image installs with `npm ci --omit=dev`; the SBOM (`@cyclonedx/cyclonedx-npm --omit dev`, TS-TOOL-16) covers what runs (SEC-CI-03).
 - **NODE-TOOL-10: `package.json` keeps `"version": "0.0.0"`.** The release version is injected at deploy time, never built in (NEST-REL-06); the field must exist for npm tooling.
 
-## Agent checklist
-
-- [ ] Node from `.nvmrc`, npm 11.10 or newer (NODE-TOOL-01)?
-- [ ] ESM imports with `.js` extension; no DOM lib (NODE-TOOL-02)?
-- [ ] No `process.env` outside `src/platform/config`, no `console`, no `child_process` (NODE-TOOL-05)?
-- [ ] `npm run verify` green before finishing; no rule or compiler check loosened?
-
-## Sources
-
-Node.js release schedule (nodejs.org/en/about/previous-releases, `index.json` of nodejs.org/dist: 26.x Active LTS "Lithium" since 2026-10-28), TypeScript `module: nodenext` (typescriptlang.org/docs/handbook/modules), typescript-eslint rules, npm registry peer dependencies (eslint-plugin-import 2.32: ESLint up to 9). Validated in a template build on 2026-11-20 (ESLint 9.39, typescript-eslint 8.73, Prettier 3.10).
+*Agent checklist in [checklists/node.md](../../checklists/node.md) and sources in [sources.md](../../sources.md), section "Node.js Tooling".*

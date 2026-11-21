@@ -116,19 +116,4 @@ During a rolling deployment a browser that loaded a page from N-1 may reach an i
 - Copying every old release's `.next/static` forward, so the image grows with each release.
 - A `frontend/` bundle copied into the backend image, or a `backend/v…` tag that also releases the Next.js app.
 
-## Agent checklist
-
-- [ ] `output: 'standalone'`; image starts `node server.js` in exec form; `.next/static` copied next to it (NEXT-REL-04/06)?
-- [ ] Dockerfile multi-stage, distroless `nonroot`, both bases pinned by digest, user 65532; specs, e2e and `.env*` in `.dockerignore`; CI copies the backend spec in with `npm run copy:api-spec` before `docker build` (NEXT-REL-06/07)?
-- [ ] No secret, `.env*` file, per-environment `NEXT_PUBLIC_*` or `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in the build (NEXT-REL-08)?
-- [ ] Nothing writes to disk at run time: `images.unoptimized`, no ISR or revalidation; read-only root filesystem without tmpfs (NEXT-REL-11)?
-- [ ] Pre-stop delay, grace period above pre-stop + longest request; `HOSTNAME=0.0.0.0` (NEXT-REL-12/13)?
-- [ ] `RELEASE_VERSION` injected at deploy; commit built in; both in the public config (NEXT-REL-15)?
-- [ ] Previous release's static files in the image; `deploymentId` = commit SHA; server-action callers reload once on an unknown action (NEXT-REL-16..18)?
-- [ ] Stored session shape compatible with the previous release (NEXT-REL-03)?
-- [ ] Own `frontend/v…` tag and changelog; backend and frontend N-1 compatible (NEXT-REL-02)?
-- [ ] Image SBOM and npm SBOM published; image scanned (NEXT-REL-19/20)?
-
-## Sources
-
-Next.js 16 documentation: `output: 'standalone'`, self-hosting guide (version skew, `deploymentId`, server actions encryption key, caching and ISR on self-hosted servers), `images.unoptimized`, `outputFileTracingExcludes` (nextjs.org/docs). Next.js 16.4.6 source in `next/dist` (`deploymentId`, `NEXT_DEPLOYMENT_ID`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`, `server-reference-manifest.json`). Distroless images (github.com/GoogleContainerTools/distroless). Docker documentation: multi-stage builds, `.dockerignore`, `docker run --read-only`. Kubernetes documentation: container lifecycle hooks (`sleep` action), pod termination. CycloneDX npm (`@cyclonedx/cyclonedx-npm`). Checked in a scratch build on 2026-11-20: Next.js 16.4.6, Node 26.1, Docker 29.8, `node:26-trixie-slim` and `gcr.io/distroless/nodejs26-debian13:nonroot`, Redis 8.4 (read-only run, SIGTERM drain, action IDs across builds, static file serving of an added previous-release chunk).
+*Agent checklist in [checklists/nextjs.md](../checklists/nextjs.md) and sources in [sources.md](../sources.md), section "Next.js: Delivery".*

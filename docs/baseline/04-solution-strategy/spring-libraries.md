@@ -74,15 +74,4 @@ Not managed by Boot, pinned in the build: springdoc-openapi 3.2.0, ArchUnit 1.5.
 
 **Boot 4.2.0 was released on 2026-11-19** (OSS support to 2027-12-31; 4.1 runs to 2027-07-31). **The upgrade is parked** (SPRING-D1) until the pinned libraries officially support Boot 4.2 and the reference template builds green on 4.2.x; a first patch release is not a precondition. *Supported* means that every pinned third-party library, `resilience4j-spring-boot4` and ShedLock included, has an official release built against the new Boot minor; a passing smoke test alone is not enough. Boot 4.2 waits for the Springwolf release on swagger-core 3 (no split upgrade without Springwolf); the upgrade skill is written once that release is out. Status 2026-11-21: springdoc 3.2.1 supports 4.2, but Springwolf 2.9.0 (swagger-core 2 / Jackson 2) fails at start-up beside it with a `VerifyError`; the Springwolf release on swagger-core 3 is merged but not released. `resilience4j-spring-boot4` 2.4.0 and ShedLock 7.11 publish no 4.2 statement; they passed a smoke test on 4.2.0, which does not count as support. What is still to confirm before the upgrade is listed in [chapter 11](../11-risks-and-technical-debt/README.md#verify-before-first-use). When upgrading, decide on the opt-in OpenTelemetry semantic conventions (they rename metrics and spans, so dashboards change) and re-check SPRING-SEC-12.
 
-## Agent checklist
-
-- [ ] Starter and artifact names are the Boot 4 ones; no explicit version for a managed dependency?
-- [ ] No Lombok, Jackson 2 imports, `@MockBean`, H2?
-- [ ] Spring Data types stay in the JPA adapter; Spring and framework annotations stay out of `domain`/`ports`?
-- [ ] New outbound REST call: generated from a spec if one exists?
-- [ ] Resilience4j only for a circuit breaker (SPRING-LIB-07)?
-- [ ] Image build: Buildpacks, or the platform-dictated method recorded in chapter 7 (SPRING-LIB-13)?
-
-## Sources
-
-Spring Boot 4.0 Migration Guide, Spring Boot reference (packaging OCI images: Buildpacks), Jib (github.com/GoogleContainerTools/jib) and 4.1 release notes (github.com/spring-projects/spring-boot/wiki), Spring Framework 7 release notes, springdoc-openapi compatibility matrix (springdoc.org/faq.html), OpenAPI Generator (openapi-generator.tech), Resilience4j. Versions read from a validated template build.
+*Agent checklist in [checklists/spring.md](../checklists/spring.md) and sources in [sources.md](../sources.md), section "Spring Boot: Libraries".*

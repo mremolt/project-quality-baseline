@@ -168,18 +168,4 @@ Stack-specific rows are in the stack's clients doc.
 | Output key `mocks` for MSW generation | `mock` (singular), as in the configuration above; check the installed Orval's types when upgrading |
 | camelCase zod schema names (`listOrdersResponse.parse`) | Orval 8.47's zod output is PascalCase operationId + `Response` (`ListOrdersResponse`); the naming has changed between Orval versions, so use the names from the generated `*.zod.ts` |
 
-## Agent checklist
-
-- [ ] Client and types generated, nothing hand-written for a specced API?
-- [ ] Generated code used only inside `adapter/out/http`?
-- [ ] Response parsed with the generated zod schema, mapped to domain types?
-- [ ] N+1 check done; batching/caching as decorator if chosen?
-- [ ] Adapter tests use the generated MSW handlers, including an error and a malformed response?
-- [ ] `urlEncodeParameters: true` in the Orval config (TS-API-09); `@faker-js/faker` a dev dependency when MSW mocks are generated?
-- [ ] File downloads through the adapter, not hand-built URLs in `<a download>` (TS-API-10)?
-
-## Sources
-
-Orval (orval.dev, `orval` skill from github.com/orval-labs/orval; option names `mock.generators` and `urlEncodeParameters` from the Orval 8 type definitions, zod schema names from Orval 8.47 output), MSW (mswjs.io; `onUnhandledFrame` in MSW 3), zod (zod.dev).
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "Generated API Clients (Orval)".*

@@ -69,19 +69,10 @@ Hexagonal architecture fixes this with the dependency rule plus explicit ports. 
 - A service in the core that calls `new SomeRepositoryImpl()` or imports an HTTP client.
 - An architecture diagram that cannot be mapped onto the folder/package structure.
 
-## Agent checklist
-
-- [ ] Does the new code sit in the right ring (domain / application / ports / adapter / configuration)?
-- [ ] Do all new imports point inward, and does no adapter import another adapter?
-- [ ] If the core needs an external capability, did I add an outgoing port instead of calling the technology directly?
-- [ ] Is wiring done only in the composition root?
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Hexagonal Architecture (Ports & Adapters)".*
 
 ## Related
 
 - [05-building-block-view/code-organization.md](../05-building-block-view/code-organization.md): how the rings map to folders/packages
 - [05-building-block-view/use-cases.md](../05-building-block-view/use-cases.md), [05-building-block-view/adapters.md](../05-building-block-view/adapters.md), [08-crosscutting-concepts/mapping/mapping-between-boundaries.md](../08-crosscutting-concepts/mapping/mapping-between-boundaries.md)
 - [08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md](../08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md): making the build fail on violations
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 1 (What's Wrong with Layers?), ch. 2 (Inverting Dependencies), ch. 12 (Deciding on an Architecture Style). Background: Robert C. Martin, *Clean Architecture*; Alistair Cockburn, "Hexagonal Architecture".

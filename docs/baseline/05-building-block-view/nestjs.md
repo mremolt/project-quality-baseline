@@ -72,14 +72,4 @@ Copy `.agents/skills/baseline-nestjs/templates/dependency-cruiser.cjs` to `backe
 1. Check that the repository layout decision was made (REPO-LAY-02). Copy the templates of the `baseline-nestjs` skill into `backend/` as `.agents/skills/baseline-nestjs/templates/README.md` describes: a complete skeleton (platform rings, configuration with `Secret`, auth guard, problem details, probes and shutdown, telemetry, logging, Kysely with `TransactionPort` and migrator, cluster lock, tests, tooling, `compose.yaml`, `Dockerfile`), validated as a whole. The Nest CLI generator (`nest new`) is not used: it scaffolds Express, Jest, CommonJS and a different layout.
 2. Rename the service, run `npm install` once to create the lockfile, then `npm ci` and `npm run verify`; it must be green before the first feature. The first bounded context goes under `src/features/<context>/` and into `app.module.ts`.
 
-## Agent checklist
-
-- [ ] New provider wired only in its context module; use case created with `useFactory`, no decorator on core classes (NEST-ARCH-01/02)?
-- [ ] Tokens in `<context>.tokens.ts`; injection by token, singleton scope, no `forwardRef` (NEST-ARCH-03..05)?
-- [ ] Transaction through `TransactionPort`; no remote call inside (NEST-ARCH-08)?
-- [ ] Controller only maps; errors by category base class (NEST-ARCH-10/12)?
-- [ ] `npm run check:arch` green and the config unchanged (or the change discussed)?
-
-## Sources
-
-NestJS documentation: custom providers (`useFactory`, `useExisting`), injection scopes, circular dependency, lifecycle events (docs.nestjs.com). Validated against a template service (NestJS 12.5, Fastify adapter), 2026-11-20.
+*Agent checklist in [checklists/nestjs.md](../checklists/nestjs.md) and sources in [sources.md](../sources.md), section "NestJS: Hexagonal Architecture".*

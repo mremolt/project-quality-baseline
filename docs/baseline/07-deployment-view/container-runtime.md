@@ -105,16 +105,4 @@ Compose has no start-up budget of its own; whoever operates it records how a fai
 - A start-up probe tuned for a fast start, so the first deployment with a long migration is killed in a restart loop.
 - The release version written into an image label or into the bundle at build time.
 
-## Agent checklist
-
-- [ ] New deployable or image change: non-root, minimal base pinned by digest, no build tools or secrets in layers, SBOM, labels (REL-IMG-01, REL-RUN-07)?
-- [ ] Build method other than Buildpacks: customer platform reason recorded in chapter 7, or an ADR (REL-IMG-02)?
-- [ ] Frontend change to serving, routing or caching: deep-link, cache-header and 404 rules kept; previous release's chunks still served (REL-FE-03/04)?
-- [ ] BFF image: start fails without the bundle, built image answers `GET /` with `200` `text/html` (REL-FE-06)?
-- [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7 (REL-RUN-*)?
-
-## Sources
-
-OCI Image Format Specification, annotations (github.com/opencontainers/image-spec). Cloud Native Buildpacks (buildpacks.io); Paketo image labels buildpack (`BP_OCI_*`) and JVM memory calculator (paketo.io). Kubernetes documentation: pod security standards, `securityContext`, resource management, startup probes, pod termination (kubernetes.io). Docker Compose file reference (docs.docker.com/compose). OpenJDK container support, `-XX:MaxRAMPercentage`. Angular deployment guide, server configuration for routed apps (angular.dev).
-
-Per stack (frontend): Angular ([stacks/angular.md](../stacks/angular.md)), React ([stacks/react.md](../stacks/react.md)), Next.js ([stacks/nextjs.md](../stacks/nextjs.md)).
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Container Images, Frontend Delivery and Runtime Contract".*

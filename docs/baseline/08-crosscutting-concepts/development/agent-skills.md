@@ -17,6 +17,7 @@ skills/                    ← our own skills (source of truth, edited here)
 skills-lock.json           ← source, commit and content hash of every third-party skill
 package.json               ← pinned `skills` CLI and the scripts below
 scripts/
+  build-rule-index.*       ← generates docs/baseline/rule-index/ (TOOL-SKL-11)
   skills-upstream-diff.*   ← upstream changes of skills we adapted
   sync-baseline.*          ← copies the baseline into a consuming project
 ```
@@ -34,6 +35,9 @@ Every script is a Node.js file (`.mjs`, built-in modules only) with two launcher
 | `npm run skills:restore` | Reinstalls exactly what `skills-lock.json` records (no updates) |
 | `npm run skills:link-own` | Installs our own skills from `skills/` into `.agents/skills` (as copies) and links them into `.claude/skills`. **Re-run after every edit in `skills/`.** |
 | `npm run skills:upstream-diff` | For own skills adapted from third-party skills: shows upstream changes since the recorded commit |
+| `npm run docs:rule-index` | Regenerates the rule index in `docs/baseline/rule-index/` from the docs (TOOL-SKL-11) |
+| `npm run docs:rule-index:check` | Fails (exit code 1) when the rule index is out of date |
+| `npm run docs:lint` | Checks the docs against TOOL-SKL-10..13 (cut-off headlines, checklists or sources inside a doc, pointer lines, reading instructions); exit code 1 on errors |
 | `npx skills add <owner/repo> --skill <name> -a universal -a claude-code -y` | Adds a new third-party skill (then record it in the catalogue below) |
 
 ## Rules
@@ -50,6 +54,17 @@ Every script is a Node.js file (`.mjs`, built-in modules only) with two launcher
   *Why:* our teams develop on Linux and Windows, and Node.js is the only runtime every project already requires.
 - **TOOL-SKL-09: A product loads only the skills and stack docs of its declared stacks** ([declared stacks](#declared-stacks)). Every own entry skill routes only to its own stack chain (for example `baseline-nestjs` never points to Spring or frontend docs), and new stack docs are written so that a project of that stack never needs another stack's docs.
   *Why:* every installed skill's description sits in each session's context, and every doc an agent reads costs tokens; another stack's rules are noise at best and wrong advice at worst.
+
+## Reading the docs on a token budget
+
+The docs of one stack chain run to 50,000–100,000 words, more than an agent can keep in context next to the code. The generated rule index in [`docs/baseline/rule-index/`](../../rule-index/) lists every rule ID with its headline, about a tenth of the full text: `shared.md` for the shared docs and one file per stack. A stack's file leaves out the docs that are already in the files of the stacks it requires. The agent checklists and the sources sit in their own files as well, so a doc opened for its rules carries only rules. In the baseline repository, the Claude Code agent `baseline-doc-compactor` (`.claude/agents/`, never synced) runs `docs:lint`, fixes its findings and reviews the docs changed since its last run for lossless compaction; run it periodically or after a batch of doc changes.
+
+- **TOOL-SKL-10: Agents read the docs in steps and never load every doc of a stack at once.** (1) At the start of a task: the rule index of the shared rules and of every declared stack, the hexagonal architecture, the code organisation and the defaults D1–D17. (2) The full docs of the topics the task touches, chosen from the "Read by task" table in `AGENTS.md` or the entry skill's task table. (3) Before implementing against a rule from a doc not yet read: that rule's full bullet, found by its ID. (4) Before finishing: the agent checklist sections of the docs it used (TOOL-SKL-13). `AGENTS.md`, the entry skills and the reminder hooks give this order and never say "read the docs a stack page lists".
+  *Why:* an agent that loads a whole stack chain up front runs out of context before it writes code, and drops rules it read early. The index keeps every rule visible, so the agent knows when to open a doc.
+- **TOOL-SKL-11: The rule index is generated, never edited by hand.** `npm run docs:rule-index` rewrites it from the docs, and a change to a rule doc or a stack page regenerates it in the same change. `npm run docs:rule-index:check` fails when it is out of date; run it before every commit.
+- **TOOL-SKL-12: Every rule starts with a bold headline that states the rule on its own as one sentence:** `- **PREFIX-AREA-NN: Headline.** Details …`. The index shows only the headline: the bold part, plus a short reference in parentheses when a colon, semicolon or full stop follows it (`**Headline** (REF-01): details`); otherwise the bold part is read on to the end of its sentence. Values, examples, exceptions and the *Why* follow after it. A rule whose first sentence is longer than about 30 words is cut in the index; split it or shorten the headline.
+- **TOOL-SKL-13: Agent checklists and sources live outside the rule docs.** Each doc's checklist is a section titled like the doc in [`docs/baseline/checklists/<scope>.md`](../../checklists/) (`shared` or the stack in the doc's file name), its sources a section in [`docs/baseline/sources.md`](../../sources.md); the doc ends with one line that points to both. A change to a doc's rules updates its checklist section in the same change. Agents read only the sections of the docs they used, once, before finishing a task.
+  *Why:* the checklists restate the rules and the sources serve people; kept in the docs, they cost every agent that opens a doc for its rules.
 
 ## Distribution to consuming projects
 
@@ -152,16 +167,4 @@ Each entry stack owns a reminder hook (`hooks` in `baseline-stacks.json`): `base
 | `material-3` | hamen/material-3-skill | replaced | Compose-first, `@material/web`; replaced by `angular-material-design` |
 | `ngrx-signals` (original) | danielsogl/skills | replaced | Store calls HTTP directly; replaced by our adaptation |
 
-## Agent checklist
-
-- [ ] Did a skill's advice contradict a doc? Followed the doc and noted the conflict?
-- [ ] Added or updated a skill? Lock file, installed files and catalogue updated in the same change, and the diff reviewed?
-- [ ] Never edited a file under `.agents/skills/` that belongs to a third-party skill?
-- [ ] Added or changed a script or hook? Logic in `.mjs`, `.sh` and `.cmd` launchers present, tested on Linux and Windows (TOOL-SKL-08)?
-- [ ] New `baseline-*` hook of a stack? Listed under that stack's `hooks` in `baseline-stacks.json` and registered in `.claude/settings.json` ([declared stacks](#declared-stacks))?
-- [ ] Changed what the sync creates or replaces? The distribution table above updated; nothing else lists it.
-- [ ] New skill or stack? Its entry in `baseline-stacks.json` and its `AGENTS.md` lines tagged (TOOL-SKL-09)?
-
-## Sources
-
-`skills` CLI (github.com/vercel-labs/skills), Agent Skills format (agentskills.io).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Agent Skills".*

@@ -240,21 +240,4 @@ Details: [08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-con
 - **Package-private visibility**: TypeScript has none at folder level. `index.ts` public APIs plus dependency-cruiser take its role.
 - **The full hexagon for trivial screens**: a static page needs no use case at all. For a simple form → API → toast there is one allowed lighter variant, the catalogued shortcut "skipping application services" ([conscious-shortcuts.md](../11-risks-and-technical-debt/conscious-shortcuts.md)): the HTTP adapter implements the `ports/in` contract itself, and the composition file binds the use-case token to it. There is no application class and no outgoing port; the UI still injects the use-case token (TS-ARCH-08), so dependency-cruiser passes unchanged. Record it as an ADR (ARCH-SC-02); introduce the use case when the screen gains a rule.
 
-## Agent checklist
-
-- [ ] No framework/HTTP imports in `domain`, `application`, `ports` (also no `import type`)? Only `src/platform/domain/index.ts` from the platform?
-- [ ] Backend DTOs mapped inside `adapter/out/http`; API client generated, not hand-written?
-- [ ] Ports return `Promise` (or are explicit stream ports)?
-- [ ] Tokens in `<feature>.tokens.ts`; UI injects use-case contracts, never outgoing ports; stores call use cases only (TS-ARCH-03)?
-- [ ] N+1 check done for new data loading?
-- [ ] Component logic limited to rendering + forwarding intent?
-- [ ] Cross-feature imports only via `index.ts`; another feature's use cases only through its published API provider (TS-ARCH-19)?
-- [ ] Routes only in `<feature>.routes.ts`, loaded with a dynamic `import()` from the app routes (TS-ARCH-20)?
-- [ ] HTTP errors mapped to domain errors in the adapter; the `TechnicalError`s it creates reported once, those it receives passed on unreported; no status codes above it (TS-ARCH-18)?
-- [ ] dependency-cruiser green with `tsPreCompilationDeps: true`, rules not loosened?
-
-## Sources
-
-Concepts from Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019 (ch. 2–8, 10, 11), translated to frontend by this baseline. The frontend mapping is our own interpretation and is not from the book.
-
-Per stack: Angular ([stacks/angular.md](../stacks/angular.md)), React ([stacks/react.md](../stacks/react.md)), Next.js ([stacks/nextjs.md](../stacks/nextjs.md)).
+*Agent checklist in [checklists/typescript.md](../checklists/typescript.md) and sources in [sources.md](../sources.md), section "TypeScript Frontend: Hexagonal Architecture".*

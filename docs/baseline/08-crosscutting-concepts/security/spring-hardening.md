@@ -89,21 +89,4 @@ Hardening for Spring Boot services on top of authentication and authorization ([
 
 Items to confirm in the first project: [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use).
 
-## Agent checklist
-
-- [ ] New chain or header change: header table of SPRING-SEC-13 kept, nothing disabled, CSP reports reach the endpoint?
-- [ ] New endpoint that takes an id: owner/tenant check, 404 for foreign objects, `cross-user` tagged test (SPRING-SEC-16, SPRING-SEC-35/36)?
-- [ ] New request record: no owner, tenant, role or audit fields (SPRING-SEC-34); size and length limits; JSON body size limited at the proxy and by the filter (SPRING-SEC-15)?
-- [ ] New query: bind parameters only, sort and identifiers from an allow-list, no process execution with user input (SPRING-SEC-31)?
-- [ ] New outbound call to a variable URL: allow-list and address filter (SPRING-SEC-19)?
-- [ ] No exception text, stack trace or SQL in a response (SPRING-SEC-18)?
-- [ ] New polymorphic JSON or Kafka payload: closed types (SPRING-SEC-20)?
-- [ ] Security-relevant action: audit event and test (SPRING-SEC-22)?
-- [ ] BFF session change: lifetimes, rotation, logout at the IdP and their tests (SPRING-SEC-32/33)? Sessions in Spring Session JDBC (SPRING-SEC-37)? Confidential client with PKCE (SPRING-SEC-38)?
-- [ ] New unauthenticated endpoint that allocates state, or new export: rate limit listed in chapter 7 (SPRING-SEC-21)?
-- [ ] New upload: name, scan, archive limits, download authorization, separate origin for active content (SPRING-SEC-26)?
-- [ ] New dependency: reviewed (JAVA-TOOL-05)?
-
-## Sources
-
-OWASP ASVS 5.0 (V1, V2, V3, V4, V5, V7, V8, V9, V11, V12, V13, V15, V16), OWASP REST Security Cheat Sheet, OWASP Content Security Policy Cheat Sheet, OWASP SQL Injection Prevention, OS Command Injection Defense, Mass Assignment, File Upload and Session Management Cheat Sheets, Spring Security reference (headers, CSRF with SPAs, OIDC logout, password storage), Spring Boot reference (`InetAddressFilter`, HTTP client settings), OpenID Connect RP-Initiated Logout 1.0 and Back-Channel Logout 1.0, RFC 7009 (token revocation), W3C Reporting API, Jackson 3.0 migration notes, Spring Boot Maven plugin (build-image).
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Hardening".*

@@ -39,17 +39,6 @@ services:
 - **NEXT-DEV-10: The dev server is not the production server.** It runs `instrumentation.ts` and the proxy like production (*verified*), but compiles on demand and uses React's development build. Behaviour that depends on the build (chunks, nonces on every script, Trusted Types, caching, the read-only filesystem, shutdown) is checked against the built server: `npm run build` and the E2E server script, or the image (`docker build`, then `docker run --read-only --cap-drop ALL --security-opt no-new-privileges` with the Compose Redis). *To verify before first use:* whether the strict CSP of `proxy.ts` lets hot reload and React's development tooling work in the browser; the policy is never loosened for production to make dev work.
 - **NEXT-DEV-11: Debugging uses `npm run dev:debug` = `next dev --hostname localhost --inspect`.** The inspector listens on `127.0.0.1:9229` in the `next-server` process (*verified*), which runs server components, route handlers, server actions and `proxy.ts`; attach from the IDE. Client components are debugged in the browser's developer tools. Never `--inspect=0.0.0.0`, never an inspector in an image or a deployed environment.
 - **NEXT-DEV-12: No bash or PowerShell start-up scripts.** Compose and npm scripts cover starting, stopping and resetting (TOOL-SKL-08); a script that becomes unavoidable is a Node `.mjs` or `.ts` file (like the E2E server script).
-- **NEXT-DEV-13: A backend developer gets a working frontend with** `cd frontend && docker compose up -d --wait && npm ci && npm run dev`, then points `API_BASE_URL` at the local backend and the login at the shared local IdP (NEXT-DEV-06/07).
+- **NEXT-DEV-13: A backend developer gets a working frontend with one command line:** `cd frontend && docker compose up -d --wait && npm ci && npm run dev`, then points `API_BASE_URL` at the local backend and the login at the shared local IdP (NEXT-DEV-06/07).
 
-## Agent checklist
-
-- [ ] New infrastructure dependency in `compose.yaml` (core: no profile; extra: profile), pinned, bound to `127.0.0.1` (NEXT-DEV-01/02)?
-- [ ] New key: throwaway value in `.env.development` if needed locally, entry in `configuration-keys.yaml`, no real secret, no `.env`/`.env.production` committed (NEXT-DEV-03)?
-- [ ] `APP_TEST_STUBS` refused outside test and local environments, with a test (NEXT-DEV-05)?
-- [ ] Dev server on `localhost` only, `APP_ORIGIN` equal to the browser URL, `agentRules: false` (NEXT-DEV-08/09)?
-- [ ] Build-dependent behaviour checked against the built server or image, not `next dev` (NEXT-DEV-10)?
-- [ ] Inspector only on `127.0.0.1`; no new start-up shell script (NEXT-DEV-11/12)?
-
-## Sources
-
-Next.js 16 documentation: `next dev` CLI options (`--hostname`, `--inspect`, `--experimental-https`), environment variables and `.env` load order, debugging guide, `agentRules` in `next.config.js` (nextjs.org/docs). Docker Compose file reference and profiles (docs.docker.com/compose). Redis image (hub.docker.com/_/redis). Keycloak realm import (keycloak.org/server/importExport). Node.js documentation: `--inspect`. Checked on 2026-11-20 in a copy of the reference app: Next.js 16.4.6 `next dev` with `.env.development`, `APP_TEST_STUBS=1` and `redis:8.4-alpine` (login and callback by `curl`, server-rendered page with stub data), `--hostname localhost` binding, `--inspect` port, `agentRules: false`.
+*Agent checklist in [checklists/nextjs.md](../checklists/nextjs.md) and sources in [sources.md](../sources.md), section "Next.js: Local Development".*

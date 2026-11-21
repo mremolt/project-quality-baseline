@@ -60,14 +60,4 @@ static {
 
 - **SPRING-REST-13: Controller tests assert status, headers and JSON body** with `@WebMvcTest` and `MockMvcTester` ([08-crosscutting-concepts/testing/spring.md](../testing/spring.md)), including the problem+json shape of each documented error. DTO serialization edge cases (dates, decimals, enums, absent fields) are covered with `@JsonTest`.
 
-## Agent checklist
-
-- [ ] New endpoint follows URL, status and error conventions; `operationId` set?
-- [ ] DTOs are package-private records with unique names; no entity or domain type in the body?
-- [ ] Decimals as `ApiDecimal`, instants as `Instant`, enums as strings (SPRING-REST-04..06)?
-- [ ] Collection paged or bounded in the query, sort and filters allow-listed; update carries a version (SPRING-REST-11/12)?
-- [ ] Error cases documented as problem+json and tested; 401/403 from the filter chain are problem+json with a code (SPRING-REST-14)?
-
-## Sources
-
-RFC 9457 (Problem Details), RFC 3339 / ISO 8601, springdoc-openapi (`SpringDocUtils.replaceWithSchema`), Spring MVC reference (docs.spring.io/spring-framework/reference/web/webmvc.html), Jackson 3 (github.com/FasterXML/jackson-3), Microsoft REST API Guidelines (money and date conventions).
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: REST and JSON Conventions".*

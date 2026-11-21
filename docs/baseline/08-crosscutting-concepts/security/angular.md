@@ -23,14 +23,14 @@ Angular rules on top of [typescript.md](typescript.md) (`TS-SEC-*`). Decisions: 
   Angular reads the nonce from the `ngCspNonce` attribute on the root element (or the `CSP_NONCE` token) and puts it on the `<style>` elements it renders, which is why `style-src` needs the nonce. `base-uri 'self'` keeps Angular's `<base href="/">` working; with `'none'` the browser ignores it, and relative bundle URLs and the router break on a deep-link reload. `trusted-types` lists Angular's own policies: `angular` (required when Trusted Types are enforced), `angular#bundler` (the CLI's lazy-chunk loading) and `angular#components` (Angular Material and the CDK, for example SVG icons in `MatIconRegistry`); `angular#unsafe-bypass` is added only together with an approved `bypassSecurityTrust*` exception (NG-SEC-02). Other hosts are added per directive (TS-SEC-07). Reports go to the BFF's report endpoint (`Reporting-Endpoints: csp="/csp-reports"`, SPRING-SEC-13, NEST-SEC-51). Trusted Types start in `Content-Security-Policy-Report-Only` and switch to enforcing once the reports of the report-only phase are clean. The other browser headers (`Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, HSTS) are listed in SPRING-SEC-13.
   *Why:* CSP is the second line of defence against XSS; a nonce must be new for every response.
 - **NG-SEC-06: The BFF sets the CSP and the other security headers** (SPRING-SEC-13, NEST-SEC-20/51), not `<meta>` tags and not a CDN with cached nonces. Per request it creates a nonce, sends it in the header and templates it into `index.html`: the `ngCspNonce` attribute and the `nonce` attribute of every `<script>`, `<style>` and stylesheet `<link>` (the build leaves a placeholder that the BFF replaces). `index.html` is served with `Cache-Control: no-store`, because a cached copy carries a stale nonce; the hashed bundles stay cacheable. The CLI's `autoCsp` (a hash-based `<meta>` CSP) is not used in any rendering mode. An app with SSR or an edge/CDN in front revisits the nonce delivery in an ADR. The dev server cannot create a per-request nonce (`headers` in `angular.json` are static), so it sends the other security headers only; the CSP and Trusted Types are asserted against the BFF-served build in the E2E tests (NG-SEC-12).
-- **TS-SEC-09 in Angular:** zod's JIT probe violates this CSP as well, so `main.ts` imports the module that sets `z.config({ jitless: true })` as its first import, before `bootstrapApplication` and anything that defines a schema. Whether the Angular CLI's esbuild output can hoist zod or schema modules into a chunk that runs before `main.ts`'s body (and so needs an equivalent of Rolldown's `strictExecutionOrder`) is to verify; the NG-SEC-12 E2E run (no CSP violation on load) is the check.
+- **TS-SEC-09 in Angular: zod runs jitless, configured by the first import of `main.ts`.** zod's JIT probe violates this CSP as well, so `main.ts` imports the module that sets `z.config({ jitless: true })` as its first import, before `bootstrapApplication` and anything that defines a schema. Whether the Angular CLI's esbuild output can hoist zod or schema modules into a chunk that runs before `main.ts`'s body (and so needs an equivalent of Rolldown's `strictExecutionOrder`) is to verify; the NG-SEC-12 E2E run (no CSP violation on load) is the check.
 
 ## Session and HTTP
 
 - **NG-SEC-07: With the BFF, the SPA is served from the BFF's origin.** `provideHttpClient()` keeps the default XSRF interceptor (cookie `XSRF-TOKEN`, header `X-XSRF-TOKEN`); `withNoXsrfProtection()` needs an ADR. All mutating calls use relative URLs: the interceptor adds the header only to same-origin requests (it compares the resolved origin with the page's), never on GET/HEAD, so a call to another origin silently goes without it.
 - **NG-SEC-08: No code reads or sets the session cookie, and no interceptor adds tokens** (the BFF holds them). A `401` redirects to the BFF login endpoint and clears client state.
 - **NG-SEC-09: Route guards improve UX only;** every action is authorized by the backend (extends NG-ARCH-14).
-- **NG-SEC-10: If SSR is chosen (NG-ARCH-18),** `allowedHosts` is an explicit list, `trustProxyHeaders` is set only behind a validating proxy, and the CSP stays a nonce-based header (NG-SEC-05/06), set by the server that renders the page; `autoCsp` is banned here as everywhere.
+- **NG-SEC-10: An SSR server (NG-ARCH-18) restricts hosts and proxy trust and keeps the nonce CSP:** `allowedHosts` is an explicit list, `trustProxyHeaders` is set only behind a validating proxy, and the CSP stays a nonce-based header (NG-SEC-05/06), set by the server that renders the page; `autoCsp` is banned here as everywhere.
 - **NG-SEC-11: A global `ErrorHandler` shows a generic message** and reports scrubbed data (TS-SEC-06); no raw server errors or stack traces in the UI. Wiring and reporting path: [NG-OBS-01/02](../observability/angular.md).
 
 ## Tests
@@ -41,15 +41,4 @@ Angular rules on top of [typescript.md](typescript.md) (`TS-SEC-*`). Decisions: 
 
 See [NG-TOOL-07/08](../development/angular-tooling.md): lint rules for the bans above and `sourceMap: false` in production builds.
 
-## Agent checklist
-
-- [ ] No `bypassSecurityTrust*`, `innerHTML` with data, or DOM write outside an adapter?
-- [ ] Mutating HTTP calls relative, XSRF interceptor intact, no token handling in the SPA?
-- [ ] CSP/header change: still strict (nonce in `script-src` and `style-src`, `base-uri 'self'`, Trusted Types incl. `angular#components`, report destination), `index.html` uncached, no `autoCsp`, E2E assertion updated (deep-link reload included)?
-- [ ] New third-party script or font: nonce or trusted loader plus SRI, hosts in the matching non-script directive, or self-hosted?
-- [ ] zod jitless module imported first in `main.ts` (TS-SEC-09)?
-- [ ] Guards treated as UX; backend enforces the rule?
-
-## Sources
-
-Angular security guide (angular.dev/best-practices/security), Angular HttpClient security (XSRF), Angular `CSP_NONCE`, `ngCspNonce` and the Trusted Types policy names (angular.dev/best-practices/security), Angular Components Trusted Types policy `angular#components` (`angular/components` commit 881edec, `@angular/cdk/private` `trustedHTMLFromString`), Angular XSRF interceptor source (`packages/common/http/src/xsrf.ts`, v22), Trusted Types (w3c.github.io/trusted-types), OWASP Content Security Policy Cheat Sheet (strict policy), OWASP ASVS 5.0 V3 and V7.
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular: Security".*

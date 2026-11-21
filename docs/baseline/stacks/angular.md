@@ -2,6 +2,8 @@
 
 Rules for Angular frontends. They implement the shared docs and the TypeScript docs ([stacks/typescript.md](typescript.md)) and may tighten them, never contradict them. Stack at a glance: [04-solution-strategy/angular.md](../04-solution-strategy/angular.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [typescript](../rule-index/typescript.md), [angular](../rule-index/angular.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 | Doc | Covers | Rule IDs |
 |---|---|---|
 | [05-building-block-view/angular.md](../05-building-block-view/angular.md) | Project layout, naming, DI and wiring, HTTP, routing, forms, setup | `NG-ARCH-*` |

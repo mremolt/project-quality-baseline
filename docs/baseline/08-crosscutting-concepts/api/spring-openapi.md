@@ -32,7 +32,7 @@ class OpenApiConfiguration {
   *Why:* springdoc names schemas by simple class name. Two nested `Request` records in different controllers would collide in the spec. The records stay package-private in their controller's package (ARCH-ADP-04).
 - **SPRING-API-03: Required means required.** Mandatory fields carry `@NotNull` (or `@Schema(requiredMode = REQUIRED)`); everything else is optional in the spec. The generated TypeScript types and zod schemas depend on it.
 - **SPRING-API-04: Bean Validation constraints on request records are part of the contract** (`@Size`, `@Pattern`, `@Min`, …) and show up as schema constraints, so clients validate the same way. They still only check mappability (SPRING-ARCH-08); the command validates itself.
-- **SPRING-API-05: Errors (API-CON-05, API-REST-05) are documented with `@ApiResponse(responseCode = "409", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))`** for every business error status the controller can produce, with the possible `code` values (API-REST-07) in the description.
+- **SPRING-API-05: Every business error status a controller can produce is documented as a problem detail with its possible `code` values** (API-CON-05, API-REST-05, API-REST-07): `@ApiResponse(responseCode = "409", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))`, with the `code` values in the description.
 - **SPRING-API-06: Examples (API-CON-05, API-CON-11) are set with `@Schema(example = "…")` or `@ExampleObject`.**
 - **SPRING-API-07: springdoc and swagger annotations stay in `adapter.in.rest`.** They never appear in `domain`, `ports` or `application` (ArchUnit, see below).
 
@@ -90,14 +90,4 @@ oasdiff breaking /tmp/base.yaml openapi/orders-v1.yaml --fail-on ERR
 
 The `domainAndPortsAreFrameworkFree` rule of the [architecture test template](../../05-building-block-view/spring.md#architecture-test-template) includes `io.swagger..` and `org.springdoc..` (SPRING-API-07).
 
-## Agent checklist
-
-- [ ] New/changed endpoint: `operationId`, unique schema names, `@NotNull` on required fields, problem+json errors, examples?
-- [ ] Spec regenerated (`./mvnw verify -Dopenapi.update=true`) and committed in the same change?
-- [ ] Local date-times and times published with a pattern, not `format: date-time` (SPRING-API-12)?
-- [ ] Breaking change? New version or explicit decision?
-- [ ] N+1 check done for read endpoints?
-
-## Sources
-
-springdoc-openapi (springdoc.org, including the properties reference), OpenAPI 3.x, RFC 9457, oasdiff (github.com/oasdiff/oasdiff).
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Producing the OpenAPI Contract (code-first)".*

@@ -66,7 +66,7 @@ Per operation Orval 8.47 generates a function (`listOrders(params, options)`, `c
   The mutator never retries (RES-RTY-04: retries live in one layer, the query client's transient-only policy, REACT-ARCH-13) and never adds an `Authorization` header: the browser holds no tokens (TS-SEC-01). It does not use `AbortSignal.any`: that needs Firefox 124 and Safari 17.4, beyond the TS-TOOL-02 browser set (Firefox 119, Safari 17.0), and the compiler's `DOM` lib does not catch it. The small `anySignal` helper next to the mutator combines the signals instead; it passes the mutator's time-out and abort tests in Vitest, and running it in Firefox 119 and Safari 17.0 is to be verified before first use.
 - **REACT-API-06: The mutator is configured once with `configureHttp()`** from `createPlatform()` before the first render (REACT-ARCH-12; (React SPA) its settings come from `/config.json`, Next.js: NEXT-API-05). Orval's `fetch` client generates module functions, not injectable instances, so the mutator reads module-level settings (`timeoutMs`, `onUnauthorized`, `reportError`); a call before `configureHttp()` throws. This is how TS-API-04 applies in React: the generated functions are stateless; the adapter that uses them is an instance created by the feature's factory (REACT-ARCH-10), and dependency-cruiser keeps everything else away from them (`generated-api-only-in-http-adapter`).
 - **REACT-API-07: Only generated code imports the mutator.** dependency-cruiser `http-mutator-only-from-generated`, with the mutator exempted from `platform-only-via-index` because generated code reaches it by a deep relative path (REACT-ARCH-22). Features never call `customFetch` themselves; a hand-written request in a feature is a missing operation in the spec (API-CON-07).
-- **REACT-API-08: The mutator reads problem bodies with a small platform schema** of the convention fields the frontend relies on (`code`, `traceId`, `errors[]`, API-REST-07), because it serves every API and cannot import one feature's generated model. It is not a DTO: features map from `HttpProblem`, never from their own copy of a problem type.
+- **REACT-API-08: The mutator reads problem bodies with a small platform schema of the convention fields the frontend relies on** (`code`, `traceId`, `errors[]`, API-REST-07). It serves every API and cannot import one feature's generated model. It is not a DTO: features map from `HttpProblem`, never from their own copy of a problem type.
 - **REACT-API-09: Plain `fetch` outside generated clients exists only in platform adapters that run before or beside the HTTP stack**: the runtime-config loader (`/config.json`, before `configureHttp()`) and the error-reporting sender (which must not report its own failures). Each sets its own timeout with `AbortSignal.timeout(…)` (RES-TMO-01); the reporting sender adds the XSRF header and drops a failed send silently. ESLint `no-restricted-globals` allows `fetch` only under `adapter/out/http` (REACT-ARCH-12).
 
 ```ts
@@ -241,16 +241,4 @@ it('rejects a malformed response with a technical error and reports it, because 
 | `server.listen({ onUnhandledRequest: 'error' })` | MSW 3: `onUnhandledFrame: 'error'` (REACT-API-12) |
 | `queryFn` calls generated API functions | `queryFn` calls a use case (REACT-ARCH-13) |
 
-## Agent checklist
-
-- [ ] `client: 'fetch'` with the `customFetch` mutator, `includeHttpResponseReturnType: false`, `urlEncodeParameters: true`?
-- [ ] No query-library client, no hand-written request in a feature, no `customFetch` call outside generated code?
-- [ ] Adapter passes `{ signal: signal ?? null }`, parses with the generated PascalCase zod schema, maps problems in one mapper, reports the `TechnicalError`s it creates (and only those)?
-- [ ] No `Authorization` header, no absolute URL, no retry in the mutator?
-- [ ] Plain `fetch` only in the platform's config loader and reporting sender, each with a timeout?
-- [ ] Several features: tag sets in `orval.config.ts` disjoint, other features' operations used through their published API (REACT-API-13)?
-- [ ] Adapter and mutator tests against MSW with `onUnhandledFrame: 'error'`, covering success, malformed body, 5xx, problem codes, time-out and abort?
-
-## Sources
-
-Orval 8.47 (orval.dev; output options `client`, `override.mutator`, `override.fetch.includeHttpResponseReturnType`, `urlEncodeParameters`, `mock.generators`, verified against the generated output), MSW 3 (mswjs.io; `setupServer`, `onUnhandledFrame`, `delay`, `HttpResponse.error`), zod 4 (zod.dev), MDN `AbortSignal.timeout`, `AbortSignal.any` (browser compatibility table) and `addEventListener` `signal` option, `@faker-js/faker` 10. All options and APIs above were compiled and tested in the baseline's React SPA validation project (2026-11-20).
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Generated API Clients".*

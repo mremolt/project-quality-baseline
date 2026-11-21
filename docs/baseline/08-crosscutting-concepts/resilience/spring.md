@@ -141,18 +141,4 @@ void purge() { purgeExpiredIdempotencyKeys.purge(); }
 
 Items of this file that are written from reference docs and not yet exercised in a service are listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use).
 
-## Agent checklist
-
-- [ ] New client: built from the injected builder, connect and read timeouts in configuration, values on the timeout ladder; WireMock delay test (SPRING-RES-01/02)?
-- [ ] OIDC login or resource server: JWKS, token and userinfo clients declared with explicit timeouts, not left to Spring Security's defaults (SPRING-RES-01)?
-- [ ] Remote call outside the transaction, database part in a `TransactionTemplate`; `app.resilience.transaction-guard` is `fail` in tests (SPRING-RES-03/04)?
-- [ ] `maximum-pool-size` and `connection-timeout` (milliseconds) set; pool timeout maps to 503 (SPRING-RES-05)?
-- [ ] `@Retryable` with explicit `includes`, backoff, jitter and `timeout`, on an adapter, not in a Kafka-driven flow (SPRING-RES-08/09)?
-- [ ] `@ConcurrencyLimit` with an explicit limit and `policy = REJECT` for each remote dependency; rejection mapped to 503 or the port's error (SPRING-RES-06)?
-- [ ] Retryable `POST`: `Idempotency-Key` in the command, stored first in the transaction with `on conflict do nothing`, documented in the spec (SPRING-RES-10/11)?
-- [ ] `@Scheduled` in `adapter.in.scheduling`, with `@SchedulerLock` or `SKIP LOCKED` (SPRING-RES-12)?
-- [ ] `@Cacheable` only in adapters, bounded, TTL set, caller in the key where needed (SPRING-RES-14)?
-
-## Sources
-
-Spring Framework 7.1 reference, *Resilience Features* (docs.spring.io/spring-framework/reference/core/resilience.html), and the Javadoc of `@ConcurrencyLimit` (`ThrottlePolicy`, since 7.0.3) and `@Retryable` (`timeout`, since 7.0.2). Spring Boot reference, *Calling REST Services* and application properties (`spring.http.clients.*`, `spring.http.serviceclient.*`, `spring.datasource.hikari.*`, `spring.transaction.default-timeout`). pgjdbc connection parameters (jdbc.postgresql.org/documentation/use). HikariCP configuration and *About Pool Sizing*. ShedLock README (github.com/lukas-krecan/ShedLock, 7.x compatibility table). Resilience4j Spring Boot documentation (resilience4j.readme.io). All checked on 2026-11-20.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Resilience and Idempotency".*

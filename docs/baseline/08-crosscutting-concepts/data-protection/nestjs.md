@@ -18,7 +18,7 @@ return Number(res.numDeletedRows);
 ```
 
   A single unbounded `DELETE` on a large table holds locks and runs into `statement_timeout`.
-- **NEST-DP-03: Child tables owned by the person reference their parent with `ON DELETE CASCADE`** in the migration (`.references('customer_accounts.id').onDelete('cascade')`), so one delete per aggregate removes everything the deletion concept lists for that category. Tables that must outlive the person (statutory retention, DP-RET-03) use a nullable foreign key or keep only the id, and are listed in the deletion concept.
+- **NEST-DP-03: Child tables owned by the person reference their parent with `ON DELETE CASCADE`** in the migration (`.references('customer_accounts.id').onDelete('cascade')`). One delete per aggregate then removes everything the deletion concept lists for that category. Tables that must outlive the person (statutory retention, DP-RET-03) use a nullable foreign key or keep only the id, and are listed in the deletion concept.
 - **NEST-DP-04: History, messaging and idempotency stores are part of erasure and retention:** own history tables, the outbox, stored idempotency results (RES-IDM-03/04), inbox deduplication rows (MSG-IDM-02) and dead-letter topics or tables (MSG-DLT-01) are in the deletion concept and covered by the erasure and retention adapters; a dead-letter or inbox entry keeps its payload only as long as its retention says. Security audit events carry only the pseudonymous user id and follow their own retention (SEC-AUD-02).
 
 ### Erasure and export (DP-DSR)
@@ -40,16 +40,4 @@ return Number(res.numDeletedRows);
 - **NEST-DP-10: By default an insert-only audit table is partitioned by month and purged by dropping partitions** (SEC-AUD-04; another mechanism per SEC-AUD-04 needs its reason in the deletion concept). The migration creates `audit_log` with `partition by range (occurred_at)` and keeps `revoke update, delete, truncate … from <runtime role>`; a retention job in `adapter/in/scheduling` (NEST-DP-01) creates the next partitions ahead of time and drops the expired ones through a connection of the owner (or purge) role, from its own small pool like the migration pool (NEST-DB-16), never through `executor()` of the request path. A `*.it.test.ts` inserts events in an old and a current partition, runs the job and asserts that only the old partition is gone and that the runtime role still cannot `DELETE` (NEST-DP-08).
   *Why:* partitions make retention a metadata operation and keep the application role insert-only.
 
-## Agent checklist
-
-- [ ] Retention job: `@Cron` under `withClusterLock`, only calls a use case; clock injected; batched delete, one transaction per batch, stops on the signal (NEST-DP-01/02)?
-- [ ] New child table: `ON DELETE CASCADE` or listed as retained (NEST-DP-03)?
-- [ ] History, outbox, inbox, idempotency and dead-letter stores covered (NEST-DP-04)?
-- [ ] New personal data: exporter and eraser registered for the context (NEST-DP-05); inventory and deletion concept updated (DP-INV-03)?
-- [ ] Event payloads with personal data justified; topic retention or tombstone documented (NEST-DP-06)?
-- [ ] Deletion `*.it.test.ts` per table; log-absence test with synthetic values (NEST-DP-08/09)?
-- [ ] Audit table partitioned by month, partitions dropped by the retention job under a separate role, runtime role still insert-only (NEST-DP-10)?
-
-## Sources
-
-`@nestjs/schedule` 12 documentation. PostgreSQL documentation, foreign keys and `ON DELETE CASCADE`. Kysely 0.29 documentation (`deleteFrom` with subqueries). Apache Kafka documentation, log compaction and tombstones. pino documentation (`redact`), nestjs-pino README (`pinoHttp` with a destination stream). Checked in a scratch build on 2026-11-20: batched delete with cascade against PostgreSQL 18, log capture and redaction with nestjs-pino 5.3.2.
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Data Protection".*

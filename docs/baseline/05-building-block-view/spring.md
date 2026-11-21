@@ -148,21 +148,8 @@ Copy `.agents/skills/baseline-spring/templates/test/ArchitectureTest.java` into 
 3. Create the ring packages with `package-info.java` (`@NullMarked`), the `stereotype` package and `ArchitectureTest` from the templates.
 4. Run `./mvnw verify`; it must be green before the first feature.
 
-## Agent checklist
-
-- [ ] New class in the right package from the table?
-- [ ] No JPA entity used as domain model (SPRING-ARCH-10); invalid input throws the domain validation exception, mapped in REST and Kafka (SPRING-ARCH-18)?
-- [ ] Stereotype annotation instead of plain `@Component`; class package-private?
-- [ ] `@Transactional` only on application services, and not around a remote call (SPRING-ARCH-07)?
-- [ ] Business exceptions extend the category base types, mapped in REST and Kafka (ARCH-UC-13, SPRING-ARCH-18)?
-- [ ] No JPA/Kafka/AWS/Jackson types in `domain` or `ports`, and only allowed framework types in `application`?
-- [ ] Test type per [08-crosscutting-concepts/testing/spring.md](../08-crosscutting-concepts/testing/spring.md); DB tests use Testcontainers?
-- [ ] `ArchitectureTest` green and unchanged (or the change discussed)?
+*Agent checklist in [checklists/spring.md](../checklists/spring.md) and sources in [sources.md](../sources.md), section "Spring Boot: Hexagonal Architecture".*
 
 ## Related skills
 
 The `baseline-spring` skill loads the right skills for the task (`spring-boot-testing`, `spring-security`, `spring-observability`, `java-hibernate-jpa`, `baseline-tdd`). Where they disagree with this doc on structure or layering, **this doc wins**; the known conflicts are in the [skill overrides table](../stacks/spring.md#skill-overrides).
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 5, 6, 7, 9, 10. Package structure: proposal from our Java team. Updated for Spring Boot 4 (constructor injection, `@MockitoBean`, `@ServiceConnection`, `ProblemDetail`, Jackson 3, modular test starters).

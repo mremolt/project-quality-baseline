@@ -154,16 +154,4 @@ export async function customFetch<T>(url: string, init: RequestInit): Promise<T>
 | Server component calling `fetch('/api/…')` on its own origin | Server client directly (NEXT-API-07) |
 | `vercel-react-best-practices` `client-swr-dedup`: SWR / `fetch('/api/…')` in components | TanStack Query calls the use case; the browser adapter calls the proxy (REACT-ARCH-13, NEXT-API-07) |
 
-## Agent checklist
-
-- [ ] Browser, server and zod outputs from one spec; `urlEncodeParameters: true` on both clients; each output cleans only its own folder?
-- [ ] One adapter class; server factory `server-only`; each factory used only by its composition?
-- [ ] Server mutator: base URL from server config, bearer token from the request-scoped resolver, time-out, `redirect: 'error'`, no retry, token never logged?
-- [ ] Nothing user-specific at module level; no server call outside a request or inside a cross-request cache?
-- [ ] Browser mutator: relative `/api` paths, XSRF header, no `Authorization`, settings from the root providers, `anySignal` not `AbortSignal.any`?
-- [ ] Proxy: session and XSRF checked, allow-listed headers, time-out, `no-store`, no business logic?
-- [ ] Mutator, proxy and adapter tests against MSW, including time-out, 401 and the missing token?
-
-## Sources
-
-Orval 8.47 (orval.dev; multiple outputs, `override.mutator`, `urlEncodeParameters`, `clean`, `mock.generators`), Next.js 16.4 (`cookies()` and dynamic APIs, Route Handlers, `'use cache'` restrictions; bundled docs in `node_modules/next/dist/docs/`), Node.js 26 (`AbortSignal.any`, `AbortSignal.timeout`, global `fetch` with `redirect: 'error'`), MSW 3 (`setupServer`, `onUnhandledFrame`, `delay`), RFC 6750 (bearer token usage). Two-client setup, server mutator, request-scoped resolver, proxy and their tests as built in the baseline's Next.js validation project (2026-11-20), with the corrections named in the rules.
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Generated API Clients".*

@@ -50,14 +50,4 @@ LoggerModule.forRoot({
 
 - **NEST-LOG-10: Logs are asserted only where they matter:** security and audit events are present, and personal data of use cases that handle it is absent (DP-TEST-02). The test module gets `LoggerModule.forRoot({ pinoHttp: [options, stream] })` with an in-memory stream (`{ write: (line) => lines.push(line) }`), drives the request, and asserts on the parsed lines.
 
-## Agent checklist
-
-- [ ] Logging through Nest's `Logger` backed by `nestjs-pino`; no `console`, no transport in deployed code (NEST-LOG-01/02)?
-- [ ] `traceId`/`spanId` mixin and redaction paths in place; request serializers drop headers, client address and query string (NEST-LOG-03/05)?
-- [ ] Values in the object argument, constant message (NEST-LOG-06)?
-- [ ] No logging in `domain`/`ports`/`application`; error logged once (NEST-LOG-07/08)?
-- [ ] No secret, token, body or personal data in a line; absence tested where personal data is handled (NEST-LOG-09/10)?
-
-## Sources
-
-pino and pino-http documentation (`mixin`, `serializers`, `redact`, `autoLogging`, transports), nestjs-pino README (`bufferLogs`, `useLogger`, `LoggerModule.forRoot`), OpenTelemetry JS API (`trace.getActiveSpan`, `isSpanContextValid`) and `@opentelemetry/instrumentation-pino` README, `pino-pretty` README. Checked in a scratch build on 2026-11-20 (nestjs-pino 5.3.2, pino 10.4.0, pino-http 11.0.0, pino-pretty 13.2.0).
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Logging".*

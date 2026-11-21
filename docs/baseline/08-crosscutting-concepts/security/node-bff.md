@@ -31,19 +31,4 @@ These rules are written from documentation and scratch tests of the libraries; n
 - **NODE-BFF-11: The pre-login state of an anonymous caller is bounded.** Starting a login (`GET /auth/login`) is reachable without credentials, so what it stores is short-lived and capped: the pre-login record (or the session that carries it) expires after at most 10 minutes unless the callback completes, a purge job removes expired ones (RES-JOB-01), and the login start, the callback and the other public routes (back-channel logout, report endpoints) have a rate limit at the gateway or in the service (NEST-SEC-32), recorded in chapter 7. A test starts the login many times without a callback and asserts that the stored rows stay bounded after expiry and purge.
   *Why:* each anonymous request that writes a durable row fills the session store; the only limit is disk.
 
-## Agent checklist
-
-- [ ] BFF holds no business logic; API calls relayed with the user's token and explicit timeouts (NODE-BFF-01)?
-- [ ] Login with PKCE, state and nonce; `redirect_uri` from configuration; post-login target allow-listed (NODE-BFF-02)?
-- [ ] Session store with an atomic `compareAndSet`, no memory store, tokens encrypted at rest, no tokens in cookies (NODE-BFF-03, NODE-BFF-05)?
-- [ ] `__Host-session` cookie with all attributes, cleared with the same ones (NODE-BFF-04)?
-- [ ] `XSRF-TOKEN`/`X-XSRF-TOKEN` on every unsafe method incl. logout, header only (NODE-BFF-06)?
-- [ ] Login start never ends a live session; idle and absolute lifetimes, new session id at login, one refresh per session through `compareAndSet` with merge on a lost write (NODE-BFF-02, NODE-BFF-07)?
-- [ ] Logout at the IdP, back-channel logout with full token validation and `sid` index (NODE-BFF-08)?
-- [ ] Nonce CSP per response, HTML `no-store`, deep-link 404s, report endpoint limited (NODE-BFF-09)?
-- [ ] Threat model and the tests of NODE-BFF-04..09 in CI (NODE-BFF-10)?
-- [ ] Pre-login state expires within 10 minutes, purged, public routes rate-limited and the limit recorded in chapter 7 (NODE-BFF-11)?
-
-## Sources
-
-OWASP ASVS 5.0 (V3, V7, V9, V10), OWASP Session Management, CSRF Prevention and Content Security Policy Cheat Sheets, `openid-client` 6 and `jose` 6 API documentation, OpenID Connect Core 1.0, RP-Initiated Logout 1.0 and Back-Channel Logout 1.0, RFC 7009, RFC 9700 (OAuth 2.0 Security BCP), IETF draft "OAuth 2.0 for Browser-Based Applications" (BFF pattern), W3C Reporting API, MDN `Set-Cookie` (cookie prefixes).
+*Agent checklist in [checklists/node.md](../../checklists/node.md) and sources in [sources.md](../../sources.md), section "Node.js Backend-for-Frontend".*

@@ -56,12 +56,7 @@ try {
 | E2E smoke | Runs against the real BFF, which serves the real `/config.json` (REPO-CI-04) |
 | Build | REACT-CFG-01 test; `check:bundle` fails on `dist/config.json` |
 
-## Agent checklist
-
-- [ ] No `--mode`, `.env.<environment>` file or `VITE_*` per-environment value; `define` only for constants identical everywhere (REACT-CFG-01)?
-- [ ] New value: added to `RuntimeConfig`, the schema, its test and the BFF's frontend configuration; public only (REACT-CFG-03/05)?
-- [ ] Read through `useRuntimeConfig()` or `createPlatform`, handed to use cases by the feature's factory, never read in the core (REACT-CFG-04)?
-- [ ] Tests provide the platform or stub `/config.json`; `dist/` has no `config.json` (REACT-CFG-06)?
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Runtime Configuration".*
 
 ## Skill overrides
 
@@ -69,7 +64,3 @@ try {
 |---|---|
 | Vite docs and generic habit: `.env.production`, `.env.staging`, `import.meta.env.VITE_API_URL` | One build; per-environment values from `/config.json` (REACT-CFG-01/02) |
 | `vercel-react-best-practices` `advanced-init-once`: module-level app initialisation | The configuration is loaded once in `main.tsx` and wired by the platform composition (REACT-CFG-02/04) |
-
-## Sources
-
-Vite 8.3 (vite.dev): env variables and modes, `define`, `server.proxy`; React 19.3 `createContext`, `use`; zod 4.6; MDN `fetch` `cache: 'no-store'`, `AbortSignal.timeout`; The Twelve-Factor App (config).

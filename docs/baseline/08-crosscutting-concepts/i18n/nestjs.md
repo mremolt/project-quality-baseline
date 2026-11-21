@@ -84,14 +84,4 @@ it.each([
 | Common examples | Message text built in the use case or the error | Errors carry a code and parameters (I18N-02, NEST-I18N-04) |
 | Common examples | `toLocaleString()` or `Intl` in services | Formatting in adapters or ICU messages (NEST-I18N-05/06) |
 
-## Agent checklist
-
-- [ ] No `Intl`, `toLocale*`, `localeCompare`, catalog or negotiator import in `domain`, `ports`, `application` (NEST-I18N-05)?
-- [ ] New business error: code in the API catalogue and the OpenAPI spec, `error.<CODE>.title|detail` in the source catalog with context (NEST-I18N-02/04)?
-- [ ] Locale negotiated in the REST adapter only; `Content-Language` set (NEST-I18N-03/04)?
-- [ ] Outgoing mail or document uses the recipient's stored language and time zone (NEST-I18N-06)?
-- [ ] Per-locale contract test and catalog parity test updated (TEST-I18N-05/06)?
-
-## Sources
-
-`intl-messageformat` 12.2 (FormatJS), `negotiator` 1.1, `nestjs-i18n` 10.8.5 package (`package.json`, `dist/utils/i18n-messageformat.js`), RFC 9457 (localized titles), RFC 9110 (`Accept-Language`, `Content-Language`), TypeScript `resolveJsonModule` and import attributes, ESLint `no-restricted-globals` and `no-restricted-properties`, PostgreSQL ICU collations. Checked on 2026-11-20: catalog loading under `tsc` and Vitest, negotiation cases, ICU arguments and parity test, the per-locale REST test with `app.inject()`, the dependency-cruiser and ESLint rules, decimal strings in ICU number arguments, `de-x-icu` ordering in `postgres:18-alpine`.
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Internationalization".*

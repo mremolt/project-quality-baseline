@@ -32,12 +32,4 @@ Once something looks neglected, people care less about making it worse. In code:
 - **ARCH-SC-08: An ADR or exception counts as an accepted deviation only for the rule IDs it names.** An ADR whose decision conflicts with a baseline rule names that rule in its Decision section; one that does not is a violation of that rule, however well reasoned. Debt recorded in chapter 11 with owner and trigger is not a deviation: reviews report it as a finding marked "recorded debt", so it stays visible until its trigger fires.
   *Why:* a reviewer or agent cannot match an unnamed rule to a decision, and debt that counts as accepted stops being looked at.
 
-## Agent checklist
-
-- [ ] Does my change take one of the shortcuts above, and does its "ADR needed?" column say yes?
-- [ ] If yes: is there an existing ADR covering it, or did I draft one and flag it for review? Does the ADR name the rule IDs it deviates from (ARCH-SC-08)?
-- [ ] Does my change meet a "grown up" criterion that requires removing an existing shortcut?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 11 (Taking Shortcuts Consciously). ADRs: Michael Nygard, "Documenting Architecture Decisions" (2011).
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Taking Shortcuts Consciously".*

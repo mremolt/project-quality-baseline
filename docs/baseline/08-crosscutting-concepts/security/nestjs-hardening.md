@@ -85,7 +85,7 @@ Hardening for NestJS backends on Node on top of authentication and authorization
 ## Database, Kafka and image
 
 - **NEST-SEC-38: The application's database role has DML rights only;** migrations run with a separate DDL role and a `lock_timeout` (NEST-DB rules in [../persistence/nestjs.md](../persistence/nestjs.md), NEST-REL rules in [../../07-deployment-view/nestjs-delivery.md](../../07-deployment-view/nestjs-delivery.md)); no superuser; `pg` connects with `ssl` and certificate verification (`rejectUnauthorized` is never `false`); `scram-sha-256` authentication.
-- **NEST-SEC-39: Kafka in non-local environments uses TLS and SASL** (the client options `tls` and `sasl` with SCRAM, from configuration), ACLs per service for topics and consumer groups, and no auto-created topics (NEST-MSG rules in [../messaging/nestjs.md](../messaging/nestjs.md)).
+- **NEST-SEC-39: Kafka in non-local environments uses TLS, SASL, ACLs per service and no auto-created topics.** TLS and SASL are the client options `tls` and `sasl` with SCRAM, from configuration; the ACLs cover topics and consumer groups (NEST-MSG rules in [../messaging/nestjs.md](../messaging/nestjs.md)).
 - **NEST-SEC-40: The image meets REL-IMG-01 and REL-RUN-01/02:** OCI, runs as a non-root user, minimal Node base image pinned by digest, read-only root filesystem with a size-limited `/tmp`, no compilers, sources, `.npmrc` with tokens or other secrets in any layer, `node dist/main.js` as the entry command, an SBOM from the build (SEC-CI-03), referenced by digest. Scanning: SEC-CI-06 ([container-runtime.md](../../07-deployment-view/container-runtime.md), NEST-REL rules).
 - **NEST-SEC-41: Consider Node's permission model** for services with a narrow footprint: `node --permission --allow-fs-read=/app --allow-net dist/main.js` (plus `--allow-fs-write=/tmp` if needed). The reference app runs with it on Node 26, but `--allow-net` is still marked experimental there, so it is an option recorded in an ADR, not a default.
 
@@ -112,21 +112,4 @@ The framework-neutral BFF rules are NODE-BFF-01..10 in [node-bff.md](node-bff.md
   - `/config.json` is generated per environment and not cached.
 - **NEST-SEC-52: The NestJS BFF meets NODE-BFF-10**, and its end-to-end test also checks every header of NEST-SEC-20.
 
-## Agent checklist
-
-- [ ] Header change: helmet still global, API CSP `useDefaults: false`, `no-store` hook intact, header test updated (NEST-SEC-20)?
-- [ ] Limits set on the adapter, schema lengths present, multipart limits explicit (NEST-SEC-22, NEST-SEC-37)?
-- [ ] zod schemas that strip unknown keys, no merge or spread of untrusted objects, prototype-poisoning options at `'error'` (NEST-SEC-23)?
-- [ ] No user-controlled or backtracking regex; no `eval`-like code, `vm` or `child_process` outside the one adapter (NEST-SEC-24, NEST-SEC-26)?
-- [ ] New query: bind parameters only; `sql.raw`/`sql.ref`/`sql.id`/`sql.lit` only from an allow-list (NEST-SEC-25)?
-- [ ] New request schema: no owner, tenant, role or audit fields (NEST-SEC-27); tenant from the `Caller` (NEST-SEC-28); 404 for foreign objects (NEST-SEC-29)?
-- [ ] Problem details without messages or stack traces; plugin errors mapped to their 4xx status (NEST-SEC-30)?
-- [ ] Outbound call to a variable URL: host allow-list, no redirects, address filter incl. IP literals (NEST-SEC-31)?
-- [ ] Security-relevant action: audit event and test (NEST-SEC-33)?
-- [ ] No handler that keeps the process alive after an uncaught error (NEST-SEC-34)?
-- [ ] BFF change: the NODE-BFF checklist in [node-bff.md](node-bff.md) answered, Fastify wiring as in NEST-SEC-44..52?
-- [ ] New dependency reviewed (NEST-SEC-43)?
-
-## Sources
-
-OWASP ASVS 5.0 (V1, V2, V3, V4, V5, V7, V8, V9, V11, V12, V13, V15, V16), OWASP REST Security, Content Security Policy, Mass Assignment, File Upload, Session Management, CSRF Prevention, SSRF Prevention, Prototype Pollution Prevention and NodeJS Security Cheat Sheets, Fastify 5 server reference (limits, timeouts, `onProtoPoisoning`, `trustProxy`), READMEs of `@fastify/helmet` 13, `@fastify/rate-limit` 11, `@fastify/multipart` 10, `@fastify/session` 11, `@fastify/csrf-protection` 8 and `@fastify/static` 10, `openid-client` 6 and `jose` 6 API documentation, Kysely `sql` reference, undici `Agent` connect options, Node.js documentation (permission model, `--disable-proto`, `crypto`), OpenID Connect RP-Initiated Logout 1.0 and Back-Channel Logout 1.0, RFC 7009, W3C Reporting API, `eslint-plugin-security`.
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Hardening".*

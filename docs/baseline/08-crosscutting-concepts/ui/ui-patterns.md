@@ -61,21 +61,4 @@ Framework-neutral rules for the UI layer of every frontend: layout across window
 
 Responsive structure and layout are tested with the viewport projects and checks of [TS-TEST-17..21](../testing/typescript-e2e.md); status messages, route focus and dialogs with the screen-reader assertions of [TS-TEST-23..27](../testing/typescript-e2e.md). Component tests cover each command: focus after the action lands on the element UI-18 names, and a second activation while the first is pending sends no second request (UI-20).
 
-## Agent checklist
-
-- [ ] Layout stated for compact, medium and expanded (UI-08); breakpoints are the size classes (UI-01)?
-- [ ] CSS for layout, the window-size contract only for structure; same data in every size class (UI-04..06)?
-- [ ] Logical properties, `rem`, `dvh`, safe areas, no hover-only function, zoom not blocked (UI-09..12)?
-- [ ] Inputs with `type`, `autocomplete`, `inputmode` (UI-13)?
-- [ ] Status via visible region or the announcer; route title; route focus only on path changes (UI-15, UI-16)?
-- [ ] Snackbars never the only error channel; progress and tables labelled; dialog focus restored when the trigger can vanish (UI-17, UI-18)?
-- [ ] Loading, empty and error states from the shared components (UI-19)?
-- [ ] Status regions rendered before their text changes (UI-15)? Focus moved when an action removes its trigger; refresh after a command keeps the view (UI-18)?
-- [ ] Commands show a pending state and ignore re-entry (UI-20)? Dirty dialog asks before closing; unchangeable control explained (UI-21)? Route navigation is a `nav` with `aria-current`, not a tab list (UI-22)?
-- [ ] Lists announce their result count after a filter or page change (A11Y-20); destructive and bulk actions confirm or can be undone (A11Y-30)?
-
-## Sources
-
-Material Design 3 layout (window size classes, canonical layouts, navigation) (m3.material.io), WCAG 2.2 (1.3.5, 1.4.4, 1.4.10, 2.2.1, 2.5.1, 2.5.7, 3.2.3, 3.2.6, 4.1.3), WAI-ARIA Authoring Practices (dialog pattern).
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "UI Patterns: Responsive Layout, Screen Readers and Screen States".*

@@ -53,14 +53,4 @@ The one table for every stack. The TDD style (London or Chicago) is explained in
 | Main user path, backend API only | System test (TEST-ARCH-05) | Outside-in acceptance test (TEST-TDD-06) | only third-party systems |
 | Critical paths across frontend and backend | Full-stack system test (TEST-ARCH-05) | Outside-in | only third-party systems |
 
-## Agent checklist
-
-- [ ] Every new domain/application/adapter element has the matching test type?
-- [ ] Use case tests verify only the essential interactions?
-- [ ] Persistence tests run against the production DB engine?
-- [ ] Bug fix comes with a regression test?
-- [ ] Main path covered by a system test of its component; critical paths also full-stack?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 7 (Testing Architecture Elements). Test pyramid: Mike Cohn, *Succeeding with Agile* (2009). Mutation testing: PIT (pitest.org), Stryker (stryker-mutator.io).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Testing by Architecture Element".*

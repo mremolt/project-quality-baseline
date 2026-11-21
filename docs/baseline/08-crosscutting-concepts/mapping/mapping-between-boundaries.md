@@ -28,12 +28,4 @@ Whether each ring has its own model, and who maps between them. There is no glob
 - **ARCH-MAP-07: The outer ring maps.** Adapters map into the core's models and back. The core only knows its own models.
 - **ARCH-MAP-08: Mapping code is explicit and tested.** Prefer plain, debuggable mapping code. Reflection-heavy mapping frameworks hide errors; if one is used, its mappings must be covered by adapter integration tests.
 
-## Agent checklist
-
-- [ ] Which boundary am I crossing, and which strategy do the defaults prescribe?
-- [ ] Did web or persistence concerns (annotations, ORM-required constructors) just show up in the core? Then upgrade to two-way for that boundary.
-- [ ] Is a deviation from the defaults documented?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 8 (Mapping Between Boundaries).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Mapping Between Boundaries".*

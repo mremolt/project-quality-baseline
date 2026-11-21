@@ -47,7 +47,7 @@ What the React SPA reference build verified: provider, typed keys and catalog sh
 The shared test rules are TEST-I18N-01..04, 07 and 08 in [i18n.md](i18n.md#tests). React specifics:
 
 - **REACT-I18N-14: Component tests render with the real source catalog:** `renderWithProviders` wraps the screen in `<IntlProvider locale="en" messages={MESSAGES.en} timeZone="UTC">` and tests query by the English role names (TEST-I18N-01, verified). Formatting helpers have unit tests in two locales (`formatMoney` in `en` and `de`, TEST-I18N-07, verified).
-- **REACT-I18N-15: The language-switch test (TEST-I18N-08)** renders a date and an amount, switches the locale through the app's switch mechanism (REACT-I18N-12), and asserts the new text and the new format without a reload. Playwright locale projects (`locale`, `timezoneId`) add the locale as one dimension from the default cell ([TS-TEST-17/18](../testing/typescript-e2e.md), TS-TEST-29); the `lang` and `dir` assertion lives in the shared axe fixture (TS-TEST-12, A11Y-32). Neither ran in the validated project (only `en` in the browser): verify before first use.
+- **REACT-I18N-15: The language-switch test (TEST-I18N-08) asserts the new text and format without a reload:** it renders a date and an amount, switches the locale through the app's switch mechanism (REACT-I18N-12), and asserts the new text and the new format without a reload. Playwright locale projects (`locale`, `timezoneId`) add the locale as one dimension from the default cell ([TS-TEST-17/18](../testing/typescript-e2e.md), TS-TEST-29); the `lang` and `dir` assertion lives in the shared axe fixture (TS-TEST-12, A11Y-32). Neither ran in the validated project (only `en` in the browser): verify before first use.
 
 ## Tooling
 
@@ -69,17 +69,4 @@ Verify before first use ([chapter 11](../../11-risks-and-technical-debt/README.m
 | Generic habit | Locale in the URL (`/de/orders`) for an authenticated app | No locale in the URL ([i18n.md](i18n.md#decisions)); Next.js public pages: [nextjs.md](nextjs.md) |
 | `vercel-react-best-practices` (`client-localstorage-schema`) | Anything in `localStorage` | The language choice may be stored for anonymous users; never tokens or personal data (TS-SEC-01) |
 
-## Agent checklist
-
-- [ ] Every new user-visible string, including `aria-label`, `title`, MUI `label`/`helperText` and the route title, uses a key in the source catalog with context (REACT-I18N-03/06)?
-- [ ] Slices, mutation hooks and error mappers return keys or codes only (REACT-I18N-04)?
-- [ ] Keys typed through `AppConfig`; no `as` casts on keys (REACT-I18N-05)?
-- [ ] Plurals and variables through ICU placeholders (REACT-I18N-07)?
-- [ ] Money through `formatMoney` on the decimal string; dates through `useFormatter()`; locale passed in, nothing cached by value (REACT-I18N-10)?
-- [ ] `<html lang>`, `dir`, MUI strings and `Accept-Language` follow the active locale (REACT-I18N-09)?
-- [ ] Component tests with the real `en` catalog; two-locale tests for formatting; language-switch test (REACT-I18N-14/15)?
-- [ ] Layout checked in the pseudo-locale; logical properties only (REACT-I18N-13)?
-
-## Sources
-
-`use-intl` 4.15 documentation (next-intl.dev: `IntlProvider`, `useTranslations`, `useFormatter`, `useLocale`, `AppConfig` type augmentation, `onError`, `getMessageFallback`, `IntlErrorCode`), ICU MessageFormat, MDN `Intl.NumberFormat` (string input, ES2023), `Intl.DateTimeFormat`, `Intl.Collator`, MUI 9.5 localization (`@mui/material/locale`), WCAG 3.1.1, 3.1.2, 3.2.3, 3.2.6. Validated in the React SPA reference build (2026-11-20).
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: Internationalization".*

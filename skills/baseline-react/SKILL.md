@@ -9,7 +9,7 @@ The baseline docs are the rules; skills supply framework know-how. **Where a ski
 
 ## 1. Read the rules for the task
 
-Always: `docs/baseline/stacks/react.md`, `docs/baseline/05-building-block-view/react.md`, `docs/baseline/05-building-block-view/typescript.md`.
+Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule index in `docs/baseline/rule-index/` (`shared.md`, `typescript.md`, `react.md`), one line per rule ID, and `docs/baseline/05-building-block-view/react.md`, `docs/baseline/05-building-block-view/typescript.md`. Then only the docs of the rows below that match the task; for a rule from a doc you have not read, search the doc for its ID and read that bullet.
 
 | Task | Also read |
 |---|---|
@@ -72,6 +72,7 @@ Full tables: the "Skill overrides" sections linked from `docs/baseline/stacks/re
 6. **Contract**: changed spec → `npm run generate:api`, adapter and mapper updated, problem `code`s mapped (REACT-API-10, TS-ARCH-18).
 7. **Shortcuts**: propose and draft an ADR; never take one silently (ARCH-SC-06).
 8. **Finish** with `npm run verify` green and `npm run build && npm run e2e` green for changed screens, and no dependency-cruiser rule, lint rule, bundle budget, CSP or a11y check loosened.
+9. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New app
 

@@ -49,6 +49,10 @@ const ATTR_MARKERS = ['# baseline:start', '# baseline:end'];
 checkMarkers(path.join(target, 'AGENTS.md'), AGENTS_MARKERS);
 checkMarkers(path.join(target, '.gitattributes'), ATTR_MARKERS);
 
+// The rule index is what agents read first (TOOL-SKL-10); a stale one would hide changed rules.
+const ruleIndex = spawnSync(process.execPath, [path.join(base, 'scripts', 'build-rule-index.mjs'), '--check'], { encoding: 'utf8' });
+if (ruleIndex.status !== 0) fail(`${ruleIndex.stderr}The rule index is out of date. Run \`npm run docs:rule-index\` in the baseline repository first (TOOL-SKL-11).`);
+
 const host = opts.host ?? detectHost(target);
 
 // Declared stacks (.baseline.json, project-owned): only their skills are copied and only their AGENTS.md lines kept.

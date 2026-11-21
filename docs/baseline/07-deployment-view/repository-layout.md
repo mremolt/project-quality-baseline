@@ -61,7 +61,7 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
 
 - **REPO-TOOL-01:** The IDE opens the repository root; see [TOOL-IDE-07](../08-crosscutting-concepts/development/ide-setup.md).
 - **REPO-TOOL-02: Git hooks, if used, are installed from the component that owns the tooling and work from the git root.** Hooks run with the repo root as working directory. With husky in the frontend: `"prepare": "cd .. && husky frontend/.husky"` in `frontend/package.json`, and every hook starts with `cd frontend`. Hooks only speed up feedback; CI runs the same checks (TS-TOOL-09). With `ignore-scripts=true` (TS-TOOL-11) npm does not run `prepare` on install, so developers run `npm run prepare` once.
-- **REPO-TOOL-03: Agents run stack commands from the component folder** (`cd backend && ./mvnw …` or `npm run …`, `cd frontend && npm run …`), and stack rules apply only to their component.
+- **REPO-TOOL-03: Agents run stack commands from the component folder** (`cd backend && ./mvnw …` or `npm run …`, `cd frontend && npm run …`). Stack rules apply only to their component.
 
 ### CI
 
@@ -163,14 +163,4 @@ The team decides. The agent doesn't create repositories before that decision.
 - A breaking API change merged without a new version because "the frontend is updated in the same PR", while browsers still run the old frontend.
 - The baseline synced into `frontend/` and `backend/` separately, so there are two diverging copies.
 
-## Agent checklist
-
-- [ ] New project or project plan? Decision guide applied and reported (signals, recommendation, consequences, open questions)?
-- [ ] Components in top-level folders, each verifiable on its own?
-- [ ] Commands run from the component folder; root `.gitignore` lists `node_modules/`, `dist/`, `coverage/`, `.env*.local` (REPO-LAY-07)?
-- [ ] Spec change? Frontend regenerated in the same PR, `oasdiff` green or breaking change decided with a rollout plan?
-- [ ] New component or path? CI change detection, the pipeline jobs table (REPO-CI-01) and the always-reported merge status updated (security job included)?
-
-## Sources
-
-GitHub Actions docs: path filters and skipped required checks (docs.github.com, "Troubleshooting required status checks"), deployment environments; dorny/paths-filter; GitLab CI `rules:changes`, protected environments and deployment approvals; Jenkins Pipeline syntax (`changeset`, `input`); Azure Pipelines branch policies, environments, approvals and checks, pull request templates. husky docs, "Project not in git root" (typicode.github.io/husky). Parallel change / expand-contract: Danilo Sato, *ParallelChange* (martinfowler.com). Conway's law as the reason ownership signals (S2, S9) dominate.
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Repository Layout".*

@@ -2,6 +2,8 @@
 
 Rules for React frontends: a React SPA (Vite, TanStack Router) and, as the base layer, every Next.js app. They implement the shared docs and the TypeScript docs ([stacks/typescript.md](typescript.md)) and may tighten them, never contradict them. Stack at a glance and defaults (`REACT-D*`): [04-solution-strategy/react.md](../04-solution-strategy/react.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [typescript](../rule-index/typescript.md), [react](../rule-index/react.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 A React project reads the shared docs, [stacks/typescript.md](typescript.md) and the docs below. A Next.js project reads them too, plus [stacks/nextjs.md](nextjs.md); rules marked **(React SPA)** are replaced there, and files whose intro says "Scope: React SPA" can be skipped. Neither ever needs another frontend or backend stack's docs.
 
 | Doc | Covers | Rule IDs |

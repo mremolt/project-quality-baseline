@@ -43,18 +43,4 @@ Database engine, migrations and Hibernate settings for services with PostgreSQL.
 
 Flyway runs at start-up with its own DDL user, the application datasource uses a DML-only role, and every migration connection sets `lock_timeout`: SPRING-REL-01..04 in [07-deployment-view/spring-delivery.md](../../07-deployment-view/spring-delivery.md) (shared rules REL-DB-01..05 in [delivery-and-release.md](../../07-deployment-view/delivery-and-release.md)).
 
-## Agent checklist
-
-- [ ] New or changed table: migration file added, previous release still works (expand/contract)?
-- [ ] No entity in a port, no lazy loading outside the adapter?
-- [ ] Types follow SPRING-DB-08; constraints in the migration?
-- [ ] JPA only where whole aggregates are loaded and changed; `JdbcClient` for reads, reports and bulk work (SPRING-DB-15)?
-- [ ] Collection query paged or limited in the query itself; statement count asserted (SPRING-DB-12)?
-- [ ] Migration touches a large table: lock behaviour considered, `lock_timeout` set (SPRING-DB-06, SPRING-REL-02)?
-- [ ] Rule across rows enforced by a constraint, conditional write or shared lock, with a concurrency IT (SPRING-DB-16)?
-- [ ] New query: index for its filter and sort columns named in the PR; foreign keys indexed (SPRING-DB-17)?
-- [ ] Constraint violations mapped by constraint name, cause kept (SPRING-DB-18)?
-
-## Sources
-
-PostgreSQL documentation (postgresql.org/docs), Flyway documentation (documentation.red-gate.com/flyway), Hibernate ORM 7 user guide, Spring Boot data reference. Expand/contract: Martin Fowler, *Parallel Change*.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Persistence with PostgreSQL".*

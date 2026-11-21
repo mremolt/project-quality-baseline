@@ -141,23 +141,4 @@ Run once per release, before the release is approved (tier T3, TS-TEST-18), on t
 - Testing only the initial page state, never the opened dialog or error state.
 - A silent session timeout that discards the user's input.
 
-## Agent checklist
-
-- [ ] New UI element reachable and operable by keyboard, with visible focus, also in forced colors?
-- [ ] Accessible name and role (component test finds it with `getByRole`)?
-- [ ] New screen, journey or state added to the inventory (A11Y-27) and covered by an axe scan with the WCAG 2.2 AA tags?
-- [ ] Keyboard journey test updated for changed main paths?
-- [ ] Contrast and target size hold in all themes and densities?
-- [ ] Main screen reflows at 320 px, survives text spacing, works in both orientations; axe runs per viewport?
-- [ ] Status message announced (visible status region or announcer), without moving focus?
-- [ ] Route title set; focus on the new `h1` when the path changes, also on back/forward, not on query-only changes?
-- [ ] Error linked to its field (`aria-invalid`, accessible description)?
-- [ ] Session timeout warns and can be extended; legal or financial submits can be reviewed, confirmed or undone; hover and focus content dismissible; `html lang` set?
-- [ ] L6 release checklist run, results recorded; legal applicability recorded (A11Y-26)?
-- [ ] No a11y rule disabled or loosened; every exclusion has a ticket and an expiry date?
-
-## Sources
-
-W3C, *Web Content Accessibility Guidelines (WCAG) 2.2*, W3C Recommendation, and *WCAG 2.2 Quick Reference* (w3.org/WAI/WCAG22/quickref). W3C *WAI-ARIA Authoring Practices Guide*. Deque axe-core API documentation, tag list (github.com/dequelabs/axe-core/blob/develop/doc/API.md). WebAIM, *Screen Reader User Survey #11* (2026, webaim.org/projects/screenreadersurvey11). Deque, *Automated testing coverage* (deque.com/automated-accessibility-testing-coverage). W3C Understanding 4.1.3, 3.3.1, 3.3.4, 2.2.1, 1.4.13, 2.4.2, 2.4.3. Directive (EU) 2019/882 (European Accessibility Act), Directive (EU) 2016/2102 (Web Accessibility Directive), ETSI EN 301 549. Content cross-checked with the `accessibility` skill by Addy Osmani (github.com/addyosmani/web-quality-skills, MIT).
-
-Per stack: Angular ([stacks/angular.md](../stacks/angular.md)), React ([stacks/react.md](../stacks/react.md)), Next.js ([stacks/nextjs.md](../stacks/nextjs.md)).
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Accessibility: WCAG 2.2".*

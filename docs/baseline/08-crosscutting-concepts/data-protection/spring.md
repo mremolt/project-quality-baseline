@@ -7,7 +7,7 @@ Spring wiring for the shared rules in [data-protection.md](data-protection.md): 
 ### Retention jobs (DP-RET-02)
 
 - **SPRING-DP-01: A retention job is an incoming adapter in `adapter.in.scheduling`**: a `@Scheduled` method that only calls a use case (`PurgeExpiredCustomerAccounts`) with the current time from an injected `Clock`. The cut-off date is computed in the use case from the retention period in configuration, not in SQL literals. The job runs on one instance at a time using the cluster lock from [RES-JOB-02 / SPRING-RES](../resilience/spring.md).
-- **SPRING-DP-02: Deletion runs in bounded batches** inside the persistence adapter (`JdbcClient`, e.g. `DELETE … WHERE id IN (SELECT id … WHERE expires_at < :cutoff LIMIT :batch)`), one transaction per batch, repeated until nothing is left. A single unbounded `DELETE` on a large table holds locks and bloats the transaction.
+- **SPRING-DP-02: Deletion runs in bounded batches, one transaction per batch, repeated until nothing is left.** The batches run inside the persistence adapter (`JdbcClient`, e.g. `DELETE … WHERE id IN (SELECT id … WHERE expires_at < :cutoff LIMIT :batch)`). A single unbounded `DELETE` on a large table holds locks and bloats the transaction.
 - **SPRING-DP-03: Child tables owned by the person reference their parent with `ON DELETE CASCADE`** in the migration, so one delete per aggregate removes everything the deletion concept lists for that category. Tables that must outlive the person (statutory retention, DP-RET-03) reference it with a nullable foreign key or keep only the ID, and are listed in the deletion concept.
 - **SPRING-DP-04: History, messaging and idempotency stores are part of erasure and retention.** Hibernate Envers `_aud` tables, own history tables, outbox tables, stored idempotency results (RES-IDM-03/04), inbox deduplication records (MSG-IDM-02) and dead-letter topics or tables (MSG-DLT-01) are listed in the deletion concept and covered by the erasure and retention adapters; a dead-letter or inbox entry keeps its payload only as long as its retention says. Security audit events (SPRING-SEC-22) carry only the pseudonymous user id and follow their own retention (SEC-AUD-02).
 
@@ -20,14 +20,4 @@ Spring wiring for the shared rules in [data-protection.md](data-protection.md): 
 - **SPRING-DP-06: Retention, export and erasure adapters are tested against Testcontainers PostgreSQL with the real migrations** (SPRING-DB-14) as `*IT`: seed expired and current records in every table of the category, run the adapter, assert per table. The use case is tested with a fixed `Clock`.
 - **SPRING-DP-07: Use cases that handle personal data have a test asserting it does not reach the log**: run with `OutputCaptureExtension` (SPRING-LOG-09) and synthetic values (e.g. `erika.mustermann@example.test`), assert that the output does not contain them.
 
-## Agent checklist
-
-- [ ] Retention job only calls a use case; `Clock` injected; cluster lock; batched delete?
-- [ ] New child table: `ON DELETE CASCADE` or listed as retained?
-- [ ] Envers, history, outbox, inbox, idempotency and dead-letter stores covered by erasure and retention?
-- [ ] Event payloads with personal data justified; topic retention or tombstone documented?
-- [ ] Deletion `*IT` per table; log-absence test for personal data?
-
-## Sources
-
-Spring Framework reference, task scheduling (`@Scheduled`). PostgreSQL documentation, foreign keys and `ON DELETE CASCADE`. Hibernate Envers user guide. Apache Kafka documentation, log compaction and tombstones. Spring Boot reference, testing with `OutputCaptureExtension`.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Data Protection".*

@@ -273,20 +273,4 @@ The API file may import the feature's server actions (`adapter/in/next/*-actions
 | `create-next-app` | Template of the `baseline-nextjs` skill (NEXT-ARCH-12) |
 | Next.js skills `next-cache-components-*`, `next-partial-prefetching-*` | Not installed; Cache Components need an ADR (NEXT-ARCH-10) |
 
-## Agent checklist
-
-- [ ] `src/app` route files only re-export a pages file or bind a platform handler?
-- [ ] Server components `.server.tsx` in `adapter/in/ui`, use case as prop, no `fetch`, generated client or port?
-- [ ] Server composition `server-only`, per request with `cache()`, nothing user-specific at module level?
-- [ ] Server action in `adapter/in/next/*-actions.ts`: `unknown` input parsed `.strict()`, caller from the session, one use case, error codes; called through an `adapter/out/next` adapter, never from a component?
-- [ ] Route handlers only the fixed BFF set, created in the platform composition, calling use cases?
-- [ ] `'use client'` only in suffix files; `server-only` in every server module; correct platform entry on each side?
-- [ ] Props to client components and action results carry no tokens, secrets, DTOs or server config?
-- [ ] Core free of `next`, `react`, `server-only`; domain data crossing the boundary is plain data?
-- [ ] N+1 check done, including server-side waterfalls and per-row server components?
-- [ ] Page dynamic, or public without personal data and with a stated reason for caching?
-- [ ] `npm run check:arch` and the canary (including the blind-spot test) green, rules not loosened?
-
-## Sources
-
-Next.js 16.4 documentation (bundled in `node_modules/next/dist/docs/`: App Router project structure, Server and Client Components, `'use client'`, `'use server'`, Server Actions and Mutations, Route Handlers, `proxy.ts`, `next/dynamic`, `generateMetadata`, dynamic rendering), React 19 (`cache`, Server Components), `server-only` (npm package README), TanStack Query 5 (`initialData`, advanced SSR guide), Redux Toolkit "Usage with Next.js", dependency-cruiser 18 (rules reference, `cruise()` API). All rules above, unless marked to verify, were compiled and exercised in the baseline's Next.js validation project (2026-11-20). Architecture mapping: this baseline.
+*Agent checklist in [checklists/nextjs.md](../checklists/nextjs.md) and sources in [sources.md](../sources.md), section "Next.js: Architecture and Project Structure".*

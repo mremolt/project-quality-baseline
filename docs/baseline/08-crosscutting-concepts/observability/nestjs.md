@@ -153,15 +153,4 @@ it('has one series per channel (OBS-08)', async () => {
 });
 ```
 
-## Agent checklist
-
-- [ ] `/livez` plain, `/readyz` with the database check only where OBS-03 applies, both on the server port and not routed by the ingress (NEST-OBS-01..03)?
-- [ ] Consumers stop in `onModuleDestroy`; pools, agents and telemetry close in `onApplicationShutdown`; drain plus phases fit the grace period (NEST-OBS-04)?
-- [ ] Started with `node --import ./dist/instrumentation.js dist/main.js`; noisy and unsupported instrumentations off (NEST-OBS-05)?
-- [ ] `OTEL_*` keys set per environment and listed in `configuration-keys.yaml`; sampler explicit (NEST-OBS-06)?
-- [ ] New business metric: outgoing port, `Meter` adapter, closed-set attributes, cardinality test (NEST-OBS-08/11)?
-- [ ] New outbound call through undici so the trace propagates (NEST-OBS-09)?
-
-## Sources
-
-NestJS documentation (lifecycle events, `enableShutdownHooks`), `@nestjs/terminus` 12 source (`HealthIndicatorService`, `gracefulShutdownTimeoutMs`), `@nestjs/schedule` 12 and `cron` 4 source (`waitForCompletion`), OpenTelemetry JS READMEs (`@opentelemetry/auto-instrumentations-node`, `@opentelemetry/instrumentation` ESM section, `instrumentation-runtime-node`, `instrumentation-nestjs-core` supported versions, `sdk-metrics`), `@fastify/otel` README, OpenTelemetry SDK environment variable specification, Kubernetes pod termination documentation. Checked in a scratch build on 2026-11-20 (Node 26, `@opentelemetry/sdk-node` 0.301.2, auto-instrumentations 0.83.1, `@fastify/otel` 1.0.1, `@opentelemetry/api` 1.10.0, terminus 12.2.0) with console exporters: spans for HTTP server, Fastify handler, pg and undici; the metrics above; exit code 143 after the drain.
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Observability and Operability".*

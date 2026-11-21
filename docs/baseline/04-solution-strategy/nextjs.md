@@ -39,13 +39,4 @@ Versions are major.minor of the validated setup; the exact pins live in the temp
 | NEXT-D11 | Server telemetry and logs | Plain OpenTelemetry Node SDK started in `src/instrumentation.ts`, pino JSON logs, `onRequestError`; no `@vercel/otel` | [observability/nextjs.md](../08-crosscutting-concepts/observability/nextjs.md) |
 | NEXT-D12 | Agent instructions | `agentRules: false`; the baseline's synced `AGENTS.md` is the only agent instruction file | [nextjs-tooling.md](../08-crosscutting-concepts/development/nextjs-tooling.md) (NEXT-TOOL-10) |
 
-## Agent checklist
-
-- [ ] Next.js chosen for one of the stated reasons, recorded in the product's chapter 4?
-- [ ] React defaults kept except the ones a NEXT-D row replaces (REACT-D1, D2, D7, D9)?
-- [ ] No Pages Router, no `next-auth`, no `NEXT_PUBLIC_*` environment values, no cached pages with personal data?
-- [ ] Versions taken from the `baseline-nextjs` template, not from memory or `latest`?
-
-## Sources
-
-Next.js 16.4 documentation (nextjs.org/docs and the copy bundled in `node_modules/next/dist/docs/`: App Router, `proxy.ts`, `output`, `reactCompiler`, `agentRules`), React 19 (react.dev), `@mui/material-nextjs` (mui.com/material-ui/integrations/nextjs), next-intl 4 (next-intl.dev), openid-client 6 (github.com/panva/openid-client), OpenTelemetry JS (opentelemetry.io/docs/languages/js), pino (getpino.io), Orval (orval.dev). Versions as installed and verified in the baseline's Next.js validation project (2026-11-20).
+*Agent checklist in [checklists/nextjs.md](../checklists/nextjs.md) and sources in [sources.md](../sources.md), section "Solution Strategy: Next.js".*

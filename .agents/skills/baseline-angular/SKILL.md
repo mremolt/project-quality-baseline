@@ -9,7 +9,7 @@ The baseline docs are the rules; skills supply framework know-how. **Where a ski
 
 ## 1. Read the rules for the task
 
-Always: `docs/baseline/stacks/angular.md`, `docs/baseline/05-building-block-view/angular.md`, `docs/baseline/05-building-block-view/typescript.md`.
+Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule index in `docs/baseline/rule-index/` (`shared.md`, `typescript.md`, `angular.md`), one line per rule ID, and `docs/baseline/05-building-block-view/angular.md`, `docs/baseline/05-building-block-view/typescript.md`. Then only the docs of the rows below that match the task; for a rule from a doc you have not read, search the doc for its ID and read that bullet.
 
 | Task | Also read |
 |---|---|
@@ -68,3 +68,4 @@ Always: `docs/baseline/stacks/angular.md`, `docs/baseline/05-building-block-view
 5. **Security as you go**: no `bypassSecurityTrust*`/`innerHTML` with data, no tokens in the browser, relative mutating calls (NG-SEC-01/02/07/08); E2E asserts payload, headers, XSRF (NG-SEC-12).
 6. **Shortcuts**: if you need one (e.g. skipping a use case for trivial CRUD), propose it and draft an ADR; never take it silently (ARCH-SC-06).
 7. **Finish** with `npm run verify` green and `npm run e2e` green for the specs that cover changed screens (axe, keyboard journeys, reflow, request budgets and locale projects run only there), and no architecture test, lint rule or a11y rule loosened.
+8. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).

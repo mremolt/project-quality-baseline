@@ -23,7 +23,7 @@ Shared rules apply to **every project, regardless of language or framework**. St
 
 ## By stack
 
-Each stack page lists its files across the chapters, the skills to load and the known skill conflicts:
+Each stack page lists its files across the chapters, the skills to load and the known skill conflicts. Agents start from the generated **rule index** instead ([rule-index/](rule-index/shared.md): `shared.md` plus one file per stack, every rule ID with its headline) and open full docs only by task (TOOL-SKL-10):
 
 | Stack | Page |
 |---|---|
@@ -41,5 +41,6 @@ Each stack page lists its files across the chapters, the skills to load and the 
 - Rules have stable IDs (`PREFIX-AREA-NN`). Reference them in reviews, commits and ADRs. Never renumber existing IDs; deprecate instead. Moving a file to another chapter never changes its IDs.
 - **MUST** = mandatory; deviations need an ADR. **SHOULD** = default; deviate with a stated reason.
 - A rule without a keyword is a **MUST**, unless its wording says *prefer*, *default* or *consider*; then it is a SHOULD.
-- Each rule doc ends with an agent checklist and its sources.
+- Every rule starts with a bold headline that states it on its own as one sentence (`- **ID: Headline.** Details …`); the rule index shows only that headline (TOOL-SKL-12). After changing rules, run `npm run docs:rule-index` in the baseline repository (TOOL-SKL-11).
+- A rule doc ends with one line pointing to its agent checklist (a section titled like the doc in [`checklists/<scope>.md`](checklists/shared.md)) and its sources ([sources.md](sources.md)); both live outside the doc so that reading a doc costs only its rules (TOOL-SKL-13).
 - New docs go into the arc42 chapter that matches their content (DOC-ARC-08). Cross-cutting topics get a folder in chapter 8 (`08-crosscutting-concepts/<topic>/`), with shared rules in a topic-named file and stack rules in `<stack>.md`. Stack files in other chapters are named `<stack>.md` or `<stack>-<topic>.md`.

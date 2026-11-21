@@ -366,21 +366,4 @@ With these constants, `http-clients-only-in-http-adapter` lets only `adapter/out
 | RTK Query or Orval `react-query` / `swr` clients | Not used (REACT-D3, REACT-D8) |
 | Run `vite build` or `tsc` to check generated code | Run `npm run verify` (format, lint, architecture, tests, build, bundle check) |
 
-## Agent checklist
-
-- [ ] File in the right ring and folder; kebab-case file, role suffix, `.tsx` only with JSX?
-- [ ] Function components; no manual `useMemo`/`useCallback`/`memo()` without a measured reason?
-- [ ] No `useEffect` that loads data, derives state or handles an event?
-- [ ] Use cases plain; adapters and use cases created by the factory in `<feature>.api.tsx` in a lazy `useState` initializer; one context, the use-case object type and selector hooks in `<feature>.tokens.ts`?
-- [ ] Commands as `useMutation` calling the use case, invalidation in `onSuccess`, errors through `toErrorKey`; no thunk for a command?
-- [ ] No `fetch` or generated client outside `adapter/out/http`; data loaded through a query hook calling a use case?
-- [ ] Form validated with the command's zod schema via `standardSchemaResolver`; submit builds the command through its factory; `Controller` passes `ref` as `inputRef`, not inside a spread `field`?
-- [ ] Routes file exports only route options with a lazy component; search params validated with zod?
-- [ ] Another feature's use cases only via its `<Feature>ApiProvider`; nothing in `src/app` imports a feature's `index.ts` at runtime?
-- [ ] Render errors reach a boundary that reports and shows the generic message?
-- [ ] N+1 check done, including per-row queries and dependent-query waterfalls?
-- [ ] `npm run check:arch` and the canary green, rules not loosened?
-
-## Sources
-
-React 19 (react.dev: Rules of Hooks, You Might Not Need an Effect, Error boundaries, React Compiler), Vite 8 (vite.dev: `html.cspNonce`, `build.rolldownOptions`), `@vitejs/plugin-react` 6 README (`reactCompilerPreset`), TanStack Router 1.170 (tanstack.com/router: code-based routing, `lazyRouteComponent`, `validateSearch`, `getRouteApi`, `createLink`), TanStack Query 5 (`queryOptions`, `keepPreviousData`), React Hook Form 7 and `@hookform/resolvers` 7 (`standardSchemaResolver`), dependency-cruiser 18 (rules reference, `cruise()` API). All APIs and options above were compiled and exercised in the baseline's React SPA validation project (2026-11-20). Architecture mapping: this baseline.
+*Agent checklist in [checklists/react.md](../checklists/react.md) and sources in [sources.md](../sources.md), section "React: Architecture and Project Structure".*

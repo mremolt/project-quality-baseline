@@ -2,6 +2,8 @@
 
 Rules for every TypeScript frontend, framework-independent. Each frontend stack adds its own page (Angular: [stacks/angular.md](angular.md); React SPA: [stacks/react.md](react.md); Next.js: [stacks/react.md](react.md) + [stacks/nextjs.md](nextjs.md)) and never needs another frontend stack's docs. Node.js backends use only [typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) from this page, through [stacks/node.md](node.md). Defaults (`TS-D*`): [04-solution-strategy/typescript.md](../04-solution-strategy/typescript.md).
 
+**Agents:** start with the rule index ([shared](../rule-index/shared.md), [typescript](../rule-index/typescript.md)): every rule ID with its headline. Open the docs below only for the topics the task touches, never all at once (TOOL-SKL-10).
+
 | Doc | Covers | Rule IDs |
 |---|---|---|
 | [05-building-block-view/typescript.md](../05-building-block-view/typescript.md) | Hexagonal architecture in frontends, folder layout, dependency-cruiser, error mapping, feature boundaries | `TS-ARCH-*` |

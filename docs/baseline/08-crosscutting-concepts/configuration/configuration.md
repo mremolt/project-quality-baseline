@@ -60,7 +60,6 @@ The decisions behind this concept, each stated once in the rule that owns it:
   description: API key for the payment provider
 ```
 
-
 ### Frontends
 
 - **CFG-11: A frontend gets its per-environment configuration at runtime from its serving origin**, never at build time. An SPA loads `/config.json`; the file is generated per environment by the server that serves the app (the BFF, SPRING-SEC-08, NEST-SEC-12, which embeds and serves the bundle by default: REL-FE-01/03) and is not cached. A frontend that renders on its own server (Next.js) maps an explicit public subset of its server configuration into the page instead (NEXT-CFG-05). Either way the browser gets public values only: anything shipped to a browser is public (TS-SEC-04).
@@ -74,16 +73,4 @@ The decisions behind this concept, each stated once in the rule that owns it:
 - **TEST-CFG-05: A required key has no deployed default.** A unit test fails when a key marked `required: true` in `configuration-keys.yaml` gets a value in the deployed configuration: Spring: in `application.yaml` without a profile, through a `${VAR:default}` fallback, or through `@DefaultValue`; NestJS: as a schema default. Defaults for local development live in the local profile or `.env.example` (CFG-03).
   *Why:* a required key with a deployed default never fails the start (CFG-08), so a forgotten value ships silently, for example as a `localhost` link in every e-mail. TEST-CFG-02 catches this only once a smoke test exists; this test catches it in the fast loop.
 
-## Agent checklist
-
-- [ ] New key: does it really differ per environment (CFG-01)? Typed, constrained, documented (CFG-08/10)?
-- [ ] No new profile, configuration file or build configuration per environment (CFG-02/04)?
-- [ ] No secret in the repository, image, log line or frontend config; held in the `Secret` type (CFG-05/07)?
-- [ ] Configuration read only in adapters or the composition root (CFG-09)?
-- [ ] Binding test covers valid, invalid and missing values (TEST-CFG-01)? `configuration-keys.yaml` updated (CFG-12, TEST-CFG-04)? Required keys without a deployed default (TEST-CFG-05)?
-
-## Sources
-
-The Twelve-Factor App (12factor.net: III Config, V Build, release, run, X Dev/prod parity), OWASP Secrets Management Cheat Sheet, OWASP ASVS 5.0 (V13 Configuration), Spring Boot externalized configuration reference.
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Configuration and Environments".*

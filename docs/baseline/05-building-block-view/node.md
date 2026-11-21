@@ -71,15 +71,4 @@ export interface PlaceOrderUseCase { placeOrder(command: PlaceOrderCommand): Pro
 - **Package-private visibility**: TypeScript has none at folder level. `index.ts` public APIs and dependency-cruiser take its role.
 - **Annotations on core classes**: the core stays free of decorators; wiring happens in the composition root.
 
-## Agent checklist
-
-- [ ] New file in the right ring and folder (NODE-ARCH-01/02)?
-- [ ] No framework, `node:*`, database or logging import in `domain`, `ports`, `application`, also no `import type` (NODE-ARCH-04)?
-- [ ] Command created through its factory; invalid input becomes `DomainValidationError` (NODE-ARCH-06/07)?
-- [ ] New business error extends one category base class (NODE-ARCH-07)?
-- [ ] No blocking call on the request path; no floating promise (NODE-ARCH-10/11)?
-- [ ] dependency-cruiser green and its rules not loosened?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, translated to TypeScript backends by this baseline. Node.js documentation: "Don't block the event loop" (nodejs.org/learn), process events `unhandledRejection` and `uncaughtException`.
+*Agent checklist in [checklists/node.md](../checklists/node.md) and sources in [sources.md](../sources.md), section "Node.js Backend: Hexagonal Architecture".*

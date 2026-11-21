@@ -43,12 +43,4 @@ The rows match the rows of the PR template's security section.
 
 Personal data across all categories: [data-protection.md](../data-protection/data-protection.md) (DP-*).
 
-## Agent checklist
-
-- [ ] PR template's security section answered when the change touches a listed area?
-- [ ] No check weakened, skipped or made advisory; anything unclear raised, not worked around (SEC-REV-02)?
-- [ ] Findings cite rule ID and ASVS/Top 10 reference?
-
-## Sources
-
-OWASP Top 10:2025, OWASP ASVS 5.0, OWASP Code Review Guide.
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Security Review".*

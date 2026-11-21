@@ -124,14 +124,4 @@ class ArchitectureTest {
   *Why:* adapters must tell "the caller sent bad data" (400, not retryable) from "our code has a bug" (500, alert). Mapping every `IllegalArgumentException` to 400 would hide bugs; mapping none would turn bad input into server errors and endless retries. Spring mapping: SPRING-ARCH-18.
 - **JAVA-ARCH-13: Each business error category of ARCH-UC-13 has one abstract base type in `domain`:** `BusinessRuleException`, `NotFoundException`, `ConflictException`, each extending `RuntimeException` and carrying a stable error code. Concrete business exceptions (`InsufficientFundsException extends BusinessRuleException`) extend exactly one of them. Adapters classify by base type, never by concrete class (SPRING-ARCH-18).
 
-## Agent checklist
-
-- [ ] New types are package-private unless they're domain, port or port model?
-- [ ] Commands, results and value objects are records with compact-constructor validation that throws the domain validation exception (JAVA-ARCH-12)?
-- [ ] New business exception extends one category base type (JAVA-ARCH-13)?
-- [ ] ArchUnit test still green, and not weakened?
-- [ ] No setters on domain entities?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 3, 4, 9, 10. The book uses Lombok and mutable getters in places; this baseline updates those parts to Java records.
+*Agent checklist in [checklists/java.md](../checklists/java.md) and sources in [sources.md](../sources.md), section "Java: Hexagonal Architecture".*

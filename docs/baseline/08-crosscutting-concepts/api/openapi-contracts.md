@@ -58,15 +58,4 @@ Which case applies is decided per consumer by [07-deployment-view/repository-lay
 - A breaking change shipped under the same version because "only one client uses it" or "the frontend is fixed in the same PR" (REPO-API-02).
 - A frontend in the same repository keeping its own copy of the spec.
 
-## Agent checklist
-
-- [ ] Endpoint change → spec regenerated and committed in the same change?
-- [ ] Breaking? Then new version or explicit decision, including the rollout (REPO-API-02)?
-- [ ] `operationId` names the use case; examples present; errors as problem+json?
-- [ ] Consumer: client generated, not hand-written; generated types confined to the adapter?
-- [ ] Consumer in the same repo: regenerated and adapted in the same pull request as the spec change?
-- [ ] N+1 check done ([08-crosscutting-concepts/api/avoiding-n-plus-one.md](avoiding-n-plus-one.md))?
-
-## Sources
-
-OpenAPI Specification 3.1 (openapis.org). RFC 9457, *Problem Details for HTTP APIs*. oasdiff (github.com/oasdiff/oasdiff). Placement rules follow Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, ch. 5–6.
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "OpenAPI Contracts".*

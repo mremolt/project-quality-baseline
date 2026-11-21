@@ -68,7 +68,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 
 ### Logging and telemetry
 
-- **DP-TEL-01: Logs, metrics, traces and frontend error reports contain no personal data beyond pseudonymous identifiers** (SPRING-LOG-08, NEST-LOG-09), and [the observability concept](../observability/observability.md) (OBS-08) applies the same rule to span attributes, metric labels and baggage. User IDs are allowed; names, e-mail addresses, free text and full payloads are not.
+- **DP-TEL-01: Logs, metrics, traces and frontend error reports contain no personal data beyond pseudonymous identifiers** (SPRING-LOG-08, NEST-LOG-09). [The observability concept](../observability/observability.md) (OBS-08) applies the same rule to span attributes, metric labels and baggage. User IDs are allowed; names, e-mail addresses, free text and full payloads are not.
 - **DP-TEL-02: Personal data is never part of a URL path or query string** (`/customers?email=…`). URLs end up in access logs, proxies, traces and browser history; searches by personal data use a request body.
 - **DP-TEL-03: Telemetry stores have a retention period** in the deletion concept, and session replay or user-level analytics are off unless the inventory names them and consent exists.
 
@@ -91,18 +91,4 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 - A new SaaS error tracker or font CDN wired in without anyone checking the DPA or where the data goes.
 - An agent filling the retention column with a plausible-looking period.
 
-## Agent checklist
-
-- [ ] New or changed personal data: `processing-record.md` and `deletion-concept.md` updated, flagged for DPO review (DP-INV-03)?
-- [ ] Field needed for a stated purpose; optional processing off by default (DP-MIN-01/03)?
-- [ ] Retention job and erasure/export cover the new location; tests updated (DP-RET-02, DP-DSR-02, DP-TEST-01)?
-- [ ] Export includes soft-deleted records, is never silently truncated, and redacts other people's data (DP-DSR-05)?
-- [ ] No personal data in logs, telemetry, URLs, events beyond IDs (DP-TEL-01/02, DP-MIN-02)?
-- [ ] Only synthetic data in fixtures and non-production environments (DP-ENV-01)?
-- [ ] New external service: listed with DPA status and location; transfer basis decided (DP-PROC-01/02)?
-- [ ] New store for dead letters, inbox or idempotency results: listed in the deletion concept and covered by retention?
-- [ ] Missing legal basis or period written as `TBD (DPO)`, not guessed?
-
-## Sources
-
-Regulation (EU) 2016/679 (GDPR), Art. 4, 5, 9, 12–22, 25, 28, 30, 32–35, 37–39, 44–49, Recital 26 (eur-lex.europa.eu). Bundesdatenschutzgesetz (BDSG), § 38. Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz (TDDDG), § 25. DIN 66398, *Leitlinie zur Entwicklung eines Löschkonzepts*. EDPB Guidelines 4/2019 on Article 25 (data protection by design and by default); EDPB Guidelines 01/2025 on pseudonymisation (status: [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)). EU General Court, judgment of 3 September 2025, T-553/23 *Latombe v Commission*; appeal C-703/25 P. Standard Data Protection Model (SDM) of the German supervisory authorities.
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Data Protection (GDPR / DSGVO)".*

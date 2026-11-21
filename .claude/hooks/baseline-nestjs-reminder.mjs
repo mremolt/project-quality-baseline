@@ -37,6 +37,6 @@ try { fs.writeFileSync(marker, ''); } catch { /* reminder still useful without t
 process.stdout.write(`${JSON.stringify({
   hookSpecificOutput: {
     hookEventName: 'PreToolUse',
-    additionalContext: 'Baseline reminder: before creating or editing NestJS backend code, load the `baseline-nestjs` skill (it loads baseline-tdd, vitest and baseline-security) and follow docs/baseline/stacks/nestjs.md (and the docs it lists). The baseline docs override the skills and the NestJS docs. Check for N+1 requests on data loading, work test-first (baseline-tdd), and finish with `npm run verify` from the component folder.',
+    additionalContext: 'Baseline reminder: before creating or editing NestJS backend code, load the `baseline-nestjs` skill (it loads baseline-tdd, vitest and baseline-security) and read the rule index in docs/baseline/rule-index/ (shared, node and nestjs); open full docs only for the topics the task touches, from the task table of the skill (TOOL-SKL-10). The baseline docs override the skills and the NestJS docs. Check for N+1 requests on data loading, work test-first (baseline-tdd), and finish with `npm run verify` from the component folder.',
   },
 }, null, 2)}\n`);

@@ -121,19 +121,4 @@ Listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before
 | Generic habit | MSW mocks enabled by `NODE_ENV === 'test'` or a dev-only build | One build; stubs only with `APP_TEST_STUBS=1` in a validated test environment (NEXT-TEST-11) |
 | Generic habit | Mock `openid-client` | Hand-built `Configuration` and MSW for the IdP (NEXT-TEST-09) |
 
-## Agent checklist
-
-- [ ] Spec in the right project: `.ts` in `core` (node), `.tsx` in `dom` (NEXT-TEST-01)?
-- [ ] Client component tested with `renderWithProviders`, server data as props, an object of mocked use cases in the feature's context (NEXT-TEST-03)?
-- [ ] Server component still thin (use case, redirect, translate, pass data), covered by E2E (NEXT-TEST-04)?
-- [ ] New route handler: factory with contracts, `Request`-based spec incl. 401/403 and XSRF cases (NEXT-TEST-05)?
-- [ ] New server action: handler spec for unauthenticated, invalid input with unknown keys, each domain error (NEXT-TEST-06)?
-- [ ] BFF adapter change: Redis container spec or MSW IdP spec still green, expiry asserted with a bound (NEXT-TEST-08/09)?
-- [ ] New backend operation: stub handler with fixed data and its problem answers (NEXT-TEST-10)?
-- [ ] Test-stub switch still refused outside a test environment, with its test (NEXT-TEST-11)?
-- [ ] E2E against the built standalone server, real BFF login, zero CSP/Trusted Types violations, `@theme` specs in all theme projects (NEXT-TEST-12..15)?
-- [ ] Architecture canary green, `'use client'` blind-spot assertion kept, new suffix rules with a fixture (NEXT-TEST-17)?
-
-## Sources
-
-Next.js 16.4 documentation (testing with Vitest and Playwright, `instrumentation.ts`, standalone output, server actions, route handlers), React 19.3 server components reference, Vitest 5.1 projects and environments, Testing Library React 16.3, MSW 3.0 (`setupServer`, `onUnhandledFrame`), Orval 8.47 MSW output, Testcontainers for Node.js 12.2 (`@testcontainers/redis`), `openid-client` 6.9 README (`Configuration`), Playwright 1.65 (`webServer`, fixtures, `APIRequestContext`, `contrast`, `colorScheme`), `@axe-core/playwright` 4.14, dependency-cruiser 18.7 API. Checked in the Next.js reference build on 2026-11-20.
+*Agent checklist in [checklists/nextjs.md](../../checklists/nextjs.md) and sources in [sources.md](../../sources.md), section "Next.js: Testing".*

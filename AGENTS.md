@@ -5,15 +5,18 @@ This repository is a shared quality baseline that our projects import. It define
 
 ## How the docs are organized
 
-- `docs/baseline/`: the baseline as an **arc42 reference architecture** (chapters `01-…` to `12-…`), synced from the baseline repository. Shared rules apply to every project; stack files (`java`, `spring`, `node`, `nestjs`, `typescript`, `angular`, `react`, `nextjs` in the name) add to them and may tighten them, but never contradict them. `docs/baseline/stacks/<stack>.md` lists everything for one stack. **Read only the stacks this project uses** (listed below; declared in `.baseline.json`); never load another stack's docs or skills.
+- `docs/baseline/`: the baseline as an **arc42 reference architecture** (chapters `01-…` to `12-…`), synced from the baseline repository. Shared rules apply to every project; stack files (`java`, `spring`, `node`, `nestjs`, `typescript`, `angular`, `react`, `nextjs` in the name) add to them and may tighten them, but never contradict them. `docs/baseline/stacks/<stack>.md` maps one stack's docs; `docs/baseline/rule-index/` lists every rule ID with its headline (generated). **Read only the stacks this project uses** (listed below; declared in `.baseline.json`); never load another stack's docs or skills.
 - `docs/architecture/`: this product's own arc42 documentation (project-owned), linking to the baseline. `docs/adr/`: this product's decisions.
 - Agent skills (`.agents/skills/`, `.claude/skills/`) supply framework know-how. If a skill, a tech doc or a generic habit disagrees with these docs, **the docs win**. Stack docs list known conflicts in their "Skill overrides" tables.
 
-## Always read
+## How to read (token budget, TOOL-SKL-10)
 
-1. [README.md](docs/baseline/README.md): chapter index, stacks, doc conventions; defaults D1–D17 in [04-solution-strategy/README.md](docs/baseline/04-solution-strategy/README.md)
-2. [04-solution-strategy/hexagonal-architecture.md](docs/baseline/04-solution-strategy/hexagonal-architecture.md): dependency rule and vocabulary
-3. [05-building-block-view/code-organization.md](docs/baseline/05-building-block-view/code-organization.md): where code goes
+The docs are too large to hold at once. **Never load every doc a stack page lists.** Read in steps:
+
+1. **Start of every task:** the rule index of the shared rules, [rule-index/shared.md](docs/baseline/rule-index/shared.md), and of each of this project's stacks (`rule-index/<stack>.md`, see "Read by stack"). One line per rule ID, so you know every rule exists. Also [hexagonal-architecture.md](docs/baseline/04-solution-strategy/hexagonal-architecture.md) (dependency rule, vocabulary), [code-organization.md](docs/baseline/05-building-block-view/code-organization.md) (where code goes) and the defaults D1–D17 in [04-solution-strategy/README.md](docs/baseline/04-solution-strategy/README.md).
+2. **Topics the task touches:** the docs from "Read by task" below, or from the entry skill's task table. Nothing else.
+3. **A rule from a doc you have not read:** search the doc for its ID and read that bullet before implementing against it.
+4. **Before finishing:** the agent checklist sections of the docs you used; each doc's last line points to its section in `docs/baseline/checklists/`.
 
 ## Read by task
 
@@ -45,16 +48,18 @@ This repository is a shared quality baseline that our projects import. It define
 
 ## Read by stack
 
-| Stack | Docs | Skills to load |
-|---|---|---|
-| Java (any) | [stacks/java.md](docs/baseline/stacks/java.md) and the docs it lists | `baseline-tdd` | <!-- stack:java -->
-| Spring Boot | everything for Java + [stacks/spring.md](docs/baseline/stacks/spring.md) and the docs it lists | **`baseline-spring` before any backend code** (it loads `spring-boot-testing`, `spring-security`, `spring-observability`, `java-hibernate-jpa`, `baseline-tdd`) | <!-- stack:spring -->
-| Node.js (any backend) | [stacks/node.md](docs/baseline/stacks/node.md) and the docs it lists (from the TypeScript layer only `typescript-tooling.md`) | `baseline-tdd`, `vitest` | <!-- stack:node -->
-| NestJS | everything for Node.js + [stacks/nestjs.md](docs/baseline/stacks/nestjs.md) and the docs it lists | **`baseline-nestjs` before any backend code** (it loads `baseline-tdd`, `vitest`, `baseline-security`) | <!-- stack:nestjs -->
-| TypeScript frontend (any) | [stacks/typescript.md](docs/baseline/stacks/typescript.md) and the docs it lists | `baseline-tdd`, `vitest`, `playwright-best-practices` | <!-- stack:typescript -->
-| Angular | everything for TypeScript + [stacks/angular.md](docs/baseline/stacks/angular.md) and the docs it lists | **`baseline-angular` before any Angular code** (it loads `angular-developer`, `ngrx-signals`, `angular-material-design`, `orval`, `accessibility`) | <!-- stack:angular -->
-| React (SPA, and the base of Next.js) | everything for TypeScript + [stacks/react.md](docs/baseline/stacks/react.md) and the docs it lists | **`baseline-react` before any React code** (it loads `vercel-react-best-practices`, `tanstack-query-best-practices`, `material-ui-theming`, `material-ui-styling`, `orval`, `accessibility`) | <!-- stack:react -->
-| Next.js | everything for React + [stacks/nextjs.md](docs/baseline/stacks/nextjs.md) and the docs it lists | **`baseline-nextjs` before any Next.js code** (it loads the React skills and routes to the Next.js docs) | <!-- stack:nextjs -->
+At the start of a task read the rule index of every stack in the chain (plus `shared.md`). The stack page maps its docs by topic; open them by task, never all at once.
+
+| Stack | Rule index | Doc map | Skills to load |
+|---|---|---|---|
+| Java (any) | [java](docs/baseline/rule-index/java.md) | [stacks/java.md](docs/baseline/stacks/java.md) | `baseline-tdd` | <!-- stack:java -->
+| Spring Boot | [java](docs/baseline/rule-index/java.md) + [spring](docs/baseline/rule-index/spring.md) | [stacks/spring.md](docs/baseline/stacks/spring.md) | **`baseline-spring` before any backend code** (it loads `spring-boot-testing`, `spring-security`, `spring-observability`, `java-hibernate-jpa`, `baseline-tdd`) | <!-- stack:spring -->
+| Node.js (any backend) | [node](docs/baseline/rule-index/node.md) | [stacks/node.md](docs/baseline/stacks/node.md) | `baseline-tdd`, `vitest` | <!-- stack:node -->
+| NestJS | [node](docs/baseline/rule-index/node.md) + [nestjs](docs/baseline/rule-index/nestjs.md) | [stacks/nestjs.md](docs/baseline/stacks/nestjs.md) | **`baseline-nestjs` before any backend code** (it loads `baseline-tdd`, `vitest`, `baseline-security`) | <!-- stack:nestjs -->
+| TypeScript frontend (any) | [typescript](docs/baseline/rule-index/typescript.md) | [stacks/typescript.md](docs/baseline/stacks/typescript.md) | `baseline-tdd`, `vitest`, `playwright-best-practices` | <!-- stack:typescript -->
+| Angular | [typescript](docs/baseline/rule-index/typescript.md) + [angular](docs/baseline/rule-index/angular.md) | [stacks/angular.md](docs/baseline/stacks/angular.md) | **`baseline-angular` before any Angular code** (it loads `angular-developer`, `ngrx-signals`, `angular-material-design`, `orval`, `accessibility`) | <!-- stack:angular -->
+| React (SPA, and the base of Next.js) | [typescript](docs/baseline/rule-index/typescript.md) + [react](docs/baseline/rule-index/react.md) | [stacks/react.md](docs/baseline/stacks/react.md) | **`baseline-react` before any React code** (it loads `vercel-react-best-practices`, `tanstack-query-best-practices`, `material-ui-theming`, `material-ui-styling`, `orval`, `accessibility`) | <!-- stack:react -->
+| Next.js | [typescript](docs/baseline/rule-index/typescript.md) + [react](docs/baseline/rule-index/react.md) + [nextjs](docs/baseline/rule-index/nextjs.md) | [stacks/nextjs.md](docs/baseline/stacks/nextjs.md) | **`baseline-nextjs` before any Next.js code** (it loads the React skills and routes to the Next.js docs) | <!-- stack:nextjs -->
 
 ## Non-negotiables for agents
 

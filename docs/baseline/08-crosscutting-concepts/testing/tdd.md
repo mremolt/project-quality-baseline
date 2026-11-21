@@ -65,16 +65,4 @@ The style per element (Chicago for domain and pure code, London for use cases an
 - Skipping the refactor step "because it's green".
 - `new Date()`, `Instant.now()` or random ids inside the code under test, then asserting "roughly now".
 
-## Agent checklist
-
-- [ ] Did I see the new test fail before implementing?
-- [ ] One behavior per cycle; did I refactor while green?
-- [ ] Style matches the element table (London for use cases and incoming adapters, Chicago for domain, pure code and outgoing adapters)?
-- [ ] Only owned contracts mocked; interactions verified only for commands?
-- [ ] Expected values independent of the implementation?
-- [ ] Test data from builders; clock and ids fixed in the test (TEST-TDD-16)?
-- [ ] Fakers only for volume or seed data, seeded, never for asserted values (TEST-TDD-17)?
-
-## Sources
-
-Kent Beck, *Test-Driven Development: By Example*, Addison-Wesley 2002. Steve Freeman, Nat Pryce, *Growing Object-Oriented Software, Guided by Tests*, Addison-Wesley 2009 (London style, double loop, "don't mock what you don't own"). Nat Pryce, "Test Data Builders" (2007). Martin Fowler, "Mocks Aren't Stubs" (2007). Anti-patterns "tautological test" and "horizontal slicing" adapted from Matt Pocock's `tdd` skill (github.com/mattpocock/skills, MIT).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Test-Driven Development".*

@@ -27,7 +27,7 @@ This table is the single source of the thresholds. Stack rules name the tool set
 - **SEC-CI-02: The pipeline itself is hardened.** Least-privilege tokens (read-only by default, write permission per job), third-party actions, plugins and images pinned by commit SHA or digest (this includes the Compose images that CI starts for integration and E2E tests), no secrets in builds of pull requests from forks, release credentials only in the release job.
   *Why:* the pipeline is part of the supply chain (Top 10:2025 A03, A08).
 - **SEC-CI-03: Releases publish an SBOM (CycloneDX; backend JAVA-TOOL-17, frontend TS-TOOL-16) and signed build provenance stored with the artifact; target SLSA Build L2.** Provenance comes from the platform's artifact attestation where the platform has one, otherwise from cosign or in-toto in the release job, attached to the image digest in the registry. Where the customer platform can do neither, the minimum is the SBOM and the image digest in the release record (REL-CD-02), and the gap is recorded in the product's chapter 11.
-- **SEC-CI-04: A passive DAST baseline scan runs nightly against a stack built from the same commit** (REPO-CI-04), with its fail threshold set explicitly (some tools, the ZAP action among them, do not fail by default). Authenticated scans are added once a project runs a real IdP. Header and CSP checks run as E2E tests on every pull request (NG-SEC-12, REACT-SEC-09, NEXT-SEC-09).
+- **SEC-CI-04: A passive DAST baseline scan runs nightly against a stack built from the same commit** (REPO-CI-04). Its fail threshold is set explicitly (some tools, the ZAP action among them, do not fail by default). Authenticated scans are added once a project runs a real IdP. Header and CSP checks run as E2E tests on every pull request (NG-SEC-12, REACT-SEC-09, NEXT-SEC-09).
 - **SEC-CI-05:** Reduced to a pointer: checks are never weakened, skipped or made advisory, see [SEC-REV-02](security-review.md).
 - **SEC-CI-06: Container images are scanned at three points:** in the integration build (report only, so findings show early), in the release job (gate per the table), and on a schedule against the digests currently deployed in each environment, so a vulnerability published after the release is found. Findings of the scheduled scan go into triage (SEC-VUL-01), not into a red build.
 - **SEC-CI-07: Before a deployment the digest's provenance and signature are verified** by the delivery platform (admission policy) or by a pipeline step; an unverifiable digest is not deployed. Where the customer platform deploys and offers no verification, the handover names the digest and its provenance, and the gap is recorded in chapter 11.
@@ -35,13 +35,4 @@ This table is the single source of the thresholds. Stack rules name the tool set
 
 Tool details to confirm at adoption: [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use). Record the pinned versions in the project's pipeline definition.
 
-## Agent checklist
-
-- [ ] New pipeline step: pinned by SHA or digest, minimal permissions?
-- [ ] No gate removed, set to advisory, or filtered by path (REPO-CI-03, SEC-REV-02)?
-- [ ] New release artifact: SBOM, provenance, scan and deploy-time verification covered (SEC-CI-03/06/07)?
-- [ ] Threshold change: made in the gate table, not in a stack rule?
-
-## Sources
-
-OWASP Top 10:2025 A03 and A08, SLSA v1.2 (slsa.dev), CycloneDX (cyclonedx.org), Sigstore cosign and in-toto attestations, OSV-Scanner (google.github.io/osv-scanner), Semgrep CE (semgrep.dev), gitleaks, Trivy (trivy.dev), ZAP (zaproxy.org), GitHub Actions security hardening (docs.github.com).
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Secure Pipeline".*

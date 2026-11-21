@@ -50,14 +50,4 @@ N+1 check
 - Tests: <request-count budget / batch assertion / query count>
 ```
 
-## Agent checklist
-
-- [ ] Does the feature load a list and then something per item, or chain independent requests?
-- [ ] Strategy recommended with tradeoffs and the template filled in?
-- [ ] Frontend batching/caching placed in the outgoing adapter?
-- [ ] Backend endpoint free of persistence N+1?
-- [ ] Request-count or query-count test added?
-
-## Sources
-
-DataLoader pattern: github.com/graphql/dataloader. HTTP caching and conditional requests: RFC 9111, RFC 9110 (ETag). Use-case-shaped queries follow ARCH-UC-03 (Command-Query Separation) in this baseline.
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Avoiding N+1 Requests over REST".*

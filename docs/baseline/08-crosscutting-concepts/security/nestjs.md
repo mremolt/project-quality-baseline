@@ -67,16 +67,4 @@ The API validates bearer JWTs. It does not issue tokens, store passwords or rend
 - **NEST-SEC-14: Every endpoint has security tests for 401 (no or invalid token), 403 (insufficient role, where coarse roles apply) and the success case.** They are REST adapter tests: `Test.createTestingModule` with the controller, mocked use cases and the real `AuthGuard` as `APP_GUARD`, `createNestApplication(new FastifyAdapter())`, requests through `app.inject(...)`. Tokens are signed locally with the algorithm the guard pins (NEST-SEC-04): `generateKeyPair('RS256')`, the public key exported with `exportJWK` into `createLocalJWKSet({ keys: [jwk] })`, which replaces the remote key set under its injection token, and `new SignJWT(claims).setProtectedHeader({ alg, kid }).setIssuer(...).setAudience(...).setSubject(...).setExpirationTime(...)`. No test switches the guard off.
 - **NEST-SEC-15: Authorization rules are unit-tested on `Caller`** in the use-case tests, without a Nest context (London style for the ports, [TEST-TDD](../testing/tdd.md); NEST-TEST rules in [../testing/nestjs.md](../testing/nestjs.md)).
 
-## Agent checklist
-
-- [ ] New endpoint: protected by the global guard, or `@Public()` with a reason in the PR?
-- [ ] `Caller` passed into the command; no Nest, Fastify or jose import in `domain`/`ports`/`application`?
-- [ ] `jwtVerify` with issuer, audience, algorithms, clock tolerance; JWKS timeouts set; key set outage 503, rejected token 401 with `WWW-Authenticate`; no hand-rolled token code, no passport?
-- [ ] 401/403/success tests per endpoint; `cross-user` test for every use case that takes an id?
-- [ ] CORS origins from configuration, no wildcard with credentials, preflight test?
-- [ ] Nothing sensitive logged; probes public but not routed externally; `trustProxy` explicit?
-- [ ] Hardening checklist ([nestjs-hardening.md](nestjs-hardening.md)) answered?
-
-## Sources
-
-jose 6 API documentation (`jwtVerify`, `createRemoteJWKSet`, `createLocalJWKSet`, `SignJWT`), NestJS documentation (guards, `Reflector`, custom decorators, testing), Fastify 5 server options (`trustProxy`), `@fastify/cors`, Vitest test tags, RFC 6750, RFC 8725 (JWT best current practice), OAuth 2.0 for Browser-Based Applications (IETF draft, BFF pattern), OWASP ASVS 5.0 (V6, V8, V9), OWASP API Security Top 10.
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Security".*

@@ -83,15 +83,4 @@ CMD ["--import", "./dist/instrumentation.js", "dist/main.js"]
 
 - **NEST-REL-11: The release job publishes a CycloneDX SBOM of the image** (REL-IMG-01), generated from the image by the pipeline's image scanner, and the dependency SBOM of TS-TOOL-16 (`@cyclonedx/cyclonedx-npm --omit dev`). `npm sbom --omit dev` is not used: with npm 11.13 it leaves out production dependencies that are also peers of dev dependencies (`@nestjs/core` among them).
 
-## Agent checklist
-
-- [ ] Start-up migration before `listen()`, DDL credentials only in the migration pool; or pre-deploy job with `node dist/migrate.js`, instances checking only; required from the second instance or a production environment (NEST-REL-01/03)?
-- [ ] Start-up budget ≥ start + migration `statement_timeout` (NEST-REL-02)?
-- [ ] Image starts `node --import ./dist/instrumentation.js dist/main.js` in exec form (NEST-REL-05)?
-- [ ] `package.json` version `0.0.0`; release version from `RELEASE_VERSION` and `OTEL_RESOURCE_ATTRIBUTES` (NEST-REL-06)?
-- [ ] Image: no sources or dev dependencies, non-root, base pinned by digest, read-only root filesystem (NEST-REL-07..09)?
-- [ ] BFF: bundle in `frontend/` from the pipeline artifact plus the previous release's hashed files (NEST-REL-10); start fails without it, built image answers `GET /` (NEST-REL-12)?
-
-## Sources
-
-Paketo Node.js buildpack how-to (paketo.io/docs/howto/nodejs) and the READMEs of `paketo-buildpacks/npm-start` and `npm-install`. Cloud Native Buildpacks `pack` CLI. Docker documentation: multi-stage builds, `buildx build --build-context`. Distroless images (github.com/GoogleContainerTools/distroless). npm documentation, `npm sbom`. Kysely 0.29 `Migrator` source. Checked in a scratch build on 2026-11-20: `pack` 0.40.11 with `paketobuildpacks/ubuntu-noble-builder`, Docker 29.8, `node:26-trixie-slim` and `gcr.io/distroless/nodejs26-debian13:nonroot`, PostgreSQL 18.
+*Agent checklist in [checklists/nestjs.md](../checklists/nestjs.md) and sources in [sources.md](../sources.md), section "NestJS: Delivery".*

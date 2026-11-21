@@ -68,7 +68,7 @@ const agent = new Agent({ connectTimeout: 1000, … }).compose(transactionGuard(
 
 - **NEST-RES-04: The pg pool is the database limit; its size is explicit and its wait is short.** `max` is the pool sum of RES-CAP-02 divided by the instance count (recorded in chapter 7); `connectionTimeoutMillis` is a few seconds. A pool wait timeout rejects with a plain `Error` whose message is `timeout exceeded when trying to connect`; the persistence adapter maps it to the port's "temporarily unavailable" error, and the problem-details filter answers `503` with `Retry-After` (API-REST-06).
 - **NEST-RES-05: Each remote dependency gets a bulkhead that rejects:** `bulkhead(limit, 0)` from cockatiel, one instance per adapter (the adapter is a singleton provider), with an explicit limit from configuration. Queue `0` makes excess calls fail at once with `BulkheadRejectedError`; the adapter maps it to the port's "temporarily unavailable" error (→ `503` with `Retry-After`) or the use case's fallback. A non-zero queue is allowed only with the call's `AbortSignal` bounding the wait. undici's `connections` caps sockets per origin, but further requests wait in undici's queue, so it is not the bulkhead.
-- **NEST-RES-06: A circuit breaker, where RES-CAP-03 calls for one,** is cockatiel's `circuitBreaker(handleWhen(isTransient), { halfOpenAfter, breaker })` with `new ConsecutiveBreaker(n)` or `new SamplingBreaker({ threshold, duration, minimumRps })`, shared by all calls of the adapter. An open circuit throws `BrokenCircuitError` (`isBrokenCircuitError`), which the adapter maps to its stated fallback (RES-CAP-04). The test drives it open with stubbed failures and asserts the fallback.
+- **NEST-RES-06: A circuit breaker, where RES-CAP-03 calls for one, uses cockatiel and is shared by all calls of the adapter:** `circuitBreaker(handleWhen(isTransient), { halfOpenAfter, breaker })` with `new ConsecutiveBreaker(n)` or `new SamplingBreaker({ threshold, duration, minimumRps })`. An open circuit throws `BrokenCircuitError` (`isBrokenCircuitError`), which the adapter maps to its stated fallback (RES-CAP-04). The test drives it open with stubbed failures and asserts the fallback.
 
 ### Retries (RES-RTY)
 
@@ -94,7 +94,7 @@ const price = await policy.execute(({ signal }) => this.callPricing(items, signa
 
 ### Idempotency (RES-IDM)
 
-- **NEST-RES-09: The REST adapter reads `Idempotency-Key` and passes it in the command** as a core value object (key plus a SHA-256 fingerprint of the canonical request body, computed in the adapter with `node:crypto`). The use case calls an outgoing `IdempotencyStore` port first in its transaction and stores its result through the same port before the commit. The Kysely adapter inserts without aborting the transaction on a duplicate, then reads the stored row when nothing was inserted: same fingerprint → replay the stored result; different fingerprint → the port's mismatch error (`409`). A concurrent duplicate waits on the primary key until the first transaction ends, bounded by `statement_timeout`; the cancelled wait has SQLSTATE `57014`, which the adapter maps to the port's "in progress" error (`409`). A missing header on an endpoint that requires it is `400`. The header and its `400`/`409` responses are in the OpenAPI spec ([../api/nestjs-openapi.md](../api/nestjs-openapi.md)).
+- **NEST-RES-09: The REST adapter reads `Idempotency-Key` and passes it in the command as a core value object.** The value object holds the key plus a SHA-256 fingerprint of the canonical request body, computed in the adapter with `node:crypto`. The use case calls an outgoing `IdempotencyStore` port first in its transaction and stores its result through the same port before the commit. The Kysely adapter inserts without aborting the transaction on a duplicate, then reads the stored row when nothing was inserted: same fingerprint → replay the stored result; different fingerprint → the port's mismatch error (`409`). A concurrent duplicate waits on the primary key until the first transaction ends, bounded by `statement_timeout`; the cancelled wait has SQLSTATE `57014`, which the adapter maps to the port's "in progress" error (`409`). A missing header on an endpoint that requires it is `400`. The header and its `400`/`409` responses are in the OpenAPI spec ([../api/nestjs-openapi.md](../api/nestjs-openapi.md)).
 
 ```ts
 const claimed = await trx.insertInto('idempotency_keys')
@@ -174,18 +174,4 @@ async purge(): Promise<void> {
 | Cluster lock | NEST-RES-12 |
 | Cache (RES-CCH-05) | Hit (dependency called once for two reads), expiry with a short `ttl`, key separation per caller |
 
-## Agent checklist
-
-- [ ] New HTTP client: own undici `Agent` with `connectTimeout`, `AbortSignal.timeout` on every call, values on the ladder; timeout test (NEST-RES-01/02)?
-- [ ] Pool timeouts (`connectionTimeoutMillis`, `statement_timeout`, `transaction_timeout`) and both `error` listeners set (NEST-RES-01)?
-- [ ] No remote call inside the transaction; guard `fail` in integration tests (NEST-RES-03)?
-- [ ] Bulkhead `bulkhead(limit, 0)` per remote dependency; rejection thrown as `UnavailableError` (NODE-ARCH-07, answered with 503) or a fallback (NEST-RES-05)?
-- [ ] Retry only for idempotent calls, with `handleWhen`, jittered backoff, total `timeout`; not in a consumer-driven flow (NEST-RES-07/08)?
-- [ ] Retryable `POST`: `Idempotency-Key` in the command, conflict-free insert first in the transaction, `57014` mapped (NEST-RES-09)?
-- [ ] New job: `@Cron` with `waitForCompletion`, under `withClusterLock` or `SKIP LOCKED`, batches stop on the signal (NEST-RES-11)?
-- [ ] Bulk input with a remote call per item: items stored, job makes the calls, request answers within its budget (NEST-RES-15)?
-- [ ] CPU-heavy work in a `piscina` pool with bounded queue (NEST-RES-13)? New cache bounded by `max` and `ttl`, caller in the key where needed (NEST-RES-14)?
-
-## Sources
-
-undici documentation (`Agent`/`Client` options and timer precision, `fetch`, `compose` interceptors), node-postgres documentation (`Pool` options, `error` events), PostgreSQL 18 documentation (`statement_timeout`, `transaction_timeout`, advisory lock functions, `INSERT … ON CONFLICT`), cockatiel 4 README and type definitions (`retry`, `ExponentialBackoff`, `DelegateBackoff`, `bulkhead`, `circuitBreaker`, `timeout`, `wrap`), `@nestjs/schedule` 12 and `cron` 4 README (`waitForCompletion`), piscina and lru-cache READMEs. Checked in a scratch build on 2026-11-20 (undici 8.13.0, cockatiel 4.0.0, pg 8.23.1 against PostgreSQL 18, Kysely 0.29.9, piscina 5.3.2, lru-cache 11.5.3).
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: Resilience and Idempotency".*

@@ -91,9 +91,10 @@ Write the report to `proposals/review-<target-name>-<YYYY-MM-DD>.md` in this rep
 2. **Implement every proposal that doesn't need feedback**, and the decided ones, following the doc conventions in `docs/baseline/README.md`:
    - new IDs continue the existing prefix sequence; never renumber or reuse an ID; MUST/SHOULD wording as defined there,
    - shared rules in the shared doc, stack rules in the stack file; every stack doc stays self-contained (TOOL-SKL-09); update `docs/baseline/stacks/<stack>.md` when it lists the topic,
-   - update the doc's agent checklist, the PR template (`templates/pull-request/`) for review questions, "Skill overrides" tables for skill conflicts, the `AGENTS.md` task table for new topics, own skills in `skills/` that route to the topic (then run `npm run skills:link-own`), and chapter 11 for open points,
+   - update the doc's agent checklist section in `docs/baseline/checklists/<scope>.md` (TOOL-SKL-13), the PR template (`templates/pull-request/`) for review questions, "Skill overrides" tables for skill conflicts, the `AGENTS.md` task table for new topics, own skills in `skills/` that route to the topic (then run `npm run skills:link-own`), and chapter 11 for open points,
    - own skills cite rule IDs instead of restating rules (TOOL-SKL-06),
    - update `ARCHITECTURE.md` whenever the change alters the baseline's architecture, technologies or decisions (current state only, DOC-ARC-09),
+   - new rules start with a bold headline that states the rule on its own (TOOL-SKL-12); run `npm run docs:rule-index` after the doc changes and check the new IDs appear in `docs/baseline/rule-index/` (TOOL-SKL-11),
    - check that every relative link you added resolves.
 3. **Close the proposal.** When every proposal is implemented or rejected, delete the proposal file and check nothing links to it; keep its summary for your final message. If some proposals wait for the user, cut the file down to those.
 4. Don't commit unless the user asks. The sync in step 5 reads the working tree, so uncommitted changes are deployed too; say so in the final message.

@@ -115,18 +115,4 @@ application/TransferFundsService implements TransferFundsUseCase
 - One use case calling another, or reacting to it through an in-process framework event.
 - Authorization only in the controller.
 
-## Agent checklist
-
-- [ ] New use case → new incoming port + new service + own command/query + own result?
-- [ ] Input model immutable and self-validating?
-- [ ] Each rule placed per the validation table?
-- [ ] Output minimal and not a domain entity?
-- [ ] Caller passed in, and object-level authorization done in the use case (ARCH-UC-15)?
-- [ ] Errors raised as exceptions of one ARCH-UC-13 category; results only for expected alternative outcomes (ARCH-UC-10)?
-- [ ] Domain events raised in `domain` and handed to an outgoing port, not to another use case (ARCH-UC-14)?
-- [ ] Transaction boundary on the service, with no remote call inside it (ARCH-UC-11)?
-- [ ] Every rule that depends on other rows (uniqueness, closed periods, "at least one", process once) enforced by a constraint, a conditional write or a shared lock, with a concurrency test (ARCH-UC-16)?
-
-## Sources
-
-Tom Hombergs, *Get Your Hands Dirty on Clean Architecture*, Packt 2019, ch. 4 (Implementing a Use Case), ch. 6 (transactions), ch. 11 (sharing models).
+*Agent checklist in [checklists/shared.md](../checklists/shared.md) and sources in [sources.md](../sources.md), section "Implementing Use Cases".*

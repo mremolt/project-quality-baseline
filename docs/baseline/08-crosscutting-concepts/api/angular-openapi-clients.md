@@ -79,12 +79,4 @@ export async function untilAborted<T>(source: Observable<T>, signal?: AbortSigna
 | `angular-query` / TanStack Query clients for Angular with signals | Not used; plain `angular` client behind ports (TS-API-03) |
 | `provideIn: 'root'` for generated services | `provideIn: false`; provided by the feature (TS-API-04) |
 
-## Agent checklist
-
-- [ ] `client: 'angular'` with `provideIn: false` and `urlEncodeParameters: true`; generated services listed in the providers file?
-- [ ] Observables converted with `untilAborted`, never `firstValueFrom` alone or `toPromise`?
-- [ ] Responses parsed with `safeParse`; a malformed body and an unmappable 4xx reported once through `REPORT_ERROR`, errors from a 5xx, status 0 or time-out passed on unreported (TS-API-05, TS-ARCH-18, NG-OBS-04)?
-
-## Sources
-
-Orval 8 type definitions (`override.angular.provideIn`), RxJS `firstValueFrom` and `takeUntil` (rxjs.dev), Angular `HttpClient` (angular.dev).
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Generated API Clients in Angular".*

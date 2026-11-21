@@ -185,19 +185,4 @@ The two `no-empty-object-type` disables (the `LazyLoadedSlices` interface and ea
 | Generic habit | `useEffect(() => { fetch(...).then(setState) }, [])` | TanStack Query hook calling a use case (REACT-STATE-09, REACT-ARCH-06/13) |
 | `vercel-react-best-practices` (`client-swr-dedup`) | SWR or `fetch('/api/...')` in components for dedup | TanStack Query calling use cases; dedup and coalescing in the outgoing adapter (REACT-STATE-09, TS-ARCH-15) |
 
-## Agent checklist
-
-- [ ] Slice in `adapter/in/ui/<feature>.slice.ts`, injected in the composition, typed `interface`, selector with `?? initialState` (REACT-STATE-01/02/05)?
-- [ ] Commands as `useMutation` in `<feature>.queries.ts` calling the use case; no thunk for a command; slice imports no adapters, services, generated code, other slices; nothing non-serializable in state or payloads (REACT-STATE-03)?
-- [ ] Slice holds only view state several components share; command status in the mutation; server data in the query cache (REACT-STATE-04)?
-- [ ] Errors mapped once per feature with `toErrorKey`; unexpected errors reported in the mutation's `onError` (REACT-STATE-07)?
-- [ ] Query hook in `<feature>.queries.ts`, keys from `<feature>Keys`, `queryOptions`, `signal` passed to the use case (REACT-STATE-10/11)?
-- [ ] Every command invalidates the affected keys in `onSuccess`; `staleTime` default unless reasoned (REACT-STATE-11)?
-- [ ] No per-row queries, no `useQueries` over ids; N+1 check stated and request budget asserted (REACT-STATE-12)?
-- [ ] No RTK Query, no Orval query client, no `useEffect` fetch (REACT-STATE-09)?
-- [ ] Retry only transient technical errors, with jitter (REACT-STATE-15)? Full-screen error only without data; failed refetch is an inline alert (REACT-STATE-19)?
-- [ ] Slice tests with the real store; commands, error keys and reporting covered by the page test with mocked use cases (REACT-STATE-13)?
-
-## Sources
-
-Redux Toolkit 2.14 (redux-toolkit.js.org: `combineSlices`, `withLazyLoadedSlices`, `inject`, serializability middleware), React Redux 9.3 (`useDispatch.withTypes`, `useSelector.withTypes`), TanStack Query 5.107 (tanstack.com/query: query keys, `queryOptions`, query cancellation, `useMutation`, `invalidateQueries`, optimistic updates, retry and `retryDelay`; default retry delay checked in `@tanstack/query-core` source), `@tanstack/eslint-plugin-query` 5.107, ESLint `no-restricted-imports`. Validated in the React SPA reference build (2026-11-20). Skill: `tanstack-query-best-practices` (DeckardGer/tanstack-agent-skills, MIT).
+*Agent checklist in [checklists/react.md](../../checklists/react.md) and sources in [sources.md](../../sources.md), section "React: State Management with Redux Toolkit and TanStack Query".*

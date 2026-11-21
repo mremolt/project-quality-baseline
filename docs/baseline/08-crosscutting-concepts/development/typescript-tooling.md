@@ -179,17 +179,4 @@ Two details keep the template valid under TS-TOOL-05, and under TS-TOOL-01 when 
 - **TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it** (`check:unused`, `knip.json` in the component, entry points listed, generated code ignored). A dependency whose code is not written yet is not installed; one that is no longer used is removed. A finding is fixed or the entry is added to `knip.json` with the reason, never silenced by deleting the check (SEC-REV-02).
   *Why:* an installed but never wired `@nestjs/schedule` and an unused cluster-lock helper looked like a working scheduled purge; each unused dependency also widens the supply chain (TS-TOOL-13). The `knip.json` templates are not yet run against a real product ([chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)).
 
-## Agent checklist
-
-- [ ] No `any`, no unexplained `as`, no new `eslint-disable` without a reason?
-- [ ] `npm run verify` green before finishing? (E2E for changed screens runs separately.)
-- [ ] No script that relies on a `pre*`/`post*` hook (TS-TOOL-10)?
-- [ ] No unused dependency, export or file (`npm run check:unused`, TS-TOOL-17)?
-- [ ] npm 11.10 or newer, `engines` and `engine-strict` in place (TS-TOOL-14)?
-- [ ] No compiler check or lint rule loosened?
-
-## Sources
-
-typescript-eslint shared configs (typescript-eslint.io/users/configs), eslint-plugin-sonarjs (github.com/SonarSource/SonarJS), eslint-plugin-import-x (github.com/un-ts/eslint-plugin-import-x), eslint-plugin-simple-import-sort (github.com/lydell/eslint-plugin-simple-import-sort), `@eslint-community/eslint-plugin-eslint-comments` (eslint-community.github.io/eslint-plugin-eslint-comments), eslint-config-prettier, Prettier options (prettier.io/docs/options), npm config `min-release-age`, `allow-git`, `engine-strict`, `ignore-scripts` (docs.npmjs.com/cli/v11/using-npm/config), npm CLI changelog (11.9.0: `allow-git`, 11.10.0: `min-release-age`), `npm sbom` (docs.npmjs.com/cli/v11/commands/npm-sbom), Baseline (web-platform-dx.github.io/web-features), Angular browser support (angular.dev/reference/versions) for the current date.
-
-Per stack: Angular ([stacks/angular.md](../../stacks/angular.md)), React ([stacks/react.md](../../stacks/react.md)), Next.js ([stacks/nextjs.md](../../stacks/nextjs.md)).
+*Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript Tooling".*

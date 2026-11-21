@@ -177,15 +177,4 @@ const OrderSummaryPage = pageOf(OrderSummary).meta({ id: 'OrderSummaryPageV1' })
 
 - **NEST-REST-21: Controller tests run the controller in Nest with the Fastify adapter and a mocked use case** (TEST-ARCH-03, NEST-TEST rules in [testing/nestjs.md](../testing/nestjs.md)): `Test.createTestingModule({ controllers: [PlaceOrderController], providers: [{ provide: PLACE_ORDER_USE_CASE, useValue: mock<PlaceOrderUseCase>() }] })`, `createNestApplication(new FastifyAdapter())`, the production pipe and filter (`app.useGlobalPipes(requestValidationPipe)`, `app.useGlobalFilters(new ProblemDetailsFilter())`), then `app.inject(...)`. They assert status, headers (`Location`, `content-type`) and the JSON body, including the problem shape of each documented error. Mapper edge cases (decimals, dates, absent fields) are unit tests of the mapping functions.
 
-## Agent checklist
-
-- [ ] Controller per use case in `adapter/in/rest/vN/`, handler named after the use case, schemas with unique `…VN` ids (NEST-REST-01..04)?
-- [ ] Every body, query and path parameter has a schema; request objects not strict; no `@Res()` without passthrough (NEST-REST-05..08)?
-- [ ] Decimals as `ApiDecimal`, instants as `z.iso.datetime()`, enums as `z.enum`, no `null` for absent fields (NEST-REST-10..13)?
-- [ ] Errors from domain base classes, answered by the global filter as problem+json; no message or stack in the body (NEST-REST-14..16)?
-- [ ] Collection paged or bounded; sort and filters allow-listed; update carries a version or `If-Match`; 201 with `Location` (NEST-REST-17..19)?
-- [ ] Controller test with mocked use case, real pipe and filter, error cases included (NEST-REST-21)?
-
-## Sources
-
-RFC 9457 (Problem Details), RFC 3339 / ISO 8601, NestJS documentation (pipes and Standard Schema validation, exception filters, Fastify adapter; the `StandardSchemaValidationPipe` options and `FastifyAdapter.mapException` in the `@nestjs/common` and `@nestjs/platform-fastify` 12 sources), Fastify reference (content-type parser, error codes, `onProtoPoisoning`), zod 4 documentation (`z.iso.*`, `z.config`, `.meta`).
+*Agent checklist in [checklists/nestjs.md](../../checklists/nestjs.md) and sources in [sources.md](../../sources.md), section "NestJS: REST and JSON Conventions".*

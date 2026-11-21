@@ -72,7 +72,8 @@ To update a project later, pull this repository and run the sync again. Projects
 
 ```
 ARCHITECTURE.md         summary of the baseline for human readers, kept current (DOC-ARC-09); not synced to projects
-docs/baseline/          the baseline as arc42 reference architecture: chapters 01-12, stacks/ index pages
+docs/baseline/          the baseline as arc42 reference architecture: chapters 01-12, stacks/ index pages,
+                          rule-index/ (generated: every rule ID with its headline, what agents read first)
 templates/              project-owned files the sync creates once if missing:
   arc42/                  → docs/architecture/
   adr/, security/         → docs/adr/0000-template.md, docs/security/*.md
@@ -96,6 +97,9 @@ skills-lock.json        pinned third-party skills
 | Reinstall exactly what the lock file records | `npm run skills:restore` |
 | Install our own skills after editing `skills/` (**always re-run**) | `npm run skills:link-own` |
 | Show upstream changes for skills we adapted | `npm run skills:upstream-diff` |
+| Regenerate the rule index after changing a rule doc or stack page (**always re-run**; `docs:rule-index:check` verifies) | `npm run docs:rule-index` |
+| Check the docs against the token-budget rules (TOOL-SKL-10..13) | `npm run docs:lint` |
+| Keep the docs compact: lint, fix and review the docs changed since the last run (periodically) | ask the agent here to run the `baseline-doc-compactor` agent (`.claude/agents/`, never synced) |
 | Review an existing codebase, improve the baseline from the gaps and sync it into that codebase with a refactoring report | ask the agent here to run the `baseline-codebase-review` skill on the codebase's path (never synced to projects) |
 
 Rules for adding, reviewing and updating skills: [08-crosscutting-concepts/development/agent-skills.md](docs/baseline/08-crosscutting-concepts/development/agent-skills.md).

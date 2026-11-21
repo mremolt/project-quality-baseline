@@ -92,19 +92,4 @@ Placement follows the hexagon: timeouts, retries, circuit breakers, concurrency 
 - A cache in front of a query that returns "orders of the current user", keyed by order status only.
 - A nightly job that runs once per instance and sends every e-mail three times.
 
-## Agent checklist
-
-- [ ] New outbound call: connect and read timeout set explicitly; timeout test (RES-TMO-01/03)?
-- [ ] Timeouts fit the ladder: gateway > request budget > transaction > statement; attempts × read + backoff within the budget; ladder recorded in chapter 7 (RES-TMO-04)?
-- [ ] No remote call inside the use case's transaction (RES-TX-01)?
-- [ ] Retries only for idempotent operations and transient errors, with backoff, jitter and a budget, in one layer (RES-RTY)?
-- [ ] Concurrency to the dependency bounded; pool size and wait time set deliberately, pool sum recorded in chapter 7 (RES-CAP-01/02)?
-- [ ] New state-changing entry point: idempotency stated; `Idempotency-Key` for retryable `POST`s, stored in the same transaction with a conflict-free insert; remote writes through the outbox or with a derived key (RES-IDM)?
-- [ ] Bulk input with a remote call per item: items stored in the transaction, calls made by a job, a rerun repairs the unfinished (RES-JOB-04)?
-- [ ] New scheduled job: calls an incoming port; cluster lock or concurrency-safe (RES-JOB-02)? Lock time above batch × worst-case per-item time, items claimed in the database (RES-JOB-03)?
-- [ ] New cache: in the adapter, bounded, TTL, invalidation stated, caller in the key where needed (RES-CCH)?
-- [ ] Security-relevant (new outbound call)? Then the threat model note (SEC-TM-02).
-
-## Sources
-
-Michael T. Nygard, *Release It!*, 2nd ed. (timeouts, circuit breaker, bulkhead, steady state). AWS Builders' Library: *Timeouts, retries, and backoff with jitter*; *Making retries safe with idempotent APIs*. IETF draft *The Idempotency-Key HTTP Header Field* (draft-ietf-httpapi-idempotency-key-header). Google SRE Book, ch. 22 (*Addressing Cascading Failures*). HikariCP wiki, *About Pool Sizing*.
+*Agent checklist in [checklists/shared.md](../../checklists/shared.md) and sources in [sources.md](../../sources.md), section "Resilience and Idempotency".*

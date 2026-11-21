@@ -138,16 +138,4 @@ create index outbox_unsent on outbox_messages (position) where sent_at is null;
 
 Items of this file that are written from reference docs and not yet exercised in a service are listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use).
 
-## Agent checklist
-
-- [ ] Listener in `adapter.in.kafka`, dispatches on `type` and skips unknown types, maps and calls one port; no catch-log, no manual ack (SPRING-MSG-01/02/09)?
-- [ ] Producer settings `acks=all`, idempotence, `linger.ms`, `request.timeout.ms` and `delivery.timeout.ms` together; consumer `read-committed`, no auto-commit (SPRING-MSG-03)?
-- [ ] Jackson 3 via Boot's `JsonMapper`; type from the envelope; no deprecated `JsonSerializer`/`JsonDeserializer`; no type headers (SPRING-MSG-04)?
-- [ ] Error handler: bounded exponential backoff with jitter, validation and JSON exceptions not retryable, consumer-owned DLT name, dead-letter counter (SPRING-MSG-05/06)?
-- [ ] Event tied to a DB change goes through the outbox; relay parks non-retryable rows, exposes age and count, restores the trace context; consumer deduplicates through the inbox or is naturally idempotent (SPRING-MSG-07/08)?
-- [ ] AsyncAPI regenerated and committed; examples updated (SPRING-MSG-11, MSG-CON)?
-- [ ] `*IT` with Kafka container covering success, unknown type, validation → DLT, transient retry; relay parking and trace id (SPRING-MSG-12)?
-
-## Sources
-
-Spring for Apache Kafka reference, *Handling Exceptions* and *Serialization* (docs.spring.io/spring-kafka/reference), Spring Kafka 4.2 API (`DefaultErrorHandler`, `DeadLetterPublishingRecoverer`, `ExponentialBackOffWithMaxRetries`, deprecations of the Jackson 2 classes), Spring Framework 7 `ExponentialBackOff` (jitter), Spring Kafka change history (`-dlt` suffix since 3.3), CVE-2026-59317 advisory (spring.io/security). Spring Boot application properties (`spring.kafka.*`). Apache Kafka producer and consumer configuration (kafka.apache.org/documentation) and the producer's configuration checks in `KafkaProducer` and `ProducerConfig` (delivery timeout, idempotence). Springwolf documentation (springwolf.dev). All checked on 2026-11-20.
+*Agent checklist in [checklists/spring.md](../../checklists/spring.md) and sources in [sources.md](../../sources.md), section "Spring Boot: Messaging with Kafka".*

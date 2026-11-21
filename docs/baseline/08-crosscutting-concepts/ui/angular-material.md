@@ -10,7 +10,7 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 
 - **NG-UI-01: Use an Angular Material component when one exists for the job.** Don't build a custom button, select, dialog, menu, table or date picker.
   *Why:* Material components come with keyboard support, ARIA and test harnesses; custom widgets have to earn all of that (A11Y-08).
-- **NG-UI-02: For Material Design patterns that Angular Material doesn't ship** (navigation rail, bottom navigation bar, search bar, carousel, split button, FAB menu), build a shared component in `src/shared/ui/` from CDK or Angular Aria primitives, styled only with system tokens, following the matching WAI-ARIA pattern, with a keyboard journey test (A11Y layer L5).
+- **NG-UI-02: Material Design patterns that Angular Material doesn't ship are built as a shared component in `src/shared/ui/`** (navigation rail, bottom navigation bar, search bar, carousel, split button, FAB menu): from CDK or Angular Aria primitives, styled only with system tokens, following the matching WAI-ARIA pattern, with a keyboard journey test (A11Y layer L5).
 - **NG-UI-03: Never style Angular Material internals** (`.mdc-*`, `.mat-mdc-*` selectors, `::ng-deep`). Customize through the theme and the per-component override mixins (`mat.<component>-overrides(...)`).
   *Why:* internal class names change between versions; override APIs are supported.
 
@@ -26,7 +26,7 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 ### Layout and navigation
 
 - **NG-UI-09 (implements UI-01): Size classes in Angular** come from CSS grid/flex, CSS container queries or the CDK `BreakpointObserver` with **custom queries** for the UI-01 breakpoints. The CDK `Breakpoints` presets (600/960/1280/1920) don't match the Material Design 3 classes and are not used. No Tailwind, no layout libraries.
-- **NG-UI-10 (implements UI-02): Navigation by window size** uses the navigation bar or a modal `mat-sidenav` on compact, the navigation rail gap component (NG-UI-02) on medium, and the rail or a standard `mat-sidenav` on expanded and larger.
+- **NG-UI-10 (implements UI-02): Navigation changes with the window size:** the navigation bar or a modal `mat-sidenav` on compact, the navigation rail gap component (NG-UI-02) on medium, and the rail or a standard `mat-sidenav` on expanded and larger.
 - **NG-UI-11 (implements UI-03): Spacing custom properties** (`--app-space-*`) are defined once in `src/styles/theme.scss`, next to the theme (NG-UI-05).
 
 ### Content and interaction
@@ -47,7 +47,7 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
 
 The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); these add the Angular mechanism.
 
-- **NG-UI-19 (implements UI-04): `WindowSize` is an abstract class in `src/shared/ui/layout` used as the DI token**, with the implementation that derives the size class from custom `BreakpointObserver` queries behind it, so component tests can stub it (NG-TEST-09). It is never injected into use cases or stores.
+- **NG-UI-19 (implements UI-04): `WindowSize` is an abstract class in `src/shared/ui/layout` used as the DI token.** The implementation behind it derives the size class from custom `BreakpointObserver` queries, so component tests can stub it (NG-TEST-09). It is never injected into use cases or stores.
 - **NG-UI-20 (implements UI-05): Every size class calls the same use cases** through the same store or `resource()`; no `resource()` or store method depends on `WindowSize` (NG-ARCH-15).
 - **NG-UI-21 (implements UI-06): `WindowSize` is for structure only** (rail vs drawer, one vs two panes, `MatDialog` vs `MatBottomSheet`); columns, gaps and pane widths are CSS in the component's styles.
 - **NG-UI-22 (implements UI-07): Reusable `shared/ui` components set `container-type: inline-size`** on their host (`:host`) and use `@container` queries.
@@ -84,18 +84,4 @@ The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); t
 | Angular Material docs | "Prefer a native `<select>` over `MatSelect`" for accessibility | Material first (NG-UI-01); `MatSelect` follows the ARIA combobox pattern |
 | `material-3` (original, not installed) | `@material/web` elements and `--md-sys-*` tokens; Compose and Flutter code | Angular Material components and `--mat-sys-*` tokens; replaced by our `angular-material-design` skill |
 
-## Agent checklist
-
-- [ ] Material component used where one exists; gap components built from CDK/Aria with a keyboard test?
-- [ ] Only `--mat-sys-*` tokens in styles; no `.mat-mdc-*` or `::ng-deep`?
-- [ ] Works in light, dark and high contrast; density doesn't shrink targets below 24 px?
-- [ ] Labels, errors, icon-button names, dialog focus handled?
-- [ ] Status via visible region or `Announcer`; route `title`; `RouteFocus` only on path changes; snackbar, spinner and table labelled; dialog focus restored when the trigger can vanish?
-- [ ] Loading, empty and error states from the shared components (NG-UI-35)?
-- [ ] Harnesses for Material widgets in tests; theme projects cover the screen (TS-TEST-28)?
-- [ ] Framework-neutral UI rules met ([ui-patterns.md](ui-patterns.md) checklist): layout per size class, `WindowSize` only for structure, logical properties, `dvh`, no hover-only function, zoom not blocked?
-- [ ] Fonts and icons self-hosted, no Google Fonts link (NG-UI-34)?
-
-## Sources
-
-Angular Material documentation and theming guide (material.angular.dev/guide/theming), Material Design 3 (m3.material.io). Design concepts adapted from the `material-3` skill by CWTI Ltd (github.com/hamen/material-3-skill, MIT).
+*Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Angular UI: Angular Material and Material Design 3".*
