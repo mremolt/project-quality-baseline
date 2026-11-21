@@ -34,7 +34,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-ARCH-08: Commands are records in `ports.in` (mechanism for ARCH-UC-05/06: JAVA-ARCH-03/04).
 - SPRING-ARCH-09: JPA entities and Spring Data repositories are package-private inside `adapter.out.jpa` and never appear in a port signature.
 - SPRING-ARCH-10: The JPA entity is never the domain model; persistence always uses two-way mapping (tightens D3 and ARCH-MAP-02/03 of 08-crosscutting-concepts/mapping/mapping-between-boundaries.md).
-- SPRING-ARCH-11: Keep JPA simple.
+- SPRING-ARCH-11: Keep JPA simple: no bidirectional associations or cascades the domain doesn't need, one persistence adapter per aggregate.
 - SPRING-ARCH-12: Kafka listeners are incoming adapters and producers are outgoing adapters.
 - SPRING-ARCH-13: If an event must be consistent with a database write, don't publish it to Kafka directly inside the use case.
 - SPRING-ARCH-14: Third-party SDK types (AWS S3, HTTP clients) never leave their adapter package.

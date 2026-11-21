@@ -26,7 +26,7 @@ I'm away most of the time, and one goal of this project is to test whether the b
 
 ## Rules
 
-1. Before any work: read AGENTS.md and follow its "How to read" steps (rule indexes first, full docs only for the topics a task touches; TOOL-SKL-10). Load the entry skills from AGENTS.md "Read by stack" before writing code for that stack, and the task skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, …) whenever a task touches their area.
+1. Before any work: read AGENTS.md and follow its "How to read" steps (rule indexes first, full docs only for the topics a task touches, a single rule by its ID, the agent checklist sections of the docs you used before finishing; TOOL-SKL-10). Load the entry skills from AGENTS.md "Read by stack" before writing code for that stack, and the task skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, …) whenever a task touches their area.
 2. Don't write a separate technical specification. Document only what is specific to this product, as the baseline requires:
    - docs/architecture/ (arc42): this product's context, building blocks, domain model and its product-specific technical concepts (whatever the planning docs flag as hard or special), linking to docs/baseline/ instead of repeating it,
    - an ADR in docs/adr/ for every choice the baseline leaves open, and for any deviation from it,
