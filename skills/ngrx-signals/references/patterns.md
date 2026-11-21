@@ -288,7 +288,7 @@ Allowed alternatives:
 
 Pair every async method with the shared request status and map errors to translation keys in one place per feature (NG-STATE-09). The store holds the key; the component translates it (NG-I18N-04).
 
-The feature error mapper (`adapter/in/ui/orders-error-keys.ts`): business errors from `domain` become translation keys; the platform's `TechnicalError` becomes the generic key (the HTTP interceptor already reported it, NG-OBS-04); anything else is a bug, becomes the generic key and is reported through the platform's `ReportErrorUseCase`.
+The feature error mapper (`adapter/in/ui/orders-error-keys.ts`): business errors from `domain` become translation keys; the platform's `TechnicalError` becomes the generic key (it was reported once where it was created: by the HTTP interceptor or the feature's HTTP adapter, NG-OBS-04); anything else is a bug, becomes the generic key and is reported through the platform's `ReportErrorUseCase`.
 
 ```typescript
 import { inject, Injectable } from '@angular/core';

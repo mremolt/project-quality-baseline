@@ -13,7 +13,7 @@ Test type, style and doubles: [element table](testing-by-architecture-element.md
 | Page / container component with its store | Real store + real child components, **use-case tokens mocked** |
 | Signal Store with real logic | `TestBed` + mocked use-case tokens ([angular-state-management.md](../ui/angular-state-management.md)) |
 | Routes, guards, resolvers | `RouterTestingHarness`, mocked use cases |
-| `adapter/out/http` | `TestBed` with `provideHttpClient()` + MSW (Orval handlers) |
+| `adapter/out/http` | `TestBed` with `provideHttpClient()` + MSW (Orval handlers), `REPORT_ERROR` as `mock<ReportErrorUseCase>()`: one report for a malformed body and for an unknown problem `code`, none for an error the adapter passes on (NG-OBS-04) |
 | Main user paths | Frontend system test (TS-TEST-10 stubbed tier); critical paths as full-stack smoke |
 
 ## Rules
@@ -109,6 +109,7 @@ describe('OrderHistoryPage', () => {
 - [ ] Right test type for the element ([element table](testing-by-architecture-element.md#test-type-style-and-doubles-per-element)) and the setup above?
 - [ ] Zoneless pattern, no `detectChanges`/`fakeAsync` in new tests?
 - [ ] Use cases mocked at the token, not the store?
+- [ ] HTTP adapter test: exactly one report for a malformed body and for an unknown problem `code`, none for a passed-on error (NG-OBS-04, TS-ARCH-18)?
 - [ ] Material widgets via harnesses, everything else by role?
 - [ ] axe on main states including overlays?
 - [ ] Announcements verified on a mocked `Announcer`; route titles in router tests, `RouteFocus` with two navigations; Material errors via accessible description?

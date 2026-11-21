@@ -10,8 +10,10 @@ import { createAuthRouteHandlers } from './adapter/in/next/auth-route-handlers';
 import { createClientErrorRouteHandler } from './adapter/in/next/client-error-route-handler';
 import { SESSION_COOKIE } from './adapter/in/next/cookies';
 import { createReadinessHandler, livenessHandler } from './adapter/in/next/health-route-handlers';
+import { createRequestErrorLog } from './adapter/in/next/request-error-log';
 import { FetchBackendRelay } from './adapter/out/http/fetch-backend-relay';
 import { configureServerFetch } from './adapter/out/http/server-fetch';
+import { LogReportError } from './adapter/out/logging/log-report-error';
 import { logger } from './adapter/out/logging/logger';
 import { PinoClientErrorLog } from './adapter/out/logging/pino-client-error-log';
 import { OpenIdClientIdentityProvider } from './adapter/out/oidc/openid-client-identity-provider';
@@ -23,6 +25,7 @@ import type { PublicConfig } from './config/public-config';
 import type { ServerConfig } from './config/server-config';
 import { publicConfig, serverConfig } from './config/server-config';
 import type { Caller } from './domain';
+import type { ReportErrorUseCase } from './ports/in/report-error.use-case';
 import type { SessionUseCase } from './ports/in/session.use-case';
 
 const now = (): number => Date.now();
@@ -117,6 +120,12 @@ function platform(): ReturnType<typeof createPlatform> {
   return instance;
 }
 
+/** The server's reporter: the creator of a technical error logs it once and marks it (TS-ARCH-18, NEXT-OBS-09). */
+export const serverReportError: ReportErrorUseCase = new LogReportError(logger);
+
+/** The body of `onRequestError` in `instrumentation.ts`: skips what `serverReportError` logged (NEXT-OBS-09). */
+export const logRequestError = createRequestErrorLog(logger);
+
 async function currentSessionId(): Promise<string | undefined> {
   return (await cookies()).get(SESSION_COOKIE)?.value;
 }
@@ -125,6 +134,7 @@ configureServerFetch(() => ({
   apiBaseUrl: platform().config.API_BASE_URL,
   timeoutMs: platform().config.API_TIMEOUT_MS,
   accessToken: async (deadline) => platform().sessions.accessToken(await currentSessionId(), deadline),
+  reportError: serverReportError,
 }));
 
 export const authRouteHandlers: AuthRouteHandlers = {

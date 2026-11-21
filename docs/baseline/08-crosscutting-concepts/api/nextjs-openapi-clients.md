@@ -59,7 +59,7 @@ export function createServerHttpOrders(): HttpOrders {
 
 ### The server mutator
 
-- **NEXT-API-03: The server mutator `server-fetch.ts` is `server-only`, relays the session's access token and sets its own timeout.** It is the only place that turns a server-side backend exchange into a result or an error:
+- **NEXT-API-03: The server mutator `server-fetch.ts` is `server-only`, relays the session's access token, sets its own timeout and reports the technical failures it creates.** It is the only place that turns a server-side backend exchange into a result or an error:
 
   | Situation | Behaviour |
   |---|---|
@@ -68,8 +68,8 @@ export function createServerHttpOrders(): HttpOrders {
   | Timeout | one `AbortSignal.timeout(API_TIMEOUT_MS)` per call, started **before** the session lookup: `accessToken(deadline)` resolves the session and any token refresh within it, and `sendRequest()` combines the same deadline with the caller's signal by `AbortSignal.any` (available in Node.js 26; the browser restriction of REACT-API-05 does not apply on the server). It is the total deadline of the call and also bounds the connect phase (RES-TMO-01); `API_TIMEOUT_MS` is below the ingress rung (RES-TMO-02, RES-TMO-04, NEXT-RES-03). A deadline that passes during the session lookup is a timeout `TechnicalError` |
   | 2xx | body as `unknown` for the adapter's zod parsing; an empty body returns `undefined` |
   | 401 | `UnauthenticatedError` (the token was rejected; the session layer refreshes before expiry, NODE-BFF-07) |
-  | Other non-2xx | `HttpProblem` with status and the parsed convention fields of the problem body (REACT-API-08) for the feature's mapper |
-  | Network failure, time-out | `TechnicalError` whose message has the path without the query string; it reaches the logs through the caller or `onRequestError`, never with the token |
+  | Other non-2xx | `HttpProblem` with status and the parsed convention fields of the problem body (REACT-API-08) for the feature's mapper; a 5xx is first reported with status and the backend's `traceId` and passed on marked as reported, so the mapper's `server` error that wraps it is not logged again (TS-ARCH-18) |
+  | Network failure, time-out, refused path | `TechnicalError` whose message has the path without the query string, reported once through the platform's server reporter (`serverReportError`, NEXT-OBS-09), never with the token |
   | Caller aborted | the abort error is rethrown unchanged |
 
   It never retries (RES-RTY-04): server actions are commands (RES-RTY-01), and a server component that fails renders the route's error UI. It never logs the token or the request body.
@@ -139,7 +139,7 @@ export async function customFetch<T>(url: string, init: RequestInit): Promise<T>
 
 ### Tests
 
-- **NEXT-API-08: Both mutators, the proxy and the shared adapter have their own tests** (TS-TEST-04, REACT-API-12). The server mutator and the proxy run in the Vitest `node` project with MSW `setupServer` (`onUnhandledFrame: 'error'`); `server-only` is aliased to its empty module in `vitest.config.ts`. `backend-url.spec.ts` covers the path-steering cases (dot segments, encoded and mixed forms, encoded separators, other origins, paths outside `/api/`). The server mutator covers: the `Authorization` header from the resolver, no token → `UnauthenticatedError` without a request, 401, a problem body → `HttpProblem`, time-out (`delay('infinite')`, RES-TMO-03), a redirect not followed, caller abort. The proxy covers: allow-listed headers only, `400` for a path that leaves `/api/`, 401 without session or token, 403 without the XSRF header on a mutating call, body forwarded, 504 on time-out, 502 on a redirect. The adapter's tests (REACT-API-12) run once, against the browser factory.
+- **NEXT-API-08: Both mutators, the proxy and the shared adapter have their own tests** (TS-TEST-04, REACT-API-12). The server mutator and the proxy run in the Vitest `node` project with MSW `setupServer` (`onUnhandledFrame: 'error'`); `server-only` is aliased to its empty module in `vitest.config.ts`. `backend-url.spec.ts` covers the path-steering cases (dot segments, encoded and mixed forms, encoded separators, other origins, paths outside `/api/`). The server mutator covers: the `Authorization` header from the resolver, no token → `UnauthenticatedError` without a request, 401, a problem body → `HttpProblem`, time-out (`delay('infinite')`, RES-TMO-03), a redirect not followed, caller abort; with a `mock<ReportErrorUseCase>()` in its settings: exactly one report for a time-out, a network failure, a refused path and a 5xx (with status and `traceId`, the thrown `HttpProblem` marked), none for a 4xx, a 401 or a cancelled call. The proxy covers: allow-listed headers only, `400` for a path that leaves `/api/`, 401 without session or token, 403 without the XSRF header on a mutating call, body forwarded, 504 on time-out, 502 on a redirect. The adapter's tests (REACT-API-12) run once, against the browser factory; a server-path spec with a fake `OrdersApi` asserts that a marked 5xx and a reported time-out pass on unreported and that the adapter reports its own two `TechnicalError`s once.
 
 ## Skill overrides
 

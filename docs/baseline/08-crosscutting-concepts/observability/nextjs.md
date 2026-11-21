@@ -2,7 +2,7 @@
 
 How a Next.js app implements [observability.md](observability.md) (`OBS-*`) on its server side, and what it changes on the client side of [react.md](react.md) (`REACT-OBS-*`). The Next.js server is the first server hop and the BFF of its browser users (NEXT-D2, [security/node-bff.md](../security/node-bff.md)), so it carries what a backend carries: telemetry, structured logs, probes and a graceful shutdown. Libraries: `@opentelemetry/sdk-node` 0.301, `@opentelemetry/instrumentation-http` 0.301, `@opentelemetry/instrumentation-undici` 0.35, `@opentelemetry/exporter-trace-otlp-http` 0.301, `@opentelemetry/api` 1.10, `pino` 10.4. Configuration of the keys named here: [configuration/nextjs.md](../configuration/nextjs.md). Image and runtime: [07-deployment-view/nextjs-delivery.md](../../07-deployment-view/nextjs-delivery.md).
 
-For Next.js this file replaces three React SPA parts of [react.md](react.md): the router `errorComponent` row of REACT-OBS-01 (NEXT-OBS-14), the router-based route template of REACT-OBS-05 (NEXT-OBS-16) and the Vite source maps of REACT-OBS-06 (NEXT-OBS-17). REACT-OBS-02, 04 and the rest of REACT-OBS-01 and 05 apply unchanged; REACT-OBS-03 applies with the fixed BFF route of NEXT-OBS-18 as its same-origin path.
+For Next.js this file replaces three React SPA parts of [react.md](react.md): the router `errorComponent` row of REACT-OBS-01 (NEXT-OBS-14), the router-based route template of REACT-OBS-05 (NEXT-OBS-16) and the Vite source maps of REACT-OBS-06 (NEXT-OBS-17). REACT-OBS-02, 04 and the rest of REACT-OBS-01 and 05 apply unchanged in the browser, and REACT-OBS-04 carries over to the server with the platform logger as reporter (NEXT-OBS-09); REACT-OBS-03 applies with the fixed BFF route of NEXT-OBS-18 as its same-origin path.
 
 What the Next.js reference build verified (Next 16.4, standalone server, 2026-11-20): telemetry in `instrumentation.ts` with spans in a local OTLP sink, `onRequestError` writing a pino JSON line with the error `digest`, `/livez` and `/readyz`, the SIGTERM behaviour, `instrumentation-client.ts` running before app code, no browser source maps in the build. Everything marked "to verify before first use" was not built and is listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use).
 
@@ -87,27 +87,28 @@ export const logger = pino({
 
   Next.js writes its own lines in plain text: the start-up banner (`▲ Next.js 16.4.6`, `✓ Ready`) and, for every error it catches, a `⨯ Error: …` block with the `digest` on stderr, next to the JSON line of NEXT-OBS-09. The reference build found no option to turn them off; the log platform must accept non-JSON lines from this component.
 - **NEXT-OBS-08: Every line written inside a request carries `traceId` and `spanId`** through a pino `mixin` that reads the active span (`trace.getActiveSpan()?.spanContext()`, only when `isSpanContextValid`). This makes the trace id the correlation id of logs and error responses (OBS-11). To verify before first use: the mixin was not in the reference build; check that route handlers, server components and server actions see the active span.
-- **NEXT-OBS-09: Unexpected server errors are logged once, by `onRequestError`.** `src/instrumentation.ts` exports `onRequestError: Instrumentation.onRequestError` (type from `next`). Next.js calls it for every error it catches while rendering a server component, running a route handler or a server action, or running `proxy.ts`. It logs one `error` line with the error object as `err` (pino serializes type, message, stack and Next's `digest`), the method, the path **without** the query string, `routePath` (the route template, for example `/orders`) and `routeType` (`render`, `route`, `action`, `proxy`). No other code logs an error and rethrows it. The `digest` is the same value the browser receives in `error.tsx` (NEXT-OBS-14), so a client report and the server log line can be matched.
+- **NEXT-OBS-09: Every server error is logged once: a technical error by the code that creates it, every other unexpected error by `onRequestError`.**
+  - *Technical errors* follow TS-ARCH-18 on the server. The code that creates a `TechnicalError` reports it through the platform's server reporter `serverReportError` (`LogReportError` in `platform/adapter/out/logging`, exported by `index.server.ts`): the server mutator for a network failure, a time-out, a refused path and a 5xx (NEXT-API-03), the feature's server HTTP adapter for a body that fails the schema and a problem it cannot map. The reporter writes one `error` line `technical error` with the error as `err`, plus `status` and the backend's `traceId` where known, and marks the error as reported: `markReported()` and `wasReported()` in `platform/domain` set and read a non-enumerable `Symbol.for` property, never a module-level `WeakSet`, because Next.js bundles `instrumentation.ts` apart from the app's server code. An error whose `cause` chain holds a marked error counts as reported, so the mapper's `server` error wrapping a reported 5xx is not logged again. A server action maps such an error to `TECHNICAL` without a line (NEXT-ARCH-04).
+  - *Everything else* reaches `onRequestError`. `src/instrumentation.ts` exports `onRequestError: Instrumentation.onRequestError` (type from `next`). Next.js calls it for every error it catches while rendering a server component, running a route handler or a server action, or running `proxy.ts`. Its body is the platform's `logRequestError` (`platform/adapter/in/next/request-error-log.ts`): it returns without a line for an error that `wasReported()`, and otherwise logs one `error` line `request failed` with the error object as `err` (pino serializes type, message, stack and Next's `digest`), the method, the path **without** the query string, `routePath` (the route template, for example `/orders`) and `routeType` (`render`, `route`, `action`, `proxy`).
+  - Apart from the server reporter, no code logs an error and rethrows it. The `digest` is the same value the browser receives in `error.tsx` (NEXT-OBS-14), so a client report and the `request failed` line can be matched. A server-rendered technical failure has its one line from the reporter, written before Next.js assigns the `digest`; it is matched to the browser's report by route template and trace id or time, not by `digest`.
 
 ```ts
 // src/instrumentation.ts (excerpt, validated)
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {
   if (process.env['NEXT_RUNTIME'] !== 'nodejs') return;
-  const { logger } = await import('@/platform/index.server');
-  logger.error(
-    { err: error, method: request.method, path: request.path.split('?')[0], routePath: context.routePath, routeType: context.routeType },
-    'request failed',
-  );
+  const { logRequestError } = await import('@/platform/index.server');
+  logRequestError(error, request, context); // skips wasReported(error), else one 'request failed' line
 };
 ```
 
-  Verified line: `{"level":50,…,"err":{"type":"Error","message":"Invalid Server Actions request.",…,"digest":"3115798418"},"method":"POST","path":"/orders","routePath":"/orders","routeType":"action","msg":"request failed"}`.
+  Verified line: `{"level":50,…,"err":{"type":"Error","message":"Invalid Server Actions request.",…,"digest":"3115798418"},"method":"POST","path":"/orders","routePath":"/orders","routeType":"action","msg":"request failed"}`. Verified on 2026-11-21 against the standalone build with the list stub answering a malformed body, a 503 problem with `traceId` and a non-JSON 2xx: each server render of `/orders` wrote exactly one `technical error` line (the 503 with `status` and `traceId`) and no `request failed` line; with the skip disabled, the same render wrote both, so Next.js hands `onRequestError` the thrown error object itself.
 - **NEXT-OBS-10: What is logged where, and what never:**
 
 | Where | Logs | Level |
 |---|---|---|
-| `onRequestError` (NEXT-OBS-09) | Errors Next.js caught: unexpected exceptions in pages, route handlers, server actions, `proxy.ts` | `error` |
-| Outgoing adapters (session store, IdP, backend relay, generated clients' mutator) | Technical events: time-outs, failed calls, retries, a session store that is unreachable, a failed token refresh | `warn`; `error` only when the request fails because of it and the error is not rethrown |
+| Server reporter `serverReportError` (NEXT-OBS-09) | Technical errors where they are created: the server mutator (network failure, time-out, refused path, 5xx with `status` and `traceId`), a feature's server HTTP adapter (malformed body, a problem it cannot map) | `error` |
+| `onRequestError` (NEXT-OBS-09) | Errors Next.js caught: unexpected exceptions in pages, route handlers, server actions, `proxy.ts`; not those the server reporter logged | `error` |
+| Outgoing adapters (session store, IdP, backend relay) | Technical events: time-outs, failed calls, retries, a session store that is unreachable, a failed token refresh; the server mutator's failures go through the server reporter (row above) | `warn`; `error` only when the request fails because of it and the error is not rethrown |
 | BFF route handlers and `proxy.ts` | Rejected requests: missing or wrong XSRF header, a page write from a foreign origin (NEXT-SEC-05), unknown session (as a count-worthy event, without the id) | `info` or `warn` |
 | Client error intake (NEXT-OBS-18) | One scrubbed browser report per accepted request, through the `ClientErrorLogPort` | `warn` |
 | Security events (login, failed login, logout, session ended by refresh failure) | Through the audit mechanism of SEC-AUD-01, not as plain log lines; not built in the reference build ([security/nextjs.md](../security/nextjs.md)): to verify before first use | n/a |
@@ -166,7 +167,8 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
 |---|---|
 | Probes (OBS-05, OBS-19) | Node spec of the handlers: `livenessHandler` 200 `UP`; `createReadinessHandler` with a stub `Readiness`: 200 `UP`, 503 `DOWN` when not ready, 503 when the check throws; `no-store` on both. The E2E server waits for `/readyz` (`webServer.url`, [testing/nextjs.md](../testing/nextjs.md)) |
 | Shutdown (NEXT-OBS-12) | A script against the built standalone server: in-flight request still answered after `SIGTERM`, new connections refused, exit within the budget (the reference build's measurement); rerun after each Next.js major |
-| `onRequestError` (NEXT-OBS-09) | Covered by the server-action check that a foreign `Origin` produces one JSON line with `routeType` `action` and the `digest`; a unit test would need Next's request context |
+| `onRequestError` (NEXT-OBS-09) | Node spec of `createRequestErrorLog` with a mocked logger: one line with path without query, route template and route type; nothing for a marked error or one with a marked `cause`. The server-action check that a foreign `Origin` produces one JSON line with `routeType` `action` and the `digest` covers the wiring |
+| Server reporter and marks (NEXT-OBS-09) | Node specs: `LogReportError` logs once with `status` and `traceId` and marks, logs nothing for an error with a reported cause; `wasReported` follows the `cause` chain, the mark is not enumerable; the server mutator and the feature adapters report what they create once (NEXT-API-08) |
 | Redaction (NEXT-OBS-10) | Logger spec with an in-memory destination |
 | Trace id in problems, incoming `traceparent` (NEXT-OBS-05/06) | Route handler spec with a span started on a test tracer provider; integration check with a sent `traceparent` |
 | Client error intake (NEXT-OBS-18) | Vitest on the route handler (`403` for a missing, `null` or foreign origin, `413` with and without `Content-Length`, `415`, `400` for unknown keys and bad fields, `429` after the window's limit, `204`) and the intake use case (scrubbed again); E2E request test without a session |
@@ -179,7 +181,7 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
 - [ ] New business metric: outgoing port, `Meter` adapter, closed-set attributes, cardinality test (NEXT-OBS-03)?
 - [ ] Outbound calls through `fetch` so the trace propagates; incoming `traceparent` dropped at the ingress or by the propagator (NEXT-OBS-04/05)?
 - [ ] Logging only through the platform's pino logger, values in the object, constant message, no `console.*` (NEXT-OBS-07, NEXT-OBS-10)?
-- [ ] Unexpected errors left to `onRequestError`, not logged and rethrown (NEXT-OBS-09)?
+- [ ] A `TechnicalError` reported once, by the code that creates it, through `serverReportError`; other unexpected errors left to `onRequestError`, not logged and rethrown (NEXT-OBS-09, TS-ARCH-18)?
 - [ ] No token, session id, cookie, XSRF token, body, query string or personal data in a log line; redaction paths extended for new fields (NEXT-OBS-10)?
 - [ ] `/livez` plain, `/readyz` with shutdown flag and session store only, not routed by the ingress (NEXT-OBS-11)?
 - [ ] Pre-stop delay, request budget and grace period recorded in chapter 7 and adding up (NEXT-OBS-12)?

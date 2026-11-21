@@ -56,7 +56,7 @@ export class HttpOrders implements LoadOrdersPort, CancelOrderPort {
 
   /**
    * Reports an `unexpected` failure the mapper created. A `TechnicalError` passed on unchanged, and a `server` failure
-   * made from a 5xx, were reported (browser) or reach the logs through the caller (server) where they arose.
+   * made from a 5xx, were reported by the browser or server mutator where they arose.
    */
   private reportedIfCreated(mapped: Error, original: unknown): Error {
     if (mapped !== original && mapped instanceof TechnicalError && mapped.failure === 'unexpected') {
