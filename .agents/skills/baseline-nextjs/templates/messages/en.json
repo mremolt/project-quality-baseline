@@ -1,0 +1,39 @@
+{
+  "app": {
+    "title": "Shop",
+    "environment": "Environment: {label}"
+  },
+  "orders": {
+    "title": "Orders",
+    "table": {
+      "caption": "Your orders",
+      "number": "Order",
+      "placedAt": "Placed",
+      "status": "Status",
+      "total": "Total",
+      "actions": "Actions"
+    },
+    "status": {
+      "OPEN": "Open",
+      "SHIPPED": "Shipped",
+      "CANCELLED": "Cancelled"
+    },
+    "count": "{count, plural, =0 {No orders} one {# order} other {# orders}}",
+    "cancel": {
+      "open": "Cancel order {number}",
+      "heading": "Cancel order {number}",
+      "reason": "Reason",
+      "reasonHint": "At least 3 characters",
+      "reasonInvalid": "Please enter a reason of 3 to 500 characters.",
+      "submit": "Cancel order",
+      "close": "Keep order",
+      "succeeded": "The order was cancelled."
+    },
+    "errors": {
+      "alreadyShipped": "This order has already shipped and can no longer be cancelled.",
+      "notFound": "This order no longer exists.",
+      "unauthenticated": "Your session has expired. Please sign in again.",
+      "technical": "Something went wrong. Please try again later."
+    }
+  }
+}

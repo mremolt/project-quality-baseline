@@ -1,0 +1,39 @@
+{
+  "app": {
+    "title": "Shop",
+    "environment": "Umgebung: {label}"
+  },
+  "orders": {
+    "title": "Bestellungen",
+    "table": {
+      "caption": "Ihre Bestellungen",
+      "number": "Bestellung",
+      "placedAt": "Bestellt am",
+      "status": "Status",
+      "total": "Summe",
+      "actions": "Aktionen"
+    },
+    "status": {
+      "OPEN": "Offen",
+      "SHIPPED": "Versandt",
+      "CANCELLED": "Storniert"
+    },
+    "count": "{count, plural, =0 {Keine Bestellungen} one {# Bestellung} other {# Bestellungen}}",
+    "cancel": {
+      "open": "Bestellung {number} stornieren",
+      "heading": "Bestellung {number} stornieren",
+      "reason": "Grund",
+      "reasonHint": "Mindestens 3 Zeichen",
+      "reasonInvalid": "Bitte geben Sie einen Grund mit 3 bis 500 Zeichen ein.",
+      "submit": "Bestellung stornieren",
+      "close": "Bestellung behalten",
+      "succeeded": "Die Bestellung wurde storniert."
+    },
+    "errors": {
+      "alreadyShipped": "Diese Bestellung wurde bereits versandt und kann nicht mehr storniert werden.",
+      "notFound": "Diese Bestellung existiert nicht mehr.",
+      "unauthenticated": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+      "technical": "Etwas ist schiefgelaufen. Bitte versuchen Sie es später erneut."
+    }
+  }
+}

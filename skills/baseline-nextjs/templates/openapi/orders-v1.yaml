@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: Orders API
+  version: 1.0.0
+servers:
+  - url: /
+tags:
+  - name: orders
+paths:
+  /api/v1/orders:
+    get:
+      tags: [orders]
+      operationId: listOrders
+      summary: List the caller's orders, newest first
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: size
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        '200':
+          description: One page of orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderPage' }
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+  /api/v1/orders/{orderId}/cancel:
+    post:
+      tags: [orders]
+      operationId: cancelOrder
+      summary: Cancel an open order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, maxLength: 64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelOrderRequest' }
+      responses:
+        '204':
+          description: Cancelled
+        '404':
+          description: No such order for the caller
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409':
+          description: The order can no longer be cancelled (code ORDER_ALREADY_SHIPPED)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        default:
+          description: Error
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+components:
+  schemas:
+    OrderStatus:
+      type: string
+      enum: [OPEN, SHIPPED, CANCELLED]
+    Order:
+      type: object
+      additionalProperties: false
+      required: [id, number, status, total, currency, placedAt]
+      properties:
+        id: { type: string, maxLength: 64, examples: ['o-1'] }
+        number: { type: string, maxLength: 32, examples: ['2026-0001'] }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total:
+          type: string
+          description: Decimal amount as a string (API-REST-01)
+          pattern: '^-?\d{1,15}(\.\d{1,4})?$'
+          examples: ['129.90']
+        currency: { type: string, pattern: '^[A-Z]{3}$', examples: ['EUR'] }
+        placedAt: { type: string, format: date-time, examples: ['2026-11-01T10:15:00Z'] }
+    OrderPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, size, totalElements]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: { $ref: '#/components/schemas/Order' }
+        page: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 1 }
+        totalElements: { type: integer, minimum: 0 }
+    CancelOrderRequest:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 3, maxLength: 500 }
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code: { type: string, examples: ['ORDER_ALREADY_SHIPPED'] }
+        traceId: { type: string }

@@ -1,0 +1,6 @@
+# NEXT-DEV-01/02: local infrastructure of the Next.js server; start with `docker compose up -d --wait`
+services:
+  redis:
+    image: redis:8.4-alpine # production major.minor; the same tag as the Testcontainers tests
+    ports: ['127.0.0.1:6379:6379']
+    healthcheck: { test: ['CMD', 'redis-cli', 'ping'], interval: 5s, timeout: 3s, retries: 20 }

@@ -1,0 +1,10 @@
+node_modules/
+.next/
+# only under src/: the dependency-cruiser canary in test/fixtures keeps its generated/ file
+src/**/generated/
+coverage/
+playwright-report/
+test-results/
+next-env.d.ts
+*.tsbuildinfo
+.env*.local

@@ -80,7 +80,7 @@ export function createServerHttpOrders(): HttpOrders {
   - no server call runs inside `'use cache'`, `unstable_cache` or another cross-request cache (NEXT-ARCH-10): Next.js 16.4 throws when `cookies()` is called inside `'use cache'` (`next-request-in-use-cache`) or `unstable_cache`, so such a call fails instead of sharing one user's answer with others;
   - token refresh is safe under concurrency: several calls of one request may refresh at once, and the session store's compare-and-set keeps one result ([security/nextjs.md](../security/nextjs.md)).
 
-  *To verify before first use:* a test with two concurrent requests from different sessions that asserts each backend call carries its own token; the validation project shows request-safety by construction and by single-user E2E only, and has no test of the server mutator itself.
+  `server-fetch.spec.ts` asserts it with two concurrent calls, each inside its own `AsyncLocalStorage` scope standing in for the request, the first answered last: each backend call carries its own token (*verified*; a mutator that keeps a token from an earlier call fails the spec). The spec also covers the base URL, a missing or rejected token, problem bodies, the timeout and `redirect: 'error'`.
 
 ```ts
 // src/platform/platform.composition.server.ts (excerpt)

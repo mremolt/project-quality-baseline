@@ -11,6 +11,7 @@ Next.js additions to [typescript-tooling.md](typescript-tooling.md) (TS-TOOL-*) 
   - `images: { unoptimized: true }`: no image optimizer at runtime, which would write to the filesystem (read-only root filesystem, REL-RUN-02) and add an outbound fetcher; images are prepared at build time or served as they are;
   - `experimental.serverActions.bodySizeLimit` (`'100kb'` in the reference app, per product): server-action options are still under `experimental` in 16.4, so `next build` prints an "Experiments: serverActions" line, which is expected; `allowedOrigins` stays unset ([security/nextjs.md](../security/nextjs.md));
   - `agentRules: false` (NEXT-TOOL-10);
+  - `turbopack: { root: import.meta.dirname }`: the component folder is the workspace root. Without it Next.js picks the folder of the outermost lockfile it finds above the project, and a `package-lock.json` in a parent folder (a developer's home, a root-level tool) moves `server.js` to `.next/standalone/<path>/` and breaks `npm run start`, `npm run e2e` and the image (*verified* with a lockfile two levels up);
   - wrapped by `createNextIntlPlugin('./src/platform/adapter/in/i18n/request.ts')` from `next-intl/plugin` ([i18n/nextjs.md](../i18n/nextjs.md)).
 
   Left at their defaults on purpose: `productionBrowserSourceMaps` (off: no `sourceMappingURL` in the client chunks, TS-SEC-05; verified), `typescript.ignoreBuildErrors` (off), `typedRoutes` (off). Never set: `env` (inlines values at build time, CFG-02), `assetPrefix` or `basePath` per environment, `webpack` (NEXT-TOOL-02), `cacheComponents` or `experimental.agentFeedback` (NEXT-ARCH-10, NEXT-TOOL-09). A deployment identifier for version skew (`deploymentId`) belongs to [nextjs-delivery.md](../../07-deployment-view/nextjs-delivery.md).
@@ -28,6 +29,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: { unoptimized: true }, // no image optimizer: read-only root filesystem (REL-RUN-02)
   agentRules: false, // the baseline's AGENTS.md routes agents (NEXT-TOOL-10)
+  turbopack: { root: import.meta.dirname }, // never a lockfile in a parent folder: server.js stays at .next/standalone/
   experimental: {
     serverActions: { bodySizeLimit: '100kb' },
   },
@@ -55,17 +57,17 @@ import nextPlugin from '@next/eslint-plugin-next';
   files: ['src/**/*.{ts,tsx}'],
   plugins: { '@next/next': nextPlugin },
   rules: {
-    ...warnAsError({ rules: nextPlugin.configs['core-web-vitals'].rules }).rules,
+    ...warnAsError({ rules: nextPlugin.configs['core-web-vitals'].rules ?? {} }).rules, // `rules` is optional in the plugin's types
     '@next/next/no-html-link-for-pages': 'off', // Pages Router rule; the app has no pages/ directory
   },
 },
 ```
 
-  The validation project used `@eslint-react` `recommended-type-checked`; REACT-TOOL-01 requires `strict-type-checked`, and that preset on Next.js code (async server components, server actions) is to be verified before first use.
+  `@eslint-react` runs with `strict-type-checked` (REACT-TOOL-01) on the Next.js code, async server components and server actions included, without exceptions (*verified* in the template); its `rsc-function-definition` rule reports a non-async export of a `'use server'` file.
 
 - **NEXT-TOOL-06: ESLint carries the Next.js bans that dependency-cruiser cannot:**
   - `no-restricted-properties` forbids `process.env` everywhere except `src/platform/config/**`, `src/instrumentation.ts`, the root `*.config.ts` files and `e2e/**` (CFG-09). This replaces the `process` part of REACT-TOOL-05 for Next.js, because server code legitimately uses `process` (signals, `NEXT_RUNTIME`); a client component that reads `process.env` would get a value inlined at build time (NEXT-D7). The `fetch` ban of REACT-TOOL-05 applies unchanged;
-  - `no-restricted-syntax` with the selector `Program > ExpressionStatement[directive="use client"]` in every file except `**/*.client.tsx`, `**/*.composition.tsx`, `src/app/providers.tsx`, `src/app/app-shell.tsx` and `src/app/theme.ts`, and `Program > ExpressionStatement[directive="use server"]` in every file except `src/**/adapter/in/next/*-actions.ts`. This closes the blind spot of dependency-cruiser, which decides client-ness by file name (NEXT-ARCH-06, NEXT-ARCH-13). Because ESLint replaces a rule's options per block, each block repeats the HTML-writing selectors of REACT-TOOL-05. *To verify before first use:* the selector fired in a probe with ESLint's default parser; with the typescript-eslint parser on `.tsx` files it is not yet run.
+  - `no-restricted-syntax` with the selector `Program > ExpressionStatement[directive="use client"]` in every file except `**/*.client.tsx`, `**/*.composition.tsx`, `src/app/providers.tsx`, `src/app/app-shell.tsx` and `src/app/theme.ts`, and `Program > ExpressionStatement[directive="use server"]` in every file except `src/**/adapter/in/next/*-actions.ts`. This closes the blind spot of dependency-cruiser, which decides client-ness by file name (NEXT-ARCH-06, NEXT-ARCH-13). Because ESLint replaces a rule's options per block, each block repeats the HTML-writing selectors of REACT-TOOL-05. Both selectors fire with the typescript-eslint parser on `.ts` and `.tsx` files (*verified* with a probe file).
 
 ## Scripts and bundle check
 
@@ -88,13 +90,13 @@ import nextPlugin from '@next/eslint-plugin-next';
 | `e2e:nightly`, `e2e:smoke` | `playwright test` with the projects of TS-TEST-18 and the smoke project |
 | `verify` | `generate:api`, `format:check`, `lint`, `typecheck`, `check:arch`, `test`, `build`, `check:bundle` |
 
-  `typecheck` and `check:bundle` are the additions to `verify`; `check:bundle` runs after `build`. None relies on a `pre*` hook (TS-TOOL-11). The validation project named the bundle script `check:size` (`scripts/check-bundle-size.mjs`); the baseline uses `check:bundle` in both React forms. `next build` took 5–7 s there.
+  `typecheck` and `check:bundle` are the additions to `verify`; `check:bundle` runs after `build`. None relies on a `pre*` hook (TS-TOOL-11). `next build` takes 5–7 s for the template.
 - **NEXT-TOOL-08: `check:bundle` enforces gzip budgets over the client chunks and fails the build** (Replaces REACT-TOOL-13 for Next.js). A small Node script without dependencies, `scripts/check-bundle.mjs`, gzips every `.js` file under `.next/static/chunks` and fails when:
   - the total client JavaScript exceeds its budget (default 400 KiB gzip; the reference app has 341 KiB, including a ~37 KiB `noModule` polyfill chunk);
   - the largest chunk exceeds its budget (default 150 KiB gzip; reference 70 KiB);
   - any chunk contains `sourceMappingURL` (TS-SEC-05).
 
-  The App Router writes no `index.html`, so the script cannot tell initial from lazy chunks the way REACT-TOOL-13 does; the total and the largest chunk are the signals. The budgets are per product; raising one is a reviewed change with the reason in the commit. The `sourceMappingURL` check is not in the validation project's script (the chunks had none); add it.
+  The App Router writes no `index.html`, so the script cannot tell initial from lazy chunks the way REACT-TOOL-13 does; the total and the largest chunk are the signals. The budgets are per product; raising one is a reviewed change with the reason in the commit. The template's script also fails when a `.map` file would be served.
 
 ## Telemetry and agents
 

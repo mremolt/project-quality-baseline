@@ -1,0 +1,15 @@
+# NEXT-REL-07: no tests, secrets or build output in the build context
+node_modules
+.next
+.env*
+coverage
+playwright-report
+test-results
+logs
+*.log
+e2e
+test
+**/*.spec.ts
+**/*.spec.tsx
+src/testing
+compose.yaml

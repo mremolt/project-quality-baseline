@@ -17,7 +17,7 @@ Everything marked *verified* was checked in a scratch build on 2026-11-20 with N
 
 - **NEXT-REL-04: The build uses `output: 'standalone'` and the image starts `node server.js` directly** (*verified*). The standalone output (`.next/standalone/`) contains `server.js`, the traced server files and a reduced `node_modules`; it does not contain `.next/static/`, which the image build copies next to it. The process is never started through `next start`, `npm start` or a shell, so `node` is PID 1 and receives SIGTERM. `npm run start` (`node .next/standalone/server.js`) exists for scripts only and needs `.next/static` copied the same way (the E2E server script does this).
 - **NEXT-REL-05: Next.js images are built with the Dockerfile of NEXT-REL-06, not with Buildpacks.** This is a stack-level exception to REL-IMG-02, decided in the baseline: no product ADR is needed, and the product's chapter 7 names this rule as the reason. Reasons: the Paketo Node.js buildpack's Node 26 does not start on the Paketo run images (`libatomic.so.1` missing, found on 2026-11-20), and Paketo builds in place, so sources and tests end up in the image instead of only the standalone output (REL-IMG-01). Buildpacks for Next.js itself were not tried. Chapter 11 tracks the return to Buildpacks for the Node stacks.
-- **NEXT-REL-06: The Dockerfile is multi-stage, from the lockfile, on distroless, pinned by digest** (*verified*, except the `GIT_COMMIT` argument). Build stage `node:26-trixie-slim@sha256:…` runs `npm ci` and `npm run build` (which runs `generate:api` first); the final stage is `gcr.io/distroless/nodejs26-debian13:nonroot@sha256:…` (no shell, no npm) and copies only `.next/standalone` and `.next/static`. `USER 65532:65532`, command in exec form. Labels per REL-RUN-07 come from `--label` at build time. The update automation bumps both digests (REL-IMG-03, TS-TOOL-15).
+- **NEXT-REL-06: The Dockerfile is multi-stage, from the lockfile, on distroless, pinned by digest** (*verified*, including the `GIT_COMMIT` argument). Build stage `node:26-trixie-slim@sha256:…` runs `npm ci` and `npm run build` (which runs `generate:api` first); the final stage is `gcr.io/distroless/nodejs26-debian13:nonroot@sha256:…` (no shell, no npm) and copies only `.next/standalone` and `.next/static`. `USER 65532:65532`, command in exec form. Labels per REL-RUN-07 come from `--label` at build time. The update automation bumps both digests (REL-IMG-03, TS-TOOL-15).
 
 ```dockerfile
 FROM node:26-trixie-slim@sha256:<digest> AS build
@@ -29,13 +29,14 @@ COPY openapi ./openapi
 COPY messages ./messages
 COPY src ./src
 ENV NEXT_TELEMETRY_DISABLED=1
-# commit SHA for NEXT-REL-15/17; not a secret (not in the scratch build)
+# commit SHA for deploymentId and the public config (NEXT-REL-15/17); not a secret
 ARG GIT_COMMIT
 RUN npm run build
 
 FROM gcr.io/distroless/nodejs26-debian13:nonroot@sha256:<digest>
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+ARG GIT_COMMIT=unknown
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000 GIT_COMMIT=${GIT_COMMIT}
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 USER 65532:65532
@@ -85,7 +86,7 @@ spec:
 ### Versions and promotion
 
 - **NEXT-REL-14: One image per commit, promoted unchanged by digest** (REL-CD-01, CFG-02). Per-environment values reach the server as configuration at run time (NEXT-CFG: validated server env, public subset passed to the client), never through a rebuild. `package.json` `version` stays `0.0.0`.
-- **NEXT-REL-15: The release version is injected at deploy time; the commit is built in** (REL-VER-05). `RELEASE_VERSION` (default `unreleased`) is a server configuration key, logged once at start and set as `service.version` in `OTEL_RESOURCE_ATTRIBUTES`. The commit comes from CI as a build argument (`--build-arg GIT_COMMIT=<sha>`, not a secret) and is read in `next.config.ts` (it sets `deploymentId`, NEXT-REL-17); the server logs it at start. Both values go to the client in the public configuration, so client error reports name what ran (REACT-OBS-05). *To verify before first use:* the exact way the server reads the commit at run time (not built in the scratch app).
+- **NEXT-REL-15: The release version is injected at deploy time; the commit is built in** (REL-VER-05). `RELEASE_VERSION` (default `unreleased`) is a server configuration key, logged once at start and set as `service.version` in `OTEL_RESOURCE_ATTRIBUTES`. The commit comes from CI as a build argument (`--build-arg GIT_COMMIT=<sha>`, not a secret) and is read in `next.config.ts` (it sets `deploymentId`, NEXT-REL-17); the server logs it at start. Both values go to the client in the public configuration, so client error reports name what ran (REACT-OBS-05). The runtime stage of the Dockerfile sets `ENV GIT_COMMIT` from the same build argument, and the server configuration reads it (*verified*: the image logged the commit at start).
 
 ### Rolling deployments and version skew (REL-ZD-04)
 
@@ -100,7 +101,7 @@ During a rolling deployment a browser that loaded a page from N-1 may reach an i
 
 - **NEXT-REL-19: The release job publishes two SBOMs:** the CycloneDX SBOM of the image from the pipeline's image scanner, and the dependency SBOM of TS-TOOL-16 (`@cyclonedx/cyclonedx-npm --omit dev`). Bundled code has no `package.json` inside the image, so the image scanner sees only the packages in the standalone `node_modules`; the npm SBOM is the complete list. Because msw and `@faker-js/faker` ship in the server chunks (NEXT-REL-09), they are listed under `dependencies`, not `devDependencies`, so `--omit dev` keeps them in the SBOM.
 - **NEXT-REL-20: The image is scanned like every image** (SEC-CI-06): in the integration build, as a release gate, and on a schedule for deployed digests. Findings in `sharp`/libvips are fixed by removing them (NEXT-REL-09), not by an accepted risk.
-- **NEXT-REL-21: The `e2e:smoke` tier and the configuration smoke test start the image as production does** (REPO-CI-04, TEST-CFG-02): read-only, all capabilities dropped, only the required keys of `configuration-keys.yaml`, test stubs off. Smoke tier: [testing/nextjs.md](../08-crosscutting-concepts/testing/nextjs.md) (not built in the scratch app, *to verify before first use*).
+- **NEXT-REL-21: The `e2e:smoke` tier and the configuration smoke test start the image as production does** (REPO-CI-04, TEST-CFG-02): read-only, all capabilities dropped, only the required keys of `configuration-keys.yaml`, test stubs off. The manual start of the template image that way (secret as a mounted file, `/livez` and `/readyz` UP against Redis, `/readyz` DOWN without it, `APP_TEST_STUBS=1` refused with exit code 1) is *verified*; the automated smoke tier ([testing/nextjs.md](../08-crosscutting-concepts/testing/nextjs.md)) is *to verify before first use*.
 
 ## Anti-patterns
 

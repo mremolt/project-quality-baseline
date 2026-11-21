@@ -47,6 +47,11 @@
       "sourceType": "local",
       "computedHash": "26bc8ae2a761b886fe3c0775d4c2b4eae205a9e5d0f7c51fa7ba3177300b8e82"
     },
+    "baseline-nextjs": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "e09398f74998a541d883b98c2189457f61fe24a04a985bce8fb3911930fdc22e"
+    },
     "baseline-react": {
       "source": "./skills",
       "sourceType": "local",

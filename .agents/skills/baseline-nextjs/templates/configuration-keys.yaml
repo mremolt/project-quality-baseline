@@ -1,0 +1,122 @@
+# Keys a deployment sets (CFG-12, NEXT-CFG-09); checked by src/platform/config/configuration-keys.spec.ts.
+# A secret is listed under its own name; the deployment delivers it as <KEY>_FILE (NEXT-CFG-06).
+- key: APP_ORIGIN
+  required: true
+  secret: false
+  description: Public origin of the app; base of the OIDC redirect URIs and the
+    server-action origin check
+- key: API_BASE_URL
+  required: true
+  secret: false
+  description: Base URL of the resource server
+- key: API_TIMEOUT_MS
+  required: false
+  secret: false
+  description: Deadline per backend call, ms (NEXT-RES-03)
+- key: OIDC_ISSUER_URL
+  required: true
+  secret: false
+  description: Issuer of the IdP
+- key: OIDC_CLIENT_ID
+  required: true
+  secret: false
+  description: Client id of this BFF at the IdP
+- key: OIDC_CLIENT_SECRET
+  required: true
+  secret: true
+  description: Client secret (mounted file, CFG-05)
+- key: OIDC_TIMEOUT_S
+  required: false
+  secret: false
+  description: Deadline per IdP call, s
+- key: REDIS_URL
+  required: true
+  secret: true
+  description: Session store URL incl. password
+- key: SESSION_IDLE_MINUTES
+  required: false
+  secret: false
+  description: Session idle timeout, min (NODE-BFF-07)
+- key: SESSION_ABSOLUTE_HOURS
+  required: false
+  secret: false
+  description: Absolute session lifetime, h
+- key: LOG_LEVEL
+  required: false
+  secret: false
+  description: pino log level
+- key: ENVIRONMENT_NAME
+  required: true
+  secret: false
+  description: Environment name in logs and error reports; never branched on
+- key: ENVIRONMENT_LABEL
+  required: false
+  secret: false
+  description: Badge in the app bar outside production; empty in production
+- key: RELEASE_VERSION
+  required: false
+  secret: false
+  description: Release version, injected at deploy time (REL-VER-05)
+- key: GIT_COMMIT
+  required: false
+  secret: false
+  description: Commit the image was built from; set in the image by the Dockerfile
+    (NEXT-REL-15)
+- key: BROWSER_REQUEST_TIMEOUT_MS
+  required: false
+  secret: false
+  description: Timeout of the browser HTTP mutator, ms (NEXT-RES-03)
+- key: APP_ENVIRONMENT_KIND
+  required: true
+  secret: false
+  description: 'local: developer machine; test: automated test runs; deployed:
+    every platform environment'
+- key: APP_TEST_STUBS
+  required: false
+  secret: false
+  description: '1: answer every backend and IdP call with stubs (NEXT-D5); never
+    in a deployed environment'
+- key: PORT
+  required: false
+  secret: false
+  description: Listen port of the standalone server (set in the image)
+- key: HOSTNAME
+  required: false
+  secret: false
+  description: Listen address of the standalone server (set in the image)
+- key: NODE_OPTIONS
+  required: false
+  secret: false
+  description: Node.js flags, e.g. --max-old-space-size matching the container memory limit
+- key: OTEL_SERVICE_NAME
+  required: false
+  secret: false
+  description: service.name of traces (NEXT-OBS-02)
+- key: OTEL_EXPORTER_OTLP_ENDPOINT
+  required: false
+  secret: false
+  description: OTLP collector endpoint (NEXT-OBS-02)
+- key: OTEL_RESOURCE_ATTRIBUTES
+  required: false
+  secret: false
+  description: Extra resource attributes, e.g. deployment.environment.name (NEXT-OBS-02)
+- key: OTEL_TRACES_SAMPLER
+  required: false
+  secret: false
+  description: Sampler, set explicitly per environment (OBS-13)
+- key: OTEL_TRACES_SAMPLER_ARG
+  required: false
+  secret: false
+  description: Sampling ratio (OBS-13)
+- key: OTEL_METRICS_EXPORTER
+  required: false
+  secret: false
+  description: otlp (NEXT-OBS-03)
+- key: OTEL_LOGS_EXPORTER
+  required: false
+  secret: false
+  description: none; logs go to stdout (NEXT-OBS-06)
+- key: OTEL_SDK_DISABLED
+  required: false
+  secret: false
+  description: true only in test runs and local runs without a collector
