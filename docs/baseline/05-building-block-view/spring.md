@@ -91,15 +91,15 @@ Below the application's base package (where the `@SpringBootApplication` class l
 
 ### Test database
 
-- **SPRING-ARCH-15:** See [TEST-ARCH-04](../08-crosscutting-concepts/testing/testing-by-architecture-element.md) (no in-memory stand-in for the production database).
+- **SPRING-ARCH-15: Tests use no in-memory stand-in for the production database** (see [TEST-ARCH-04](../08-crosscutting-concepts/testing/testing-by-architecture-element.md)).
 
 ### Data loading
 
-- **SPRING-ARCH-16:** See [API-N1-05](../08-crosscutting-concepts/api/avoiding-n-plus-one.md) (bounded number of queries per query or batch port) and SPRING-TEST-06 (statement-count tests).
+- **SPRING-ARCH-16: Every query or batch port runs a bounded number of queries, asserted by statement-count tests** (see [API-N1-05](../08-crosscutting-concepts/api/avoiding-n-plus-one.md), SPRING-TEST-06).
 
 ### REST contract
 
-- **SPRING-ARCH-17:** See [spring-openapi.md](../08-crosscutting-concepts/api/spring-openapi.md) (spec generated, committed, checked in CI) and [spring-rest.md](../08-crosscutting-concepts/api/spring-rest.md) (URLs, JSON, errors).
+- **SPRING-ARCH-17: The OpenAPI spec is generated, committed and checked in CI, and URLs, JSON and errors follow the Spring REST conventions.** See [spring-openapi.md](../08-crosscutting-concepts/api/spring-openapi.md) (spec) and [spring-rest.md](../08-crosscutting-concepts/api/spring-rest.md) (URLs, JSON, errors).
 
 ### Validation errors
 

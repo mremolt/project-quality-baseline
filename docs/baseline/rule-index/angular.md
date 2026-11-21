@@ -34,7 +34,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - TS-API-04 in Angular: `override.angular.provideIn: false`.
 - TS-API-05 and TS-ARCH-18 in Angular: the adapter parses with `safeParse`, maps errors in one mapper and reports the `TechnicalError`s it creates.
 - TS-API-06 in Angular: the adapter converts the generated service's `Observable` with the shared `untilAborted` helper in `src/platform/adapter/out/http`, never with a bare `firstValueFrom` (which ignores the signal) or `toPromise`.
-- TS-API-07 in Angular: batching and caching decorators are bound to the port token in the providers file (`useFactory` wrapping the plain adapter).
+- TS-API-07 in Angular: Batching and caching decorators are bound to the port token in the providers file (`useFactory` wrapping the plain adapter).
 
 ## [Angular: Runtime Configuration](../08-crosscutting-concepts/configuration/angular.md)
 

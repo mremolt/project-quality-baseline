@@ -107,6 +107,6 @@ SAST next to FindSecBugs: JAVA-TOOL-21 under [Security tooling](#security-toolin
 ## Security tooling
 
 - **JAVA-TOOL-21: A SAST tool runs in CI next to FindSecBugs** with an agreed rule set (SEC-CI-01, [secure-pipeline.md](../security/secure-pipeline.md); reference tool, replaceable: Semgrep CE); suppressions carry a reason or point at `docs/security/exceptions.md` (SEC-VUL-03).
-- **JAVA-TOOL-22:** Deprecated, see [JAVA-TOOL-05](#jdk-and-maven-defaults-java-d1-java-d2) (versions from the BOM, review of new dependencies).
+- **JAVA-TOOL-22: Deprecated; versions come from the BOM and new dependencies are reviewed** (see [JAVA-TOOL-05](#jdk-and-maven-defaults-java-d1-java-d2)).
 
 *Agent checklist in [checklists/java.md](../../checklists/java.md) and sources in [sources.md](../../sources.md), section "Java Tooling".*

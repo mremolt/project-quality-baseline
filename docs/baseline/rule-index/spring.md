@@ -38,9 +38,9 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-ARCH-12: Kafka listeners are incoming adapters and producers are outgoing adapters.
 - SPRING-ARCH-13: If an event must be consistent with a database write, don't publish it to Kafka directly inside the use case.
 - SPRING-ARCH-14: Third-party SDK types (AWS S3, HTTP clients) never leave their adapter package.
-- SPRING-ARCH-15: See TEST-ARCH-04 (no in-memory stand-in for the production database).
-- SPRING-ARCH-16: See API-N1-05 (bounded number of queries per query or batch port) and SPRING-TEST-06 (statement-count tests).
-- SPRING-ARCH-17: See spring-openapi.md (spec generated, committed, checked in CI) and spring-rest.md (URLs, JSON, errors).
+- SPRING-ARCH-15: Tests use no in-memory stand-in for the production database (see TEST-ARCH-04).
+- SPRING-ARCH-16: Every query or batch port runs a bounded number of queries, asserted by statement-count tests (see API-N1-05, SPRING-TEST-06).
+- SPRING-ARCH-17: The OpenAPI spec is generated, committed and checked in CI, and URLs, JSON and errors follow the Spring REST conventions.
 - SPRING-ARCH-18: Every incoming adapter maps the error categories of ARCH-UC-13 explicitly, by their base types in `domain`.
 
 ## [Spring Boot: Delivery](../07-deployment-view/spring-delivery.md)
@@ -50,7 +50,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-REL-03: The DML role gets its rights through a schema grant and default privileges.
 - SPRING-REL-04: Projects that use `CREATE INDEX CONCURRENTLY` (SPRING-DB-06) set `spring.flyway.postgresql.transactional-lock=false`.
 - SPRING-REL-07: The pre-deploy variant (REL-DB-01) runs the same image in a migrate-only mode.
-- SPRING-REL-05: Graceful shutdown and the shutdown budget: SPRING-OBS-04, OBS-04.
+- SPRING-REL-05: Graceful shutdown and the shutdown budget follow SPRING-OBS-04 and OBS-04; platform termination settings follow REL-RUN-06.
 - SPRING-REL-06: The image does not carry the release version; the deployment injects it (REL-CD-01).
 - SPRING-REL-08: The BFF embeds the bundle through a Maven profile activated by the bundle path.
 
@@ -158,7 +158,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-MSG-07: The outbox is a table plus a relay inside `adapter.out.kafka`.
 - SPRING-MSG-08: Consumers deduplicate through an inbox port unless the use case is naturally idempotent (MSG-IDM-02).
 - SPRING-MSG-09: Offsets are committed by the container.
-- SPRING-MSG-10: Deprecated, see SPRING-RES-09.
+- SPRING-MSG-10: Deprecated; an adapter called from a Kafka listener does not retry (see SPRING-RES-09).
 - SPRING-MSG-11: The AsyncAPI document is generated with Springwolf and committed (MSG-CON-01):
 - SPRING-MSG-12: Kafka adapter tests are `*IT` with the shared Testcontainers Kafka (`org.testcontainers.kafka.KafkaContainer`, `apache/kafka` in the production broker version, `@ServiceConnection`, SPRING-TEST-04/07), awaited with Awaitility (SPRING-TEST-09).
 

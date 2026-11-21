@@ -8,7 +8,7 @@ The Angular parts of the generated-client rules in [typescript-openapi-clients.m
 - **TS-API-04 in Angular: `override.angular.provideIn: false`.** The generated services are not `providedIn: 'root'`; the feature's `<feature>.providers.ts` lists them, and only the adapter injects them (NG-ARCH-10).
 - **TS-API-05 and TS-ARCH-18 in Angular: the adapter parses with `safeParse`, maps errors in one mapper and reports the `TechnicalError`s it creates.** A body that fails the generated zod schema becomes `TechnicalError` (never a `ZodError` from `parse`, never a half-filled domain object). The mapper (`orders-mapper.ts`) turns `HttpErrorResponse`s into the feature's domain errors and everything else into `TechnicalError`. The adapter injects `REPORT_ERROR` from `src/platform/index.ts` and reports, once, the `TechnicalError` for a malformed body and the one its mapper made from a 4xx it cannot map (unknown problem `code`, unexpected status); one made from a 5xx, a status 0 or a time-out is passed on unreported, because the interceptor reported that failure (NG-OBS-04). Parsing runs outside the `try` around the call, so the mapper never sees a parse failure.
 - **TS-API-06 in Angular: the adapter converts the generated service's `Observable` with the shared `untilAborted` helper** in `src/platform/adapter/out/http`, never with a bare `firstValueFrom` (which ignores the signal) or `toPromise`.
-- **TS-API-07 in Angular:** batching and caching decorators are bound to the port token in the providers file (`useFactory` wrapping the plain adapter).
+- **TS-API-07 in Angular: Batching and caching decorators are bound to the port token in the providers file** (`useFactory` wrapping the plain adapter).
 
 ## Configuration
 

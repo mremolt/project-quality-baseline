@@ -35,7 +35,7 @@ Spring Boot wiring for the shared delivery rules in [delivery-and-release.md](de
 
 ### Shutdown and readiness (REL-ZD-02)
 
-- **SPRING-REL-05:** Graceful shutdown and the shutdown budget: [SPRING-OBS-04](../08-crosscutting-concepts/observability/spring.md), OBS-04. Platform termination settings: REL-RUN-06.
+- **SPRING-REL-05: Graceful shutdown and the shutdown budget follow SPRING-OBS-04 and OBS-04; platform termination settings follow REL-RUN-06.** See [SPRING-OBS-04](../08-crosscutting-concepts/observability/spring.md).
 
 ### Version (REL-VER-05)
 

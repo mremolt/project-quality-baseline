@@ -14,7 +14,7 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-ARCH-06: Domain entities protect their invariants.
 - JAVA-ARCH-07: Every project has an ArchUnit test class (JUnit Jupiter) that checks the dependency table from 05-building-block-view/code-organization.md.
 - JAVA-ARCH-08: Never disable `archRule.failOnEmptyShould` (enabled by default in current ArchUnit versions).
-- JAVA-ARCH-09: See ARCH-ENF-06 (module splits once stable, in its order).
+- JAVA-ARCH-09: Build modules are split once the architecture is stable, in the order of ARCH-ENF-06.
 - JAVA-ARCH-10: Dependencies between modules are declared explicitly in the build file and reviewed (ARCH-ENF-07).
 - JAVA-ARCH-11: A plain-Java application wires everything in one place:
 - JAVA-ARCH-12: Invalid input throws one dedicated exception from `domain` (the validation category of ARCH-UC-13) (e.g. `DomainValidationException extends RuntimeException`, carrying a stable error code and, where known, the field).
@@ -44,4 +44,4 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-TOOL-19: Unit tests are `*Test` (Surefire), integration tests `*IT` (Failsafe).
 - JAVA-TOOL-20: Every Java component offers the same commands, run from the component folder (REPO-TOOL-03), so humans, agents and CI don't have to guess:
 - JAVA-TOOL-21: A SAST tool runs in CI next to FindSecBugs with an agreed rule set (SEC-CI-01, secure-pipeline.md;
-- JAVA-TOOL-22: Deprecated, see JAVA-TOOL-05 (versions from the BOM, review of new dependencies).
+- JAVA-TOOL-22: Deprecated; versions come from the BOM and new dependencies are reviewed (see JAVA-TOOL-05).

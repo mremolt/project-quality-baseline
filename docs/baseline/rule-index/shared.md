@@ -26,7 +26,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - ARCH-ADP-08: Outgoing ports are narrow (Interface Segregation).
 - ARCH-ADP-09: Slice outgoing adapters freely.
 - ARCH-ADP-10: Bounded contexts don't share outgoing adapters.
-- ARCH-ADP-11: See ARCH-UC-11 (the use case owns the transaction; adapters never open or commit one).
+- ARCH-ADP-11: Adapters never open or commit a transaction; the use case owns it (see ARCH-UC-11).
 - ARCH-ADP-12: Technology-specific models (ORM entities, API DTOs) stay inside their adapter, with the narrowest visibility possible.
 - ARCH-ADP-13: SHOULD: choose the simplest technology that fits.
 
@@ -130,7 +130,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - REPO-LAY-07: The root `.gitignore` also ignores tool output (`node_modules/`, `dist/`, `coverage/`, `.env*.local`), next to the IDE block of TOOL-IDE-03;
 - REPO-API-01: A frontend in the same repository generates its client directly from the backend's committed spec (`frontend/orval.config.ts` → `../backend/openapi/orders-v1.yaml`).
 - REPO-API-02: One commit is not one deployment.
-- REPO-TOOL-01: The IDE opens the repository root; see TOOL-IDE-07.
+- REPO-TOOL-01: The IDE opens the repository root (see TOOL-IDE-07).
 - REPO-TOOL-02: Git hooks, if used, are installed from the component that owns the tooling and work from the git root.
 - REPO-TOOL-03: Agents run stack commands from the component folder.
 - REPO-CI-01: The pipeline runs the jobs in this table.
@@ -138,7 +138,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - REPO-CI-03: The merge gate is one always-reported status.
 - REPO-CI-04: The `e2e:smoke` tier runs against a backend built from the same commit (08-crosscutting-concepts/testing/typescript.md, NG-TEST-08):
 - REPO-CI-05: Each release unit is versioned separately, with tags prefixed by its component folder (`backend/v1.4.0`, `backend-admin/v2.1.0`).
-- REPO-CI-06: Security checks run as one job in the single pipeline; see SEC-CI-01.
+- REPO-CI-06: Security checks run as one job in the single pipeline (see SEC-CI-01).
 
 ## [Avoiding N+1 Requests over REST](../08-crosscutting-concepts/api/avoiding-n-plus-one.md)
 
@@ -409,7 +409,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - SEC-CI-02: The pipeline itself is hardened.
 - SEC-CI-03: Releases publish an SBOM (CycloneDX; backend JAVA-TOOL-17, frontend TS-TOOL-16) and signed build provenance stored with the artifact; target SLSA Build L2.
 - SEC-CI-04: A passive DAST baseline scan runs nightly against a stack built from the same commit (REPO-CI-04).
-- SEC-CI-05: Reduced to a pointer: checks are never weakened, skipped or made advisory, see SEC-REV-02.
+- SEC-CI-05: Checks are never weakened, skipped or made advisory (see SEC-REV-02).
 - SEC-CI-06: Container images are scanned at three points:
 - SEC-CI-07: Before a deployment the digest's provenance and signature are verified by the delivery platform (admission policy) or by a pipeline step;
 - SEC-CI-08: One scheduled job checks the security dates:

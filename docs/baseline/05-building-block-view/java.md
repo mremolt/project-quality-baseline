@@ -110,7 +110,7 @@ class ArchitectureTest {
 
 ## Build modules (Maven / Gradle)
 
-- **JAVA-ARCH-09:** See [ARCH-ENF-06](../08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md) (module splits once stable, in its order). In Maven or Gradle the cuts become modules such as `app-configuration`, `adapter-rest`, `adapter-jpa`, `app-ports`, `app-core`.
+- **JAVA-ARCH-09: Build modules are split once the architecture is stable, in the order of [ARCH-ENF-06](../08-crosscutting-concepts/architecture-enforcement/enforcing-boundaries.md).** In Maven or Gradle the cuts become modules such as `app-configuration`, `adapter-rest`, `adapter-jpa`, `app-ports`, `app-core`.
 - **JAVA-ARCH-10: Dependencies between modules are declared explicitly** in the build file and reviewed (ARCH-ENF-07). Maven and Gradle reject cycles between modules by design.
 
 ## Composition root without a framework

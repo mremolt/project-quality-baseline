@@ -124,7 +124,7 @@ create index outbox_unsent on outbox_messages (position) where sent_at is null;
 ### Consumption
 
 - **SPRING-MSG-09: Offsets are committed by the container.** `enable-auto-commit` stays `false` and `spring.kafka.listener.ack-mode` stays at the default (`BATCH`); `RECORD` is allowed. `MANUAL` acknowledgement and batch listeners (`spring.kafka.listener.type=batch`, failures signalled with `BatchListenerFailedException`) need a stated reason in the listener's Javadoc. `spring.kafka.listener.concurrency` is at most the topic's partition count.
-- **SPRING-MSG-10:** Deprecated, see [SPRING-RES-09](../resilience/spring.md#retries-res-rty).
+- **SPRING-MSG-10: Deprecated; an adapter called from a Kafka listener does not retry** (see [SPRING-RES-09](../resilience/spring.md#retries-res-rty)).
 
 ### Contract
 

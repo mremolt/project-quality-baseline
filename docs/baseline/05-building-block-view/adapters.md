@@ -44,7 +44,7 @@ Examples: database/ORM, message producers, object storage (S3), third-party API 
   *Why:* each service depends only on what it uses. Tests know exactly what to mock, with no "which methods do I need to stub?" research.
 - **ARCH-ADP-09: Slice outgoing adapters freely.** One adapter class may implement several ports. A good default is one persistence adapter **per aggregate**. Using different technologies for different ports (ORM for some, plain SQL for others) is allowed.
 - **ARCH-ADP-10: Bounded contexts don't share outgoing adapters.** Each context has its own persistence adapter(s). Cross-context access: ARCH-ORG-09.
-- **ARCH-ADP-11:** See [ARCH-UC-11](use-cases.md) (the use case owns the transaction; adapters never open or commit one).
+- **ARCH-ADP-11: Adapters never open or commit a transaction; the use case owns it** (see [ARCH-UC-11](use-cases.md)).
 - **ARCH-ADP-12: Technology-specific models (ORM entities, API DTOs) stay inside their adapter**, with the narrowest visibility possible.
 - **ARCH-ADP-13: SHOULD: choose the simplest technology that fits.** A full ORM is not mandatory. Use plain SQL or a lighter mapper when it serves the port better.
 
