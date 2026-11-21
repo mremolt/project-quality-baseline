@@ -81,5 +81,9 @@ At the start of a task read the rule index of every stack in the chain (plus `sh
 
 ## This repository (the baseline itself)
 
+- **"Deploy the baseline to `<folder>`"** means the sync followed by the IDE setup, without asking in between:
+  1. `node scripts/sync-baseline.mjs <folder>` (add `--host` only if the user names one). It refuses a target with uncommitted changes: stop and ask; never pass `--force` without consent.
+  2. In `<folder>`, follow the `baseline-ide-setup` skill (`skills/baseline-ide-setup/SKILL.md`): run `.agents/skills/baseline-ide-setup/scripts/apply-ide-config.sh .` from the target's root (`.cmd` on Windows), resolve its `MANUAL:` lines and review the diff.
+  3. Report the `MANUAL:` lines of both steps and the one-time per-developer IDE steps. Don't commit in the target.
 - **Reviewing another codebase** to test or improve the baseline: load the skill `baseline-codebase-review`. It is listed under `baselineOnly` in `baseline-stacks.json`, so the sync never copies it.
 - **Keep [ARCHITECTURE.md](ARCHITECTURE.md) current.** Every change to `docs/baseline/`, the skills, templates or sync that alters the baseline's architecture, technologies or decisions updates `ARCHITECTURE.md` in the same change. The file shows the current state only: no changelog, no dates of changes, no superseded or reverted decisions ([DOC-ARC-09](docs/baseline/08-crosscutting-concepts/development/architecture-documentation.md)).
