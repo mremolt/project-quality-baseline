@@ -71,6 +71,8 @@ The decisions behind this concept, each stated once in the rule that owns it:
 - **TEST-CFG-02: The deployed defaults start.** One system or smoke test (REPO-CI-04) starts the artifact without a development profile and with only the required keys of the key list (CFG-12), so a newly required key that is missing from the list fails CI.
 - **TEST-CFG-03: Secret masking is asserted** (CFG-07): one unit test for the `Secret` type, plus the architecture test that no secret-named value is a plain string.
 - **TEST-CFG-04: The key list matches the code.** A unit test fails when the component defines an own key that `configuration-keys.yaml` lacks, or the list names an own key the code no longer defines (Spring: the generated configuration metadata, SPRING-CFG-04; NestJS: NEST-CFG-10).
+- **TEST-CFG-05: A required key has no deployed default.** A unit test fails when a key marked `required: true` in `configuration-keys.yaml` gets a value in the deployed configuration: Spring: in `application.yaml` without a profile, through a `${VAR:default}` fallback, or through `@DefaultValue`; NestJS: as a schema default. Defaults for local development live in the local profile or `.env.example` (CFG-03).
+  *Why:* a required key with a deployed default never fails the start (CFG-08), so a forgotten value ships silently, for example as a `localhost` link in every e-mail. TEST-CFG-02 catches this only once a smoke test exists; this test catches it in the fast loop.
 
 ## Agent checklist
 
@@ -78,7 +80,7 @@ The decisions behind this concept, each stated once in the rule that owns it:
 - [ ] No new profile, configuration file or build configuration per environment (CFG-02/04)?
 - [ ] No secret in the repository, image, log line or frontend config; held in the `Secret` type (CFG-05/07)?
 - [ ] Configuration read only in adapters or the composition root (CFG-09)?
-- [ ] Binding test covers valid, invalid and missing values (TEST-CFG-01)? `configuration-keys.yaml` updated (CFG-12, TEST-CFG-04)?
+- [ ] Binding test covers valid, invalid and missing values (TEST-CFG-01)? `configuration-keys.yaml` updated (CFG-12, TEST-CFG-04)? Required keys without a deployed default (TEST-CFG-05)?
 
 ## Sources
 

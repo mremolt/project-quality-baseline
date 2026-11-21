@@ -22,7 +22,7 @@ function errorCodeOf(error: unknown): CancelOrderErrorCode {
   if (error instanceof OrderNotFound) return 'ORDER_NOT_FOUND';
   if (error instanceof OrderAlreadyShipped) return 'ORDER_ALREADY_SHIPPED';
   if (error instanceof UnauthenticatedError) return 'UNAUTHENTICATED';
-  if (error instanceof TechnicalError) return 'TECHNICAL';
+  if (error instanceof TechnicalError) return 'TECHNICAL'; // logged once where it was created (TS-ARCH-18)
   throw error; // a programming error: onRequestError logs it (NEXT-OBS-09)
 }
 

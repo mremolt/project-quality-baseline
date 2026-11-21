@@ -19,10 +19,16 @@ The Spring Boot 4 settings and code for [resilience/resilience.md](resilience.md
 | Transactions | — | `spring.transaction.default-timeout` (RES-TX-02) |
 | Kafka producer | `spring.kafka.producer.properties.max.block.ms` | `request.timeout.ms` and `delivery.timeout.ms` under `spring.kafka.producer.properties`, with `linger.ms` explicit (SPRING-MSG-03) |
 | Kafka consumer | — | `max.poll.interval.ms` bounds one poll's processing (SPRING-MSG-09) |
+| Spring Security resource server: JWKS | a `JwtDecoder` bean over a Nimbus key source: `new NimbusJwtDecoder(processor)` with a `DefaultJWTProcessor` whose key selector uses `JWKSourceBuilder.create(url, new DefaultResourceRetriever(connectMs, readMs, sizeLimitBytes)).build()`, values from the IdP group. Not `NimbusJwtDecoder.….restOperations(…)`: it takes a `RestTemplate`, which `noRestTemplate` forbids (SPRING-LIB-06) | same |
+| Spring Security OIDC login: token endpoint | `RestClientAuthorizationCodeTokenResponseClient.setRestClient(…)` (and the refresh-token client), built from the injected `RestClient.Builder` | same |
+| Spring Security OIDC login: userinfo | a small own user service that calls the userinfo endpoint with the injected `RestClient.Builder` and the IdP group values (`OidcUserService` and `DefaultOAuth2UserService` accept only `RestOperations`, i.e. a `RestTemplate`, which `noRestTemplate` forbids) | same |
+| Spring Security: issuer discovery at start-up | static provider metadata (`authorization-uri`, `token-uri`, `jwk-set-uri`) instead of `issuer-uri` discovery, or the decoder's lazy discovery through the client above | same |
 
   Global HTTP values are a floor; each dependency gets its own group values (RES-TMO-02). The `application.yaml` template sets the global and database values on the default ladder of RES-TMO-04 (statement 3 s < transaction 5 s < request budget 10 s); `socketTimeout` is a network backstop above the statement timeout. Spring MVC does not cancel a synchronous request when its budget runs out; the rungs below (transaction, statement and client timeouts, the `@Retryable` `timeout`) enforce it.
 
   Clients are built from the auto-configured `RestClient.Builder` or as HTTP Service Clients, so the configured timeouts apply (SPRING-OBS-09). The ArchUnit template's `noUnconfiguredHttpClients` rule fails the build on `RestClient.create(…)`, the static `RestClient.builder()` and `HttpClient.newHttpClient()`, which all start with library defaults (RES-TMO-01).
+
+  Spring Security builds its own HTTP clients for the identity provider, and they do **not** read `spring.http.clients.*`. Their defaults are the library's own: 30 s for discovery, a static `RestClient.builder()` for the token endpoint, a plain `new RestTemplate()` without timeouts for userinfo. A BFF or resource server therefore declares these clients itself, as the Spring Security rows of the table show, with the values of an `idp` group (RES-TMO-02), and a WireMock delay test covers the token and JWKS calls (SPRING-RES-02).
 
 ```yaml
 spring:
@@ -138,6 +144,7 @@ Items of this file that are written from reference docs and not yet exercised in
 ## Agent checklist
 
 - [ ] New client: built from the injected builder, connect and read timeouts in configuration, values on the timeout ladder; WireMock delay test (SPRING-RES-01/02)?
+- [ ] OIDC login or resource server: JWKS, token and userinfo clients declared with explicit timeouts, not left to Spring Security's defaults (SPRING-RES-01)?
 - [ ] Remote call outside the transaction, database part in a `TransactionTemplate`; `app.resilience.transaction-guard` is `fail` in tests (SPRING-RES-03/04)?
 - [ ] `maximum-pool-size` and `connection-timeout` (milliseconds) set; pool timeout maps to 503 (SPRING-RES-05)?
 - [ ] `@Retryable` with explicit `includes`, backoff, jitter and `timeout`, on an adapter, not in a Kafka-driven flow (SPRING-RES-08/09)?

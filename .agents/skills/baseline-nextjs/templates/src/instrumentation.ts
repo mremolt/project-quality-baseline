@@ -23,18 +23,12 @@ export async function register(): Promise<void> {
   }
 }
 
-/** Server errors Next.js caught (render, route handler, server action, proxy): one log line (NEXT-OBS-09). */
+/**
+ * Server errors Next.js caught (render, route handler, server action, proxy): one log line, unless the error's creator
+ * logged it already through the server reporter (NEXT-OBS-09, TS-ARCH-18).
+ */
 export const onRequestError: Instrumentation.onRequestError = async (error, request, context) => {
   if (process.env['NEXT_RUNTIME'] !== 'nodejs') return;
-  const { logger } = await import('@/platform/index.server');
-  logger.error(
-    {
-      err: error,
-      method: request.method,
-      path: request.path.split('?')[0],
-      routePath: context.routePath,
-      routeType: context.routeType,
-    },
-    'request failed',
-  );
+  const { logRequestError } = await import('@/platform/index.server');
+  logRequestError(error, request, context);
 };

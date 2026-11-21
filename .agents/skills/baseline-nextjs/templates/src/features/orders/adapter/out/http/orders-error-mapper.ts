@@ -4,8 +4,8 @@ import { OrderAlreadyShipped, OrderNotFound } from '../../../domain/order-errors
 
 /**
  * The one place that turns HTTP answers of the orders API into domain errors (TS-ARCH-18). A 5xx becomes a `server`
- * failure (the browser mutator has reported it); anything it cannot map becomes an `unexpected` one, which the adapter
- * reports.
+ * failure (the browser or server mutator has reported it); anything it cannot map becomes an `unexpected` one, which
+ * the adapter reports.
  */
 export function toOrdersError(error: unknown, orderId?: string): Error {
   if (error instanceof UnauthenticatedError || error instanceof TechnicalError) return error;

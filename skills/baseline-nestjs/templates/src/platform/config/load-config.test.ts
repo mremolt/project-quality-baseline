@@ -39,6 +39,13 @@ describe('parseConfig (NEST-CFG-02, NEST-CFG-07, TEST-CFG-01)', () => {
     expect(cfg.DEMO_PASSWORD.reveal()).toBe('from-file');
   });
 
+  it('refuses a secret shorter than its minimum length, naming the key only (NEST-CFG-12)', () => {
+    const Signed = z.object({ DEMO_SIGNING_SECRET: secret(32).describe('Signing secret') });
+    const run = (value: string): unknown => parseConfig(Signed, { DEMO_SIGNING_SECRET: value });
+    expect(() => run('too-short')).toThrow('Invalid configuration: DEMO_SIGNING_SECRET');
+    expect(() => run('x'.repeat(32))).not.toThrow();
+  });
+
   it('fails when KEY and KEY_FILE are both set, or KEY_FILE is unreadable', () => {
     expect(() => parseConfig(Schema, { ...valid, DEMO_PASSWORD_FILE: '/nonexistent' })).toThrow(
       'DEMO_PASSWORD (set both DEMO_PASSWORD and DEMO_PASSWORD_FILE)',

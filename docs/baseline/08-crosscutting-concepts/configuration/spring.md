@@ -83,6 +83,7 @@ public final class Secret {
 | Binding and validation (TEST-CFG-01) | Plain JUnit with `ApplicationContextRunner().withUserConfiguration(PaymentClientConfiguration.class).withPropertyValues(...)`: valid values give the bean, each violated constraint and each missing key gives `hasFailed()` with the key in the message. No Spring Boot test context, no containers |
 | Secret masking (TEST-CFG-03) | One unit test: `assertThat(new Secret("s3cr3t").toString()).doesNotContain("s3cr3t")`; the ArchUnit rule `secretsUseSecretType` covers every properties record |
 | Key list (TEST-CFG-04) | Plain JUnit: read `META-INF/spring-configuration-metadata.json` from the classpath and `configuration-keys.yaml`, compare the `app.*` names in both directions |
+| No deployed default for required keys (TEST-CFG-05) | Plain JUnit: load `application.yaml` (default document, no profile) with a YAML parser, and fail for every `required: true` key of `configuration-keys.yaml` that has a value there or a `${…:default}` fallback; the `@DefaultValue` check reads the generated configuration metadata (`defaultValue`) |
 | Use-case settings | Unit test constructs the record directly |
 | `/config.json` | `@WebMvcTest`: 200 without authentication, exact JSON keys, `Cache-Control: no-store` (SPRING-REST-13, SPRING-SEC-10) |
 | Deployed defaults (TEST-CFG-02) | The `e2e:smoke` start of the image (SPRING-DEV-10) runs without the `local` profile and with the required keys of `configuration-keys.yaml` only (CFG-12) |

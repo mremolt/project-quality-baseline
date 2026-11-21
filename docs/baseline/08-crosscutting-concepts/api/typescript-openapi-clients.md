@@ -70,6 +70,8 @@ Option names change between Orval versions; the installed `orval` skill and orva
 - **TS-API-07: Batching and caching (API-N1 S4/S5) are decorators in the same folder**, implementing the same port and wrapping the plain adapter. They are wired in the composition file and have their own adapter tests (one batch call for N items, one call for repeated requests).
 - **TS-API-08: A spec change is reviewed together with its effect on the frontend**: spec diff, regenerated code compiles, adapter tests green. In the same repository this is the pull request that changes the backend (REPO-API-01). With a separate repository, updating the pinned copy is its own pull request. A breaking change in the spec shows up as compile errors in the adapters, which is the point.
 - **TS-API-09: `urlEncodeParameters: true` is set in every Orval client output.** Without it Orval interpolates path parameters raw into the URL template (`/orders/${orderId}`), so a value containing `/`, `?` or `#` changes the path or query of the request (another endpoint of the same API, injected query parameters; OWASP ASVS 5.0 V1 encoding). With it the generated code calls `encodeURIComponent(String(orderId))`. **Encoding does not stop dot segments:** `encodeURIComponent('..')` is `..`, and `new URL()` resolves `..` and `%2e%2e` segments, so `/orders/../admin` still leaves the intended path. Therefore id path parameters also get a format constraint in the spec (`pattern`, `format: uuid`), which the domain value object and the backend enforce, and code that sends the request (a server-side relay or mutator) asserts that the resolved URL stays on the expected origin and path prefix.
+- **TS-API-10: Downloads of generated files (exports, reports) go through the outgoing HTTP adapter** by default: the generated client or `HttpClient`/`fetch` with a blob response, saved from an object URL. The adapter's error mapping, the 401 handling and error reporting then apply, and the UI can show progress (UI-20). The core never builds API URLs; the outgoing port returns the file (name, type, content). A plain `<a href download>` to an API path is acceptable only where a failed download needs no message, with the reason in the pull request.
+  *Why:* a browser download of an error response either saves the problem JSON as a file or fails silently, and a hand-built URL does not break the build when the API changes.
 
 ## Examples
 
@@ -174,6 +176,7 @@ Stack-specific rows are in the stack's clients doc.
 - [ ] N+1 check done; batching/caching as decorator if chosen?
 - [ ] Adapter tests use the generated MSW handlers, including an error and a malformed response?
 - [ ] `urlEncodeParameters: true` in the Orval config (TS-API-09); `@faker-js/faker` a dev dependency when MSW mocks are generated?
+- [ ] File downloads through the adapter, not hand-built URLs in `<a download>` (TS-API-10)?
 
 ## Sources
 

@@ -6,7 +6,7 @@ How a NestJS backend meets [delivery-and-release.md](delivery-and-release.md) (R
 
 ### Migrations (REL-DB-01..06)
 
-- **NEST-REL-01: By default the new version migrates at start-up, before it listens.** `main.ts` runs the migration (`migrateToLatest`, NEST-DB-14) with the DDL credentials, then `createApp()` and `listen()`, so an instance is never ready on an old schema and a failed migration fails the start (REL-DB-05: the old version keeps serving). The DDL credentials are their own keys (`DATABASE_MIGRATION_USER`, `DATABASE_MIGRATION_PASSWORD` as a secret file, NEST-CFG-07) and are used only by the one-connection migration pool, which is closed before the app starts; the application pool uses the DML user (NEST-DB-17).
+- **NEST-REL-01: By default the new version migrates at start-up, before it listens; from the second instance or the first production environment the pre-deploy variant (NEST-REL-03) is required.** `main.ts` runs the migration (`migrateToLatest`, NEST-DB-14) with the DDL credentials, then `createApp()` and `listen()`, so an instance is never ready on an old schema and a failed migration fails the start (REL-DB-05: the old version keeps serving). The DDL credentials are their own keys (`DATABASE_MIGRATION_USER`, `DATABASE_MIGRATION_PASSWORD` as a secret file, NEST-CFG-07) and are used only by the one-connection migration pool, which is closed before the app starts; the application pool uses the DML user (NEST-DB-17). The start-up variant suits a single instance and a demo environment. A product with more than one instance, or with a production environment, runs the migration as a pre-deploy job instead and records that in chapter 7: otherwise every instance races for the migrator lock (the losers fail on `lock_timeout` and restart) and the schema owner's password is part of the serving process's environment, reachable after a compromise of the web process.
 
 ```ts
 // src/main.ts (excerpt)
@@ -77,18 +77,20 @@ CMD ["--import", "./dist/instrumentation.js", "dist/main.js"]
 
 - **NEST-REL-10: When the NestJS backend is the BFF, the image build adds the bundle as `frontend/` next to `dist/`.** The bundle is the frontend job's pipeline artifact (REL-FE-02), plus the hashed files of the previous release's bundle (REL-FE-04); it is copied into the Buildpacks staging folder, or into the Dockerfile's final stage from a named build context (`docker buildx build --build-context frontend=<bundle path>`, `COPY --from=frontend . ./frontend/`). The path is configuration with the default `frontend/`. Serving rules (static plugin, nonce, deep links, cache headers, 404): NEST-SEC-51 in [security/nestjs-hardening.md](../08-crosscutting-concepts/security/nestjs-hardening.md). The BFF's own tests use a fixture bundle, so `npm run verify` never needs the frontend.
 
+- **NEST-REL-12: The bundle folder is checked at start and the image is smoke-tested** (REL-FE-06). The code that registers the SPA routes (NEST-SEC-51) throws in a deployed environment when `index.html` is missing under the configured folder, unless an explicit key (for example `FRONTEND_SERVE=false`, listed in `configuration-keys.yaml`) declares an API-only run. The default folder is `frontend/` relative to the image's working directory (NEST-REL-10), never a path outside the image (such as `../frontend/dist`, which only exists in a development checkout). The image build job runs the image and asserts `GET /` returns `200` with `text/html`. The serving test with the fixture bundle covers the refusal.
+
 ### SBOM (SEC-CI-03)
 
 - **NEST-REL-11: The release job publishes a CycloneDX SBOM of the image** (REL-IMG-01), generated from the image by the pipeline's image scanner, and the dependency SBOM of TS-TOOL-16 (`@cyclonedx/cyclonedx-npm --omit dev`). `npm sbom --omit dev` is not used: with npm 11.13 it leaves out production dependencies that are also peers of dev dependencies (`@nestjs/core` among them).
 
 ## Agent checklist
 
-- [ ] Start-up migration before `listen()`, DDL credentials only in the migration pool; or pre-deploy job with `node dist/migrate.js`, instances checking only (NEST-REL-01/03)?
+- [ ] Start-up migration before `listen()`, DDL credentials only in the migration pool; or pre-deploy job with `node dist/migrate.js`, instances checking only; required from the second instance or a production environment (NEST-REL-01/03)?
 - [ ] Start-up budget ≥ start + migration `statement_timeout` (NEST-REL-02)?
 - [ ] Image starts `node --import ./dist/instrumentation.js dist/main.js` in exec form (NEST-REL-05)?
 - [ ] `package.json` version `0.0.0`; release version from `RELEASE_VERSION` and `OTEL_RESOURCE_ATTRIBUTES` (NEST-REL-06)?
 - [ ] Image: no sources or dev dependencies, non-root, base pinned by digest, read-only root filesystem (NEST-REL-07..09)?
-- [ ] BFF: bundle in `frontend/` from the pipeline artifact plus the previous release's hashed files (NEST-REL-10)?
+- [ ] BFF: bundle in `frontend/` from the pipeline artifact plus the previous release's hashed files (NEST-REL-10); start fails without it, built image answers `GET /` (NEST-REL-12)?
 
 ## Sources
 

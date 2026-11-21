@@ -72,6 +72,9 @@ component ──▶ useOrdersPage() (orders.queries.ts) ──────▶ Lo
 - **REACT-STATE-17: Screens render loading, empty and error from the query result with the shared state components** (`isPending` → loading, `isError` → error with a retry that calls `refetch()`, empty data → empty state; UI-19, [react-mui.md](react-mui.md)). `throwOnError` and `useSuspenseQuery` are not used by default: they move error handling into boundaries, which then need the same mapping and reporting.
 - **REACT-STATE-18: Query devtools are not part of production builds.** If a project adds `@tanstack/react-query-devtools`, it loads only in development (`import.meta.env.DEV` with a dynamic import), and the bundle check proves it is absent (TS-SEC-05 spirit). Not used in the validated project.
 
+- **REACT-STATE-19: A failed refetch keeps the data on screen.** The full-screen `ErrorState` shows only when the query failed and has no data (`isError && data === undefined`, REACT-STATE-17); when data exists, a failed background refetch shows a non-blocking `Alert` with a retry above the data (`isRefetchError`). Every command invalidates its keys (REACT-STATE-11), so every booking refetches and one network blip would otherwise replace the page, unmount a running timer and discard open dialogs and drafts. A page test fails the second fetch and asserts that the data and the open dialog stay and the alert appears.
+  *Why:* in TanStack Query v5 a failed refetch sets `status: 'error'` and keeps the cached data, so branching on `isError` alone destroys a working screen.
+
 ## Example
 
 ```ts
@@ -192,7 +195,7 @@ The two `no-empty-object-type` disables (the `LazyLoadedSlices` interface and ea
 - [ ] Every command invalidates the affected keys in `onSuccess`; `staleTime` default unless reasoned (REACT-STATE-11)?
 - [ ] No per-row queries, no `useQueries` over ids; N+1 check stated and request budget asserted (REACT-STATE-12)?
 - [ ] No RTK Query, no Orval query client, no `useEffect` fetch (REACT-STATE-09)?
-- [ ] Retry only transient technical errors, with jitter (REACT-STATE-15)?
+- [ ] Retry only transient technical errors, with jitter (REACT-STATE-15)? Full-screen error only without data; failed refetch is an inline alert (REACT-STATE-19)?
 - [ ] Slice tests with the real store; commands, error keys and reporting covered by the page test with mocked use cases (REACT-STATE-13)?
 
 ## Sources

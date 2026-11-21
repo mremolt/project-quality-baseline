@@ -76,6 +76,8 @@ Status codes and the `code` catalogue in REST: API-REST-06/07 ([rest-conventions
 
 - **ARCH-UC-15: The use case authorizes; the incoming adapter authenticates.** The adapter turns the authenticated principal into a framework-free caller and passes it with the command or query; it may add coarse checks per route (authenticated, has a role). The use case decides with the caller whether this caller may act on this object (ownership, tenant, state), so every adapter gets the same decision. Spring: SPRING-SEC-02; NestJS: NEST-SEC-02.
   *Why:* object-level checks need the loaded object, and a check that lives only in the REST adapter is skipped by the Kafka listener and the scheduled job.
+- **ARCH-UC-16: A rule that depends on other rows or on concurrent requests is enforced atomically, never by check-then-write alone.** Examples: a natural key is unique, no write lands in a closed period, time ranges of one owner never overlap, at least one administrator remains, a queued item is processed once. For each such invariant the use case states how it holds under concurrency: a database constraint (unique, exclusion, check, foreign key), a conditional write whose affected-row count is checked, or a lock taken by both the check and the conflicting write (row lock, advisory lock). A test runs the two conflicting operations as two real transactions in a controlled order (the first held open until the second has reached the conflicting statement) and asserts that one of them is rejected or waits; it has been seen failing without the mechanism. Concurrent edits of the *same* object are covered by optimistic locking (API-REST-11). Spring: SPRING-DB-16; NestJS: NEST-DB-23.
+  *Why:* under the default isolation level (READ COMMITTED) two requests can both pass the check before either writes, so the check alone guarantees nothing.
 
 ### Domain model style
 
@@ -123,6 +125,7 @@ application/TransferFundsService implements TransferFundsUseCase
 - [ ] Errors raised as exceptions of one ARCH-UC-13 category; results only for expected alternative outcomes (ARCH-UC-10)?
 - [ ] Domain events raised in `domain` and handed to an outgoing port, not to another use case (ARCH-UC-14)?
 - [ ] Transaction boundary on the service, with no remote call inside it (ARCH-UC-11)?
+- [ ] Every rule that depends on other rows (uniqueness, closed periods, "at least one", process once) enforced by a constraint, a conditional write or a shared lock, with a concurrency test (ARCH-UC-16)?
 
 ## Sources
 

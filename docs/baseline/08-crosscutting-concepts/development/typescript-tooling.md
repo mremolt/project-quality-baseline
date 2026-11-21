@@ -156,11 +156,13 @@ Two details keep the template valid under TS-TOOL-05, and under TS-TOOL-01 when 
 | `lint` / `lint:fix` | ESLint |
 | `format` / `format:check` | Prettier write / check |
 | `check:arch` | dependency-cruiser (TS-ARCH-12) |
+| `check:unused` | knip: unused dependencies, exports and files (TS-TOOL-17) |
 | `test` | `generate:api`, then Vitest (unit, component, adapter) |
+| `test:coverage` | `test` with the coverage report (REACT-TEST-22, NEST-TEST-13) |
 | `e2e` | Playwright, stubbed tier |
 | `e2e:nightly` | Playwright, stubbed tier plus the nightly viewport and browser projects (TS-TEST-18) |
 | `e2e:smoke` | Playwright, real-backend tier |
-| `verify` | The component's local gate, from a clean checkout: `generate:api`, `format:check`, `lint`, `check:arch`, `test`, `build`. No E2E, no security scans |
+| `verify` | The component's local gate, from a clean checkout: `generate:api`, `format:check`, `lint`, `check:arch`, `check:unused`, `test`, `build`. No E2E, no security scans |
 
   `build` and `test` call `generate:api` explicitly. With `ignore-scripts=true` (TS-TOOL-11) npm skips `pre*` and `post*` scripts also for `npm run` and `npm test`, so no script relies on them. `verify` is what the component's CI job runs (REPO-CI-01); E2E tiers and the security job are separate pipeline jobs, listed with trigger and required status in the pipeline jobs table ([REPO-CI](../../07-deployment-view/repository-layout.md#ci)). A stack maps the scripts to its CLI where it has one.
 
@@ -174,11 +176,15 @@ Two details keep the template valid under TS-TOOL-05, and under TS-TOOL-01 when 
 - **TS-TOOL-15: Dependency updates are automated as a capability of the repository.** One update tool opens update pull requests for npm, Maven (JAVA-TOOL-16), container base images, Compose images and CI actions or plugins, grouped by ecosystem, and waits at least the `min-release-age` cooldown before proposing a release (reference tools, replaceable: Renovate, Dependabot). Update pull requests pass the same pipeline as any other change. Framework majors follow the stack's update rule.
 - **TS-TOOL-16: Builds are reproducible.** CI installs with `npm ci` from the committed lockfile, on the pinned Node and npm (TS-TOOL-14) in a build image pinned by digest (SEC-CI-02), so the same commit gives the same bundle. The release job produces a CycloneDX SBOM with the CycloneDX npm tool (`@cyclonedx/cyclonedx-npm --omit dev`, a pinned dev dependency) and publishes it with the artifact (SEC-CI-03, JAVA-TOOL-17 for Maven). `npm sbom --omit dev` is not used: npm 11.13 drops production packages that are also peers of dev dependencies (in a NestJS service 196 of 285 components, `@nestjs/core` among the missing), and it fails without a `version` in `package.json`.
 
+- **TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it** (`check:unused`, `knip.json` in the component, entry points listed, generated code ignored). A dependency whose code is not written yet is not installed; one that is no longer used is removed. A finding is fixed or the entry is added to `knip.json` with the reason, never silenced by deleting the check (SEC-REV-02).
+  *Why:* an installed but never wired `@nestjs/schedule` and an unused cluster-lock helper looked like a working scheduled purge; each unused dependency also widens the supply chain (TS-TOOL-13). The `knip.json` templates are not yet run against a real product ([chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)).
+
 ## Agent checklist
 
 - [ ] No `any`, no unexplained `as`, no new `eslint-disable` without a reason?
 - [ ] `npm run verify` green before finishing? (E2E for changed screens runs separately.)
 - [ ] No script that relies on a `pre*`/`post*` hook (TS-TOOL-10)?
+- [ ] No unused dependency, export or file (`npm run check:unused`, TS-TOOL-17)?
 - [ ] npm 11.10 or newer, `engines` and `engine-strict` in place (TS-TOOL-14)?
 - [ ] No compiler check or lint rule loosened?
 

@@ -248,6 +248,8 @@ page: async ({ page }, use) => {
 },
 ```
 
+- **REACT-TEST-22: Coverage is reported, not gated** (TEST-ARCH-09). The template ships `@vitest/coverage-v8` (the Vitest version), a `coverage` block in `vitest.config.ts` (`provider: 'v8'`, `include: src/**/*.{ts,tsx}`, generated code excluded, reporters `text-summary` and `lcov`, no threshold) and the script `test:coverage`; `verify` does not run it. The report shows which `domain` and `application` branches no test reaches.
+
 ## To verify before first use
 
 Verified with React 19.3, Vitest 5.1, jsdom 31, Testing Library 16.3, user-event 14.6, jest-dom 7.0, MSW 3.0, Orval 8.47, Playwright 1.65 in Chromium and Firefox. Not yet verified, listed in [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use):

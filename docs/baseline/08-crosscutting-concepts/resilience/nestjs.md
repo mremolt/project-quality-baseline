@@ -160,6 +160,8 @@ async purge(): Promise<void> {
 
 - **NEST-RES-14: Caches are `lru-cache` instances inside the outgoing adapter** (RES-CCH-01/03), with both `max` and `ttl` set (the library rejects a cache with neither, but `ttl` alone does not bound memory). `fetchMethod` with `cache.fetch(key)` deduplicates concurrent loads of the same key. Keys that depend on the caller include caller and tenant id (RES-CCH-02). Nothing from a cache library is imported in `domain`, `ports` or `application`. A shared cache (Redis) needs an ADR (RES-CCH-04).
 
+- **NEST-RES-15: Bulk use cases hand per-item remote calls to a job** (RES-JOB-04): the use case writes the item rows (or a status column) in its unit of work and returns; an `adapter/in/scheduling` job (NEST-RES-11) picks `PENDING` items with `FOR UPDATE SKIP LOCKED` in batches, calls the outgoing port through the policy of NEST-RES-07 and records the result per item. An integration test with a port stub that takes longer than the request budget asserts that the request still answers within it and that the job finishes the items.
+
 ## Tests
 
 | What | How |
@@ -181,6 +183,7 @@ async purge(): Promise<void> {
 - [ ] Retry only for idempotent calls, with `handleWhen`, jittered backoff, total `timeout`; not in a consumer-driven flow (NEST-RES-07/08)?
 - [ ] Retryable `POST`: `Idempotency-Key` in the command, conflict-free insert first in the transaction, `57014` mapped (NEST-RES-09)?
 - [ ] New job: `@Cron` with `waitForCompletion`, under `withClusterLock` or `SKIP LOCKED`, batches stop on the signal (NEST-RES-11)?
+- [ ] Bulk input with a remote call per item: items stored, job makes the calls, request answers within its budget (NEST-RES-15)?
 - [ ] CPU-heavy work in a `piscina` pool with bounded queue (NEST-RES-13)? New cache bounded by `max` and `ttl`, caller in the key where needed (NEST-RES-14)?
 
 ## Sources

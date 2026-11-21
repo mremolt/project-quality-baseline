@@ -29,11 +29,13 @@ Once something looks neglected, people care less about making it worse. In code:
 - **ARCH-SC-05: Some use cases stay CRUD forever.** Keeping their shortcuts is fine. The ADR records that.
 - **ARCH-SC-06: Agents MUST NOT introduce a shortcut silently.** If a task seems to need one, the agent proposes it and drafts the ADR, and a human decides.
 - **ARCH-SC-07: Incoming ports are required (default D1).** An adapter calls a use case only through its incoming port (ARCH-UC-02, ARCH-ADP-02); the architecture test checks it (Spring: `adaptersCallPortsNotServices`; NestJS: `adapters-use-ports-not-services`). Skipping incoming ports is the shortcut in the table above and needs an ADR, which also records how the test is adjusted.
+- **ARCH-SC-08: An ADR or exception counts as an accepted deviation only for the rule IDs it names.** An ADR whose decision conflicts with a baseline rule names that rule in its Decision section; one that does not is a violation of that rule, however well reasoned. Debt recorded in chapter 11 with owner and trigger is not a deviation: reviews report it as a finding marked "recorded debt", so it stays visible until its trigger fires.
+  *Why:* a reviewer or agent cannot match an unnamed rule to a decision, and debt that counts as accepted stops being looked at.
 
 ## Agent checklist
 
 - [ ] Does my change take one of the shortcuts above, and does its "ADR needed?" column say yes?
-- [ ] If yes: is there an existing ADR covering it, or did I draft one and flag it for review?
+- [ ] If yes: is there an existing ADR covering it, or did I draft one and flag it for review? Does the ADR name the rule IDs it deviates from (ARCH-SC-08)?
 - [ ] Does my change meet a "grown up" criterion that requires removing an existing shortcut?
 
 ## Sources

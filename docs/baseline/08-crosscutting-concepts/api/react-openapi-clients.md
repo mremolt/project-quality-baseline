@@ -223,6 +223,9 @@ it('rejects a malformed response with a technical error and reports it, because 
 });
 ```
 
+- **REACT-API-13: With several features, every OpenAPI tag is generated into exactly one owning feature.** The template configures one feature; a second feature does not copy the config with an overlapping tag list. `orval.config.ts` lists, per feature, the tags it owns (`input.filters: { tags: [...] }` for both the `fetch` and the `zod` output), and the tag sets are disjoint. A feature that needs an operation another feature owns uses that feature's use case through its published API (TS-ARCH-19, REACT-ARCH-11); the backend splits a tag that two features really share. A check in `check:arch` or the config's own test fails when two features generate the same tag.
+  *Why:* overlapping tag lists triple the generated code, double every diff after an API change, and leave near-identical adapters that must be kept in sync by hand.
+
 ## Skill overrides (`orval`, `tanstack-query-best-practices`)
 
 | Skill says | Our rule |
@@ -245,6 +248,7 @@ it('rejects a malformed response with a technical error and reports it, because 
 - [ ] Adapter passes `{ signal: signal ?? null }`, parses with the generated PascalCase zod schema, maps problems in one mapper, reports the `TechnicalError`s it creates (and only those)?
 - [ ] No `Authorization` header, no absolute URL, no retry in the mutator?
 - [ ] Plain `fetch` only in the platform's config loader and reporting sender, each with a timeout?
+- [ ] Several features: tag sets in `orval.config.ts` disjoint, other features' operations used through their published API (REACT-API-13)?
 - [ ] Adapter and mutator tests against MSW with `onUnhandledFrame: 'error'`, covering success, malformed body, 5xx, problem codes, time-out and abort?
 
 ## Sources

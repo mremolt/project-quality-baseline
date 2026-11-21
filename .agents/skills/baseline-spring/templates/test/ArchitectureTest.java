@@ -39,12 +39,14 @@ import com.tngtech.archunit.library.GeneralCodingRules;
 import jakarta.persistence.Entity;
 import java.math.BigDecimal;
 import java.net.http.HttpClient;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Tag;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 
 @AnalyzeClasses(packages = "com.example.orders", importOptions = ImportOption.DoNotIncludeTests.class)
@@ -376,6 +378,39 @@ class ArchitectureTest {
             throw new AssertionError("Use cases without a @Tag(\"cross-user\") test (SPRING-SEC-16): " + missing);
         }
     }
+
+    // Every controller is covered by a web slice test, where the 401/403/success cases of SPRING-SEC-10 live
+    // (SPRING-TEST-12): named in @WebMvcTest(controllers = ...) of some test class, or <Controller>Test next to it.
+    // A bare @WebMvcTest loads every controller and covers none.
+    @ArchTest
+    static void everyControllerHasAWebSliceTest(JavaClasses productionClasses) {
+        JavaClasses testClasses = new ClassFileImporter().importPackages("com.example.orders");
+        Set<String> testNames = new HashSet<>();
+        Set<String> covered = new HashSet<>();
+        for (JavaClass testClass : testClasses) {
+            testNames.add(testClass.getName());
+            testClass.tryGetAnnotationOfType(WEB_MVC_TEST).ifPresent(annotation -> {
+                for (String attribute : List.of("controllers", "value")) {
+                    annotation.get(attribute).ifPresent(value -> {
+                        for (Object controller : (Object[]) value) {
+                            covered.add(((JavaClass) controller).getName());
+                        }
+                    });
+                }
+            });
+        }
+        List<String> missing = productionClasses.stream()
+                .filter(controller -> controller.isAnnotatedWith(RestController.class))
+                .map(JavaClass::getName)
+                .filter(name -> !covered.contains(name) && !testNames.contains(name + "Test"))
+                .sorted()
+                .toList();
+        if (!missing.isEmpty()) {
+            throw new AssertionError("Controllers without a web slice test (SPRING-TEST-12): " + missing);
+        }
+    }
+
+    private static final String WEB_MVC_TEST = "org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest";
 
     private static boolean isCrossUserTest(JavaClass javaClass) {
         return hasCrossUserTag(javaClass)

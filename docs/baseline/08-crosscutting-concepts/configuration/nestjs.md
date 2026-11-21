@@ -26,7 +26,7 @@ export const PAYMENT_CLIENT_CONFIG = Symbol('PaymentClientConfig');
 
 ```ts
 // src/platform/config/load-config.ts
-export const secret = () => z.string().trim().min(1).transform((v) => new Secret(v)).meta({ secret: true });
+export const secret = (minLength = 1) => z.string().trim().min(minLength).transform((v) => new Secret(v)).meta({ secret: true });
 
 export function parseConfig<S extends z.ZodObject<z.ZodRawShape>>(schema: S, env: Readonly<Record<string, string | undefined>>): Readonly<z.output<S>> {
   const input: Record<string, string | undefined> = {};
@@ -79,6 +79,11 @@ export class Secret {
 
 - **NEST-CFG-09: Configuration is never dumped:** no log line with a configuration object or `process.env`, no endpoint that returns configuration, no stack trace that includes it.
 
+- **NEST-CFG-12: `secret(minLength)` states the strength of a secret, and keys with a format state it in the schema.** The helper takes the minimum length (`secret(32)` for a session or cookie signing secret, `secret()` only where the length is the provider's choice); a key with a fixed format (a base64 encryption key that must decode to exactly 32 bytes, a PEM) is refined in the schema, so a weak or malformed value fails at config load with the key name, never later in a constructor or on first use. A description that says "32 characters or more" without the check is a defect.
+  *Why:* `z.string().min(1)` starts a production instance with a one-character signing secret.
+- **NEST-CFG-13: Switches that only make sense locally are refused in a deployed environment.** `APP_ENVIRONMENT_KIND` (`local`, `test` or `deployed`) is a required key without a default (like `NEXT-CFG-07`): every deployment states `deployed`, the committed `.env.local` states `local`, the test setup `test`. The schema refuses `OIDC_ALLOW_INSECURE_HTTP`, test stubs, development certificates and similar keys unless the kind is `local` or `test`, and the start refuses a secret that equals the throwaway value of the committed `.env.local` when the kind is `deployed`. The template defines no such switch; the product adds the key together with the first one.
+  *Why:* the throwaway values in the committed `.env.local` (NEST-DEV-06) are public; a deployment that copies the file or keeps an insecure-transport switch has forged sessions or a downgraded login.
+
 ### Key list
 
 - **NEST-CFG-10: `configuration-keys.yaml` in `backend/` lists every key a deployment sets** (CFG-12): the keys of all own schemas plus library keys such as `OTEL_SERVICE_NAME` and `OTEL_EXPORTER_OTLP_ENDPOINT`. A secret key is listed under its own name with `secret: true`; the `_FILE` variant is how it is delivered, not a second key. `src/config-schemas.ts` (a composition-root file next to `app.module.ts`) exports the array of all schemas; the key-list test reads it.
@@ -116,7 +121,8 @@ expect(listed.filter((k) => !libraryKey(k.key)).map(pick).sort(byKey)).toEqual(o
 - [ ] New setting: key in a zod schema next to its adapter, constrained, `.describe()`d, unit in the name (NEST-CFG-01/05)?
 - [ ] Read through `loadConfig` in a provider, injected by token; nothing in the core imports config (NEST-CFG-02/03)?
 - [ ] No `process.env`, no `NODE_ENV` branch, no per-environment file (NEST-CFG-02/06)?
-- [ ] Secret built with `secret()`, delivered as `KEY_FILE`, `reveal()` only at the client library (NEST-CFG-07/08)?
+- [ ] Secret built with `secret()`, delivered as `KEY_FILE`, `reveal()` only at the client library (NEST-CFG-07/08); minimum length and key format checked in the schema (NEST-CFG-12)?
+- [ ] Local-only switch: refused unless `APP_ENVIRONMENT_KIND` is `local` or `test` (NEST-CFG-13)?
 - [ ] Key added to `configuration-keys.yaml` and to `src/config-schemas.ts` (NEST-CFG-10)?
 - [ ] Binding test for valid, invalid and missing values (TEST-CFG-01)?
 

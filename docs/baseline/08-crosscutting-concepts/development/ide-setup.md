@@ -34,6 +34,12 @@ We support two IDEs for frontend and backend work: **Visual Studio Code** and **
 !.idea/jsLinters/
 !.idea/externalDependencies.xml
 !.idea/codeStyles/
+
+# Tool output of a stray run from the repository root (REPO-LAY-07)
+node_modules/
+dist/
+coverage/
+.env*.local
 ```
 
 ## Agent checklist

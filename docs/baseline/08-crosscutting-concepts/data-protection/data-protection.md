@@ -51,6 +51,8 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 - **DP-DSR-02: Each module that stores personal data contributes to export and erasure through its own port**, so a new storage location cannot be forgotten: a test fails when an adapter holding personal data has no export/erase implementation (e.g. an architecture test or a registry test).
 - **DP-DSR-03: Requests are answered within one month** (Art. 12(3); extendable by two months with notice). The use cases run without developer involvement, so the deadline does not depend on a ticket. Erasure and rectification are passed on to recipients and processors listed in the inventory (Art. 19), through an outgoing port where they are systems.
 - **DP-DSR-04: Identity verification of the requester is part of the business process**, not something the export endpoint assumes. A self-service export only returns the authenticated caller's own data (SPRING-SEC-16, NEST-SEC-08).
+- **DP-DSR-05: An access or portability export contains all stored personal data of the requester, and nothing about other people.** It includes soft-deleted, archived and superseded records that are still stored, marked as such: the export reads them with its own queries, not with the business queries that hide them. It is never silently truncated: it streams, pages or fails with a stated reason. Records that also concern other people (an audit entry the requester wrote about a colleague, a team or project list) show only the requester's part: what the requester did, when, and to which object type, without the other person's identifiers or values (Art. 15(4)). Tests: the export of a user who changed other users' data contains none of their identifiers, and a soft-deleted record of the requester appears in it.
+  *Why:* Art. 15 covers every stored record, not just the active ones, and an export built on the business queries silently leaves out the deleted ones while copying everything the requester touched.
 
 ### Non-production environments and test data
 
@@ -94,6 +96,7 @@ Agents never invent a legal basis, a retention period or a transfer mechanism. W
 - [ ] New or changed personal data: `processing-record.md` and `deletion-concept.md` updated, flagged for DPO review (DP-INV-03)?
 - [ ] Field needed for a stated purpose; optional processing off by default (DP-MIN-01/03)?
 - [ ] Retention job and erasure/export cover the new location; tests updated (DP-RET-02, DP-DSR-02, DP-TEST-01)?
+- [ ] Export includes soft-deleted records, is never silently truncated, and redacts other people's data (DP-DSR-05)?
 - [ ] No personal data in logs, telemetry, URLs, events beyond IDs (DP-TEL-01/02, DP-MIN-02)?
 - [ ] Only synthetic data in fixtures and non-production environments (DP-ENV-01)?
 - [ ] New external service: listed with DPA status and location; transfer basis decided (DP-PROC-01/02)?

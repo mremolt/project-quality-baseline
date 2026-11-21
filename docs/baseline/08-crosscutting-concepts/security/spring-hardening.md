@@ -46,7 +46,7 @@ Hardening for Spring Boot services on top of authentication and authorization ([
 
 ## Abuse protection
 
-- **SPRING-SEC-21: Abuse protection by rate limiting returns 429 and sits at the gateway or reverse proxy by default.** Bucket4j in the service only for business limits (password-reset or invitation requests per account, exports, expensive searches); login throttling belongs to the IdP. Redis only when counters must be shared across instances. Client identity is never taken from an unvalidated `X-Forwarded-For`.
+- **SPRING-SEC-21: Abuse protection by rate limiting returns 429 and sits at the gateway or reverse proxy by default.** Bucket4j in the service only for business limits (password-reset or invitation requests per account, exports, expensive searches); login throttling belongs to the IdP. Redis only when counters must be shared across instances. Client identity is never taken from an unvalidated `X-Forwarded-For`. The product lists in chapter 7, with the limit and where it is enforced: its unauthenticated endpoints that allocate server state or work (the OAuth2 authorization start creates a session, the CSP report endpoint, public forms) and its expensive authenticated endpoints (exports, reports). Until a gateway enforces these limits, the service does (Bucket4j filter).
 
 ## Audit logging
 
@@ -62,6 +62,10 @@ Hardening for Spring Boot services on top of authentication and authorization ([
 - **SPRING-SEC-25: CSRF protection for the SPA uses `csrf.spa()` or an equivalent handler:** cookie `XSRF-TOKEN` readable by the SPA, header `X-XSRF-TOKEN` on unsafe requests, session cookie HttpOnly. The Angular side is NG-SEC-07.
 - **SPRING-SEC-32: BFF sessions have explicit lifetimes, and the tokens stay server-side.** Defaults: idle timeout 30 minutes, absolute lifetime 12 hours, and never longer than the IdP session; a product sets other values in configuration with the reason in `docs/security/requirements.md`. The idle timeout is the session store's timeout; the absolute lifetime is checked against the session's creation time, because the session store has only an idle timeout. The session id is rotated on login (session-fixation protection stays on). The BFF refreshes access tokens shortly before expiry; refresh tokens live only in the server-side session store (encrypted at rest when the store is shared, SEC-CRY-03), are replaced when the IdP rotates them, and end with the session. A failed refresh ends the session (401 to the SPA, NG-SEC-08). Tests: a session id from before login is rejected after login, and a session past its idle or absolute limit is rejected (fixed `Clock` or short test timeouts).
 - **SPRING-SEC-33: Logout ends the session in the BFF and at the IdP.** `POST /logout` (CSRF-protected) invalidates the server session, deletes the session cookie, revokes the refresh token where the IdP supports revocation (RFC 7009), and redirects to the IdP's end-session endpoint (OIDC RP-Initiated Logout; Spring Security `OidcClientInitiatedLogoutSuccessHandler`). The BFF accepts OIDC Back-Channel Logout (Spring Security `oidcLogout().backChannel(...)`), so a logout or account lock at the IdP ends the user's BFF sessions; the session store can find sessions by the IdP's `sid`. Tests assert that the old session id is rejected after logout and after a back-channel logout token for its `sid`.
+- **SPRING-SEC-37: BFF sessions live in a shared, persistent session store: Spring Session JDBC on the product's PostgreSQL by default.** The session tables come from a Flyway migration (`spring.session.jdbc.initialize-schema: never`), Spring Session's cleanup job removes expired sessions, and the store is a storage location in the deletion concept (DP-INV-02). Session attributes hold tokens, so the table is readable only by the application role, and refresh tokens follow SPRING-SEC-32 (encrypted at rest when the store is shared). A Redis store needs an ADR (RES-CCH-04). The in-memory servlet session needs an ADR that accepts losing every session on each restart and running a single instance.
+  *Why:* with in-memory sessions every deployment logs every user out, a second instance needs sticky sessions, and losing a node drops its sessions; PostgreSQL is already there, so a shared store costs no new infrastructure.
+- **SPRING-SEC-38: The BFF authenticates to the IdP as a confidential client and still uses PKCE.** Prefer `private_key_jwt` with the key read from a mounted file (SEC-CRY); a `client_secret` from a file or secret store is acceptable. `client-authentication-method: none` is only for local development realms. The key or secret is a `secret: true` entry in `configuration-keys.yaml` (CFG-12), and the threat model names the method.
+  *Why:* a server-side client can keep a credential (RFC 9700 §2.5); without one, PKCE and the redirect-URI allow-list are the only protection, and anyone who knows the client id can run flows for it.
 
 ## Uploads
 
@@ -95,7 +99,8 @@ Items to confirm in the first project: [chapter 11](../../11-risks-and-technical
 - [ ] No exception text, stack trace or SQL in a response (SPRING-SEC-18)?
 - [ ] New polymorphic JSON or Kafka payload: closed types (SPRING-SEC-20)?
 - [ ] Security-relevant action: audit event and test (SPRING-SEC-22)?
-- [ ] BFF session change: lifetimes, rotation, logout at the IdP and their tests (SPRING-SEC-32/33)?
+- [ ] BFF session change: lifetimes, rotation, logout at the IdP and their tests (SPRING-SEC-32/33)? Sessions in Spring Session JDBC (SPRING-SEC-37)? Confidential client with PKCE (SPRING-SEC-38)?
+- [ ] New unauthenticated endpoint that allocates state, or new export: rate limit listed in chapter 7 (SPRING-SEC-21)?
 - [ ] New upload: name, scan, archive limits, download authorization, separate origin for active content (SPRING-SEC-26)?
 - [ ] New dependency: reviewed (JAVA-TOOL-05)?
 

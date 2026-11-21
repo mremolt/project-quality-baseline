@@ -148,7 +148,7 @@ it('rejects a type-only adapter import in domain and Nest in application', async
 
 ### Coverage and tags
 
-- **NEST-TEST-13: Coverage is reported, not gated.** `vitest run --coverage` with `@vitest/coverage-v8` (same version as Vitest) produces the report; no threshold fails the build unless an ADR adds one (TEST-ARCH-09).
+- **NEST-TEST-13: Coverage is reported, not gated.** `vitest run --coverage` with `@vitest/coverage-v8` (same version as Vitest) produces the report; no threshold fails the build unless an ADR adds one (TEST-ARCH-09). The template ships the dependency, a `coverage` block in `vitest.config.ts` (`provider: 'v8'`, `include: src/**/*.ts`, reporters `text-summary` and `lcov`, no threshold) and the script `test:coverage`; `verify` does not run it. Use the report to find untested branches of `domain` and `application`, not to chase a number.
 - **NEST-TEST-14: Tags select test groups, never skip them.** Security tests that prove object-level checks carry the Vitest tag `cross-user`, declared under `test.tags` in `vitest.config.ts` (NEST-SEC rules in [security/nestjs.md](../security/nestjs.md)); `--tags-filter=cross-user` runs them alone. Tagged tests still run in `npm test`.
 
 ## Skill overrides

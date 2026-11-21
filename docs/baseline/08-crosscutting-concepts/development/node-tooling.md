@@ -80,13 +80,15 @@ Runtime, compiler, lint and build settings for Node.js backends. The TypeScript 
 | `lint` / `lint:fix` | ESLint with `--max-warnings 0` |
 | `format` / `format:check` | Prettier write / check |
 | `check:arch` | `depcruise src` (NODE-ARCH-13) |
+| `check:unused` | `knip`: unused dependencies, exports and files (TS-TOOL-17) |
 | `test` | Unit and adapter tests without Docker (`vitest run --project unit`) |
 | `test:it` | Container-backed tests (`vitest run --project it`), needs Docker |
+| `test:coverage` | `vitest run --project unit --coverage`: coverage report, no threshold (NEST-TEST-13) |
 | `openapi` | Regenerates the committed spec: `OPENAPI_UPDATE=true vitest run --project unit openapi`; without the variable the same test fails on a difference ([api/nestjs-openapi.md](../api/nestjs-openapi.md)) |
 | `generate:api` | Generates outbound clients with Orval, only when the service has some; `build`, `typecheck` and `test` call it first |
 | `migrate` | `node dist/migrate.js`: migrate-only entrypoint ([nestjs-delivery.md](../../07-deployment-view/nestjs-delivery.md)) |
 | `check:migrations` | `node scripts/check-migrations.mjs`: merged migrations unchanged (NEST-DB-19 in [persistence/nestjs.md](../persistence/nestjs.md)) |
-| `verify` | The local gate from a clean checkout: `format:check`, `lint`, `typecheck`, `check:arch`, `check:migrations`, `test`, `test:it`, `build` |
+| `verify` | The local gate from a clean checkout: `format:check`, `lint`, `typecheck`, `check:arch`, `check:migrations`, `check:unused`, `test`, `test:it`, `build` |
 
   Scripts never rely on `pre*`/`post*` hooks (`ignore-scripts=true`, TS-TOOL-11). `verify` is what the backend's CI job runs (REPO-CI-01).
 

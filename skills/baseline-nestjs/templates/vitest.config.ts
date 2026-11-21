@@ -9,6 +9,13 @@ export default defineConfig({
   plugins: [swcPlugin],
   test: {
     setupFiles: ['reflect-metadata', './test/setup-env.ts'],
+    // Reported, never gated (NEST-TEST-13); `npm run test:coverage`
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.test.ts', 'src/**/generated/**'],
+      reporter: ['text-summary', 'lcov'],
+    },
     tags: [{ name: 'cross-user', description: 'Object-level access across callers (NEST-SEC-08)' }],
     projects: [
       {

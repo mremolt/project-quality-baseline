@@ -74,6 +74,22 @@ export default defineConfig({
   *Why:* a slow gate gets bypassed; a number makes growth visible before it hurts.
 - **TS-TEST-31: Retries only in CI, and a retried test is a defect.** `retries` is 0 locally and at most 1 in CI. A test that passes only on retry (Playwright reports it as flaky) gets a ticket with a fix date; one that is still flaky after that date is fixed, or skipped with `test.fixme` and the ticket reference, never deleted and never given more retries (A11Y-04).
   *Why:* retries hide real races; a deadline keeps them from becoming permanent.
+- **TS-TEST-32: A stubbed E2E test fails when the page makes an API call that no stub answers, throws an unhandled error, or reports a missing translation.** The shared fixture (`e2e/fixtures.ts`) registers a catch-all route for the API prefix before the test's own stubs (Playwright runs the most recently registered matching route first), which answers 501 and records the call. It also collects `pageerror` events, `console.error` messages and the i18n library's missing-key warnings. Teardown fails the test when any were recorded, unless the test declares them as expected (`expectErrors(/…/)`).
+  ```ts
+  // e2e/fixtures.ts (excerpt)
+  page: async ({ page }, use) => {
+    const problems: string[] = [];
+    await page.route('**/api/**', (route) => {
+      problems.push(`unstubbed ${route.request().method()} ${route.request().url()}`);
+      return route.fulfill({ status: 501 });
+    });
+    page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
+    page.on('console', (msg) => { if (msg.type() === 'error') problems.push(`console: ${msg.text()}`); });
+    await use(page);
+    expect(problems, 'unexpected API calls or runtime errors').toEqual([]);
+  },
+  ```
+  *Why:* without this, a page can render half-broken (a request that fell through to the dev server, an unhandled rejection) while every assertion passes.
 
 ## Responsive
 
@@ -178,6 +194,7 @@ A shell with a footer adds `- contentinfo` to its landmark snapshot.
 - [ ] Target size asserted at `compact`; `target-size` proven to have run?
 - [ ] Status messages, route title and focus (link, back, query-only change) and form errors asserted (TS-TEST-23/24/26); shell and screen ARIA snapshots (TS-TEST-25)?
 - [ ] No new retries or timeouts to hide a flaky test; pull-request tier within its time budget?
+- [ ] Shared fixture fails on unstubbed API calls, page errors, `console.error` and missing translations (TS-TEST-32)?
 
 ## Sources
 

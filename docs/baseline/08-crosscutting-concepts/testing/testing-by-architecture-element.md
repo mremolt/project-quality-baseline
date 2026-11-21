@@ -36,7 +36,7 @@ Follow the test pyramid: many cheap, fast, stable unit tests; fewer integration 
 - **TEST-ARCH-12: Mutation testing on `domain` and `application` is optional (consider it as a test-strength signal).** If a product adopts it, it runs nightly on these two rings only, and the score is reported, never gated. Reference tools (replaceable): PIT for Java, Stryker for TypeScript.
   *Why:* coverage shows which lines ran, not whether a test would notice a wrong result; surviving mutants point at weak assertions. Adapters and system tests are too slow and too noisy for it.
 
-> Coverage is reported, not gated (JAVA-TOOL-14 for Java; TypeScript has no coverage gate either). A project that adds a coverage floor records it in an ADR; it is a safety net, not the goal.
+> Coverage is reported, not gated (JAVA-TOOL-14 for Java; TypeScript has no coverage gate either). "Reported" means every component produces the report on each `verify` run: JaCoCo for Java, `@vitest/coverage-v8` for TypeScript (coverage enabled in the unit-test configuration, report kept as a CI artefact). A project that adds a coverage floor records it in an ADR; it is a safety net, not the goal.
 
 ## Test type, style and doubles per element
 

@@ -6,12 +6,12 @@ import { Secret } from './secret.js';
 
 export type ConfigSchema = z.ZodObject<z.ZodRawShape>;
 
-/** A secret config value; read from KEY or from the mounted file in KEY_FILE (NEST-CFG). */
-export const secret = (): z.ZodType<Secret, string> =>
+/** A secret config value; read from KEY or from the mounted file in KEY_FILE. Pass the minimum length for signing secrets (NEST-CFG-12). */
+export const secret = (minLength = 1): z.ZodType<Secret, string> =>
   z
     .string()
     .trim()
-    .min(1)
+    .min(minLength)
     .transform((v) => new Secret(v))
     .meta({ secret: true });
 

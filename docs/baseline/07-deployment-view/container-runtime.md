@@ -34,6 +34,8 @@ What every deployable ships as and what it expects from the platform it runs on:
   - the image build adds the hashed files of the previous release's bundle to the current bundle (current files win; `index.html` only from the current build), taken from the previous release's bundle artifact or image, so the pipeline keeps the bundle artifact of every release until the next one ships;
   - the frontend handles a failed lazy chunk load with one full page reload, guarded against reload loops (for example at most one reload per release version in a session). A browser that reaches an older instance after the reload gets that instance's consistent `index.html`.
 - **REL-FE-05: The frontend embedded in the BFF is part of the BFF's release.** There is one tag for both, in the BFF's format (`backend/v1.4.0`, or `backend-bff/v…` for a separate BFF component, REPO-CI-05); no `frontend/v…` tags exist while the frontend ships only inside the BFF image. The release tool derives the version and changelog from commits in both folders (REL-VER-03), and the changelog lives in the BFF's folder. A frontend delivered on its own (by ADR, REL-FE-01) gets its own tag.
+- **REL-FE-06: A BFF that should serve the bundle refuses to start without it.** In a deployed environment a missing `index.html` in the bundle folder ends the start (exit code 1, the configuration key in the message); a run without a bundle is an explicit setting (an API-only deployment), never the fallback. The image build job also starts the built image once and asserts `GET /` answers `200` with `text/html` and `GET /config.json` answers `200`.
+  *Why:* a bundle-less image passes `/livez` and `/readyz` and answers `404` to every user, so only the users notice. A smoke test of the probes alone cannot tell.
 
 ### Runtime contract
 
@@ -108,6 +110,7 @@ Compose has no start-up budget of its own; whoever operates it records how a fai
 - [ ] New deployable or image change: non-root, minimal base pinned by digest, no build tools or secrets in layers, SBOM, labels (REL-IMG-01, REL-RUN-07)?
 - [ ] Build method other than Buildpacks: customer platform reason recorded in chapter 7, or an ADR (REL-IMG-02)?
 - [ ] Frontend change to serving, routing or caching: deep-link, cache-header and 404 rules kept; previous release's chunks still served (REL-FE-03/04)?
+- [ ] BFF image: start fails without the bundle, built image answers `GET /` with `200` `text/html` (REL-FE-06)?
 - [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7 (REL-RUN-*)?
 
 ## Sources

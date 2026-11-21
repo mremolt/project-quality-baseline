@@ -53,6 +53,8 @@ static {
 
 - **SPRING-REST-11: Collection endpoints are paged with a hard maximum page size, or bounded by a documented upper limit that the query enforces** (API-REST-08, API-N1-07). The JSON shape is our own `PageResponse<T>` record (`items`, `page`, `size`, `totalElements`), mapped in the controller; Spring Data's `Page` is neither in ports (SPRING-LIB-12) nor in the contract. `page`, `size` and `sort` are bound to request parameters and validated in the controller (`@Max` on `size`; `sort` against the endpoint's allow-list, API-REST-09); filters bind to a request record (API-REST-10). The command or query carries the port's own `PageRequest`.
 - **SPRING-REST-12: Update endpoints implement optimistic concurrency as API-REST-11 describes.** The command carries the expected version. The use case (or the persistence adapter) compares it with the version of the loaded aggregate and throws a conflict exception from `domain` on a mismatch. The application never sets the entity's `@Version` field: Hibernate checks the version it loaded, not one handed in. The advice maps the conflict to 409 when the expected version came from the body and to 412 when it came from `If-Match`; a missing required `If-Match` is 428 (API-REST-06). A concurrent write between load and commit still fails Hibernate's own check (SPRING-DB-10) and is a 409. A deprecated operation is annotated `@Deprecated` (springdoc marks it `deprecated: true`) and sets the `Deprecation` and `Sunset` headers in the controller (API-REST-12).
+- **SPRING-REST-14: Errors produced by the security filter chain follow the problem-details contract (API-REST-05).** For the API paths a custom `AuthenticationEntryPoint` writes 401 with `code: UNAUTHENTICATED` and a custom `AccessDeniedHandler` writes 403 with `ACCESS_DENIED`, or `CSRF_INVALID` for a `CsrfException`, both as `application/problem+json` with `traceId`. Neither falls through to Boot's `/error` JSON or an empty body. Framework 4xx outside validation get their own codes (`METHOD_NOT_ALLOWED`, `NOT_ACCEPTABLE`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `MALFORMED_BODY`), never `VALIDATION_FAILED`. The 401/403 tests of SPRING-SEC-10 assert the content type and the code.
+  *Why:* an expired session or CSRF token must reach the SPA as a distinguishable error; a generic body makes the client show "validation failed" or nothing.
 
 ### Tests
 
@@ -64,7 +66,7 @@ static {
 - [ ] DTOs are package-private records with unique names; no entity or domain type in the body?
 - [ ] Decimals as `ApiDecimal`, instants as `Instant`, enums as strings (SPRING-REST-04..06)?
 - [ ] Collection paged or bounded in the query, sort and filters allow-listed; update carries a version (SPRING-REST-11/12)?
-- [ ] Error cases documented as problem+json and tested?
+- [ ] Error cases documented as problem+json and tested; 401/403 from the filter chain are problem+json with a code (SPRING-REST-14)?
 
 ## Sources
 

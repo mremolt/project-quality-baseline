@@ -327,8 +327,9 @@ function resolveStacks(dir, defs) {
     declared,
     created,
     active,
-    // Shared skills and skills no stack claims are always copied.
-    wantsSkill: (n) => defs.shared.includes(n) || !skillOwner.has(n) || skillOwner.get(n).some((s) => active.has(s)),
+    // Shared skills and skills no stack claims are always copied; baseline-only skills never.
+    wantsSkill: (n) => !(defs.baselineOnly ?? []).includes(n)
+      && (defs.shared.includes(n) || !skillOwner.has(n) || skillOwner.get(n).some((s) => active.has(s))),
     // Hooks no stack claims are always copied.
     wantsHook: (n) => !hookOwner.has(n) || hookOwner.get(n).some((s) => active.has(s)),
   };

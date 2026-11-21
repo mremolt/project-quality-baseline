@@ -78,6 +78,14 @@ export class KyselyTransactionAdapter implements TransactionPort {
 - **NEST-DB-10: Optimistic locking uses a `version integer not null default 0` column** on aggregates that users change concurrently. The update is `update … set …, version = version + 1 where id = $1 and version = $2`; `numUpdatedRows === 0n` throws the context's `ConcurrentModificationError` subclass (`OrderModifiedConcurrentlyError`). The version travels in the domain type and to the API (API-REST-11).
 - **NEST-DB-11: Driver errors are mapped in the adapter, never passed through the port** (ARCH-ADP-01): pg's pool wait timeout (a plain `Error` with the message `timeout exceeded when trying to connect`) becomes `UnavailableError` (NODE-ARCH-07; the REST filter answers 503 with `Retry-After`); a unique violation (`23505`) that the use case expects becomes the port's `ConflictError`; anything else stays a technical error (500). A session ended by `transaction_timeout` or `idle_in_transaction_session_timeout` rejects with `Connection terminated unexpectedly` or `Client has encountered a connection error and is not queryable` (no SQLSTATE): technical error.
 
+- **NEST-DB-23: An invariant across rows holds under concurrency through one of these PostgreSQL mechanisms** (ARCH-UC-16), named in the use case's comment:
+  - a rule over ranges of one owner (working times that never overlap, bookings per resource) is an **exclusion constraint** (`create extension btree_gist`; `exclude using gist (user_id with =, tstzrange(start_at, coalesce(end_at, 'infinity')) with &&) where (deleted_at is null)`), and the adapter maps SQLSTATE `23P01` to the domain error;
+  - a rule over a count of other rows ("at least one administrator remains") takes `pg_advisory_xact_lock(<constant key>)` as the first statement of the unit of work, or `select … for update` on the rows it counts, before it counts;
+  - a natural key is a unique index, mapped from `23505`.
+
+  The use case's own check stays, for the friendly error and the early exit; the database decides. Each invariant has an `*.it.test.ts` against Testcontainers PostgreSQL that runs two real units of work in a controlled order: the first does its check and write and is held open (a deferred promise) until the second has reached the conflicting statement; the second then fails with the mapped domain error, or, for a lock, is seen waiting (`pg_stat_activity.wait_event_type = 'Lock'`) and proceeds after the first commits; exactly one effect remains. The test has been seen failing without the mechanism; two free-running `Promise.all` calls are not a test of a race, because they hit it only by chance.
+  *Why:* at READ COMMITTED two requests (a double click, two devices) both pass a check-then-insert before either commits, so the invariant lives only in code that cannot see the other transaction. Optimistic locking (`version`) guards one row, not a rule over several.
+
 ### Loading data (API-N1)
 
 - **NEST-DB-12: No query per item.** Kysely has no lazy loading, so N+1 shows up as a loop of queries: an `await` inside `for`/`map` over rows is a defect. Load children with one `where('order_id', 'in', ids)` query per child table (or a join) and group in memory; every query and batch port has a fixed statement count. Persistence integration tests assert it with Kysely's `log` option (`log: (e) => { if (e.level === 'query') statements.push(e.query.sql); }`), excluding `begin`/`commit`: loading 3 orders with their lines is exactly 2 statements (API-N1-05/06).
@@ -105,6 +113,7 @@ export class KyselyTransactionAdapter implements TransactionPort {
 - [ ] Adapter uses `executor()` and `$pickTables`, maps rows both ways, never returns a row type through a port?
 - [ ] Use case work wrapped in `runInTransaction`; no remote call inside; conflicts thrown as `ConcurrentModificationError`?
 - [ ] Driver errors mapped (`UnavailableError`, conflict) in the adapter (NEST-DB-11)?
+- [ ] Rule across rows (overlap, "at least one", uniqueness): constraint, advisory or row lock, and a two-transaction `*.it.test.ts` in a controlled order (NEST-DB-23)?
 - [ ] No query in a loop; statement count asserted; collection queries limited in SQL (NEST-DB-12/13)?
 - [ ] No edit to a migration on `main`; `check-migrations` green (NEST-DB-19)?
 

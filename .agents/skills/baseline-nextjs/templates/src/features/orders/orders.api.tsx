@@ -20,7 +20,7 @@ export interface OrdersPlatform {
 export function createOrdersUseCases({ reportError }: OrdersPlatform): OrdersUseCases {
   return {
     listOrders: new ListOrdersService(createBrowserHttpOrders(reportError)),
-    cancelOrder: new CancelOrderService(new ServerActionOrders(cancelOrderAction)),
+    cancelOrder: new CancelOrderService(new ServerActionOrders(cancelOrderAction, reportError)),
   };
 }
 

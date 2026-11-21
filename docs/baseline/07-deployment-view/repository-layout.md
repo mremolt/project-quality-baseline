@@ -49,6 +49,8 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
   *Why:* two or three components don't need a task graph. Each stack keeps its standard tooling, docs and skills.
 - **REPO-LAY-05: Repo-wide files live at the root, component files in the component.** Root: baseline, `docs/architecture/`, `docs/adr/`, `docs/security/`, `docs/data-protection/`, `SECURITY.md`, the PR template, `.editorconfig`, `.gitignore`, IDE settings, CI definition, git hooks setup. `CODEOWNERS`. Component: build files and wrappers (`mvnw`, `.mvn/`), lockfiles, formatter and linter configs, `openapi/`, `compose.yaml` for the component's local dependencies, `configuration-keys.yaml` (CFG-12), and the image build definition if the product has one (REL-IMG-02).
 - **REPO-LAY-06: The baseline is synced into the repository root**, never into a component folder (command and options: [agent-skills.md](../08-crosscutting-concepts/development/agent-skills.md#distribution-to-consuming-projects)). The project notes below the `AGENTS.md` end marker name the components and their folders, so agents know where to run commands.
+- **REPO-LAY-07: The root `.gitignore` also ignores tool output** (`node_modules/`, `dist/`, `coverage/`, `.env*.local`), next to the IDE block of TOOL-IDE-03; each component keeps its own `.gitignore` from the template. Stack commands run from the component folder (REPO-TOOL-03); the root entries catch the stray run from the repository root, which otherwise leaves a tool cache (`node_modules/.vite/…`) that a later `git add .` commits.
+  *Why:* one test run from the wrong folder put a Vitest cache under a root `node_modules/` into history.
 
 ### Contract between components
 
@@ -165,7 +167,7 @@ The team decides. The agent doesn't create repositories before that decision.
 
 - [ ] New project or project plan? Decision guide applied and reported (signals, recommendation, consequences, open questions)?
 - [ ] Components in top-level folders, each verifiable on its own?
-- [ ] Commands run from the component folder?
+- [ ] Commands run from the component folder; root `.gitignore` lists `node_modules/`, `dist/`, `coverage/`, `.env*.local` (REPO-LAY-07)?
 - [ ] Spec change? Frontend regenerated in the same PR, `oasdiff` green or breaking change decided with a rollout plan?
 - [ ] New component or path? CI change detection, the pipeline jobs table (REPO-CI-01) and the always-reported merge status updated (security job included)?
 

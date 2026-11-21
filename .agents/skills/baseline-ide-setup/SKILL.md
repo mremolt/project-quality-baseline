@@ -24,7 +24,7 @@ Rules: `docs/baseline/08-crosscutting-concepts/development/ide-setup.md` (projec
    - `.editorconfig` (only if missing)
    - `.vscode/settings.json` (merged; baseline keys win), `.vscode/extensions.json` (recommendations merged)
    - `.idea/prettier.xml`, `.idea/jsLinters/eslint.xml`, `.idea/externalDependencies.xml` (required plugins), Java formatter plugin settings
-   - an IDE block in `.gitignore` (TOOL-IDE-03)
+   - an IDE block in `.gitignore` (TOOL-IDE-03) and the tool-output entries of REPO-LAY-07
    It never overwrites differing files: it writes `*.baseline*` next to them and reports `MANUAL:` items.
 3. **Resolve every `MANUAL:` line** from the output: merge the `*.baseline*` file by hand (e.g. a `settings.json` with comments), then delete it.
 4. **Review the diff** (`git diff`, new files). Check that `.gitignore` has no older rule that contradicts the IDE block (e.g. a blanket `.idea/` line above it).

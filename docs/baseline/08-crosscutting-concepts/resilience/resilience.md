@@ -69,7 +69,10 @@ Placement follows the hexagon: timeouts, retries, circuit breakers, concurrency 
 
 - **RES-JOB-01: A scheduled job is an incoming adapter that calls an incoming port** (ARCH-ADP-02), like a controller. It contains no business logic.
 - **RES-JOB-02: In a deployment with more than one instance, every scheduled job either runs under a cluster-wide lock or is proven safe to run concurrently on all instances** (idempotent, and work items claimed with row locks such as `FOR UPDATE SKIP LOCKED`). Which applies is stated on the job.
-- **RES-JOB-03: Jobs work in bounded batches** and are safe to stop at any point: the next run continues where the last one stopped. A lock's maximum hold time is longer than the job's longest expected run.
+- **RES-JOB-03: Jobs work in bounded batches** and are safe to stop at any point: the next run continues where the last one stopped. A lock's maximum hold time is longer than the job's longest expected run. When a run calls a remote system per item, that is batch size × the worst-case time per item (connect plus read timeouts of every call); alternatively the run stops taking new items before its lock budget ends. Work items are claimed in the database as well (MSG-PUB-04, ARCH-UC-16), so an expired lock cannot make two instances process the same item.
+
+- **RES-JOB-04: A request that needs one remote call per item of a bulk input commits first and hands the calls to a job.** The request budget (RES-TMO-04) bounds the whole request, so a loop of remote calls inside it fails above a few dozen items, after the commit, with the rest never done. The use case stores the work per item (an outbox row or a status column such as `PENDING`), the job processes items in bounded batches (RES-JOB-03) with the retries of RES-RTY, and the request answers with the committed result and the pending count. A repeated run of the same input also schedules the items whose remote state is not final, so a failed half is repaired by running it again.
+  *Why:* an import of a few dozen users that provisions each one in an identity provider exceeds a 10 s budget, answers 503 after the commit, and leaves the remaining users unprovisioned for good, because the second upload reports them "unchanged".
 
 ### Caching
 
@@ -97,7 +100,8 @@ Placement follows the hexagon: timeouts, retries, circuit breakers, concurrency 
 - [ ] Retries only for idempotent operations and transient errors, with backoff, jitter and a budget, in one layer (RES-RTY)?
 - [ ] Concurrency to the dependency bounded; pool size and wait time set deliberately, pool sum recorded in chapter 7 (RES-CAP-01/02)?
 - [ ] New state-changing entry point: idempotency stated; `Idempotency-Key` for retryable `POST`s, stored in the same transaction with a conflict-free insert; remote writes through the outbox or with a derived key (RES-IDM)?
-- [ ] New scheduled job: calls an incoming port; cluster lock or concurrency-safe (RES-JOB-02)?
+- [ ] Bulk input with a remote call per item: items stored in the transaction, calls made by a job, a rerun repairs the unfinished (RES-JOB-04)?
+- [ ] New scheduled job: calls an incoming port; cluster lock or concurrency-safe (RES-JOB-02)? Lock time above batch × worst-case per-item time, items claimed in the database (RES-JOB-03)?
 - [ ] New cache: in the adapter, bounded, TTL, invalidation stated, caller in the key where needed (RES-CCH)?
 - [ ] Security-relevant (new outbound call)? Then the threat model note (SEC-TM-02).
 

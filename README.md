@@ -96,6 +96,7 @@ skills-lock.json        pinned third-party skills
 | Reinstall exactly what the lock file records | `npm run skills:restore` |
 | Install our own skills after editing `skills/` (**always re-run**) | `npm run skills:link-own` |
 | Show upstream changes for skills we adapted | `npm run skills:upstream-diff` |
+| Review an existing codebase, improve the baseline from the gaps and sync it into that codebase with a refactoring report | ask the agent here to run the `baseline-codebase-review` skill on the codebase's path (never synced to projects) |
 
 Rules for adding, reviewing and updating skills: [08-crosscutting-concepts/development/agent-skills.md](docs/baseline/08-crosscutting-concepts/development/agent-skills.md).
 

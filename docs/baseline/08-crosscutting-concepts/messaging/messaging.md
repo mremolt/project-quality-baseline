@@ -14,6 +14,8 @@ Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): 
 | No duplicates from producer retries (MSG-PUB-03) | Idempotent producer | Service Bus duplicate detection by message id; otherwise the consumer's deduplication (MSG-IDM-02) covers it |
 | Per-consumer dead-letter destination (MSG-DLT-01) | One DLT topic per consumer service | RabbitMQ: dead-letter exchange per consumer queue; Service Bus: the dead-letter subqueue of the consumer's subscription |
 
+**Outboxes without a broker.** MSG-PUB-01..04 apply to every outbox, including one whose relay sends e-mail or calls an HTTP API. A product without a broker (no Kafka, "no messaging" in its ADRs) still follows them for its outboxes; only the broker-specific rules (topics, consumers, dead-letter topics) do not apply.
+
 ## Rules
 
 ### Events and commands
@@ -62,7 +64,7 @@ Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): 
 - **MSG-PUB-01: A message that must be consistent with a database change is never sent directly from the use case** (no dual write: commit then send, or send then commit). The default is the transactional outbox with a relay (MSG-PUB-02); change data capture needs an ADR.
 - **MSG-PUB-02: The default pattern is a transactional outbox with a relay:** the outgoing port writes the serialized message into an outbox table in the use case's transaction; a relay sends it after the commit and marks it sent. The relay preserves per-key order and delivers at least once. Outbox with relay needs no ADR; change data capture (Debezium) on the outbox table instead of the relay needs an ADR (SPRING-ARCH-13; NestJS: [nestjs.md](nestjs.md)).
 - **MSG-PUB-03: Producers wait for a durable publish acknowledgement from the broker** (Kafka: `acks=all`, all in-sync replicas) and use the broker's protection against duplicates from producer retries (Kafka: the idempotent producer), so a producer retry does not duplicate or reorder messages of one key.
-- **MSG-PUB-04: The outbox relay is observable and does not let one bad row block everything.** It exposes the age of the oldest unsent row and the count of unsent and parked rows as metrics. An alert fires when the oldest unsent row is older than a threshold the product sets (default: 5 minutes) or when any row is parked, and the messaging row of the minimal dashboard (OBS-17) shows these values. A transient send failure (timeout, broker unavailable) ends the run; the next run retries. A non-retryable send failure (message too large, not authorized for the topic, cannot be serialized) parks the row with the reason and the relay continues with other keys. Later rows of the parked row's key wait, so per-key order holds; an operator fixes the cause and releases or discards the parked row through a documented procedure (like MSG-DLT-03).
+- **MSG-PUB-04: The outbox relay is observable and does not let one bad row block everything.** It exposes the age of the oldest unsent row and the count of unsent and parked rows as metrics. An alert fires when the oldest unsent row is older than a threshold the product sets (default: 5 minutes) or when any row is parked, and the messaging row of the minimal dashboard (OBS-17) shows these values. A transient send failure (timeout, broker unavailable) ends the run; the next run retries. A non-retryable send failure (message too large, not authorized for the topic, cannot be serialized) parks the row with the reason and the relay continues with other keys. Later rows of the parked row's key wait, so per-key order holds; an operator fixes the cause and releases or discards the parked row through a documented procedure (like MSG-DLT-03). A relay that sends each row on its own (e-mail, HTTP) retries a transiently failed row with exponential backoff (a `next_attempt_at` per row) over a retry window of hours, not a fixed number of quick attempts, and parks it when the window ends. It claims rows before sending (`FOR UPDATE SKIP LOCKED`, or a status update to `SENDING` with a claim expiry), so two relay instances never send the same row, even after a job lock has expired (RES-JOB-03).
   *Why:* a relay that stops at the first failure for good blocks every topic of the service, and without a metric nobody notices until consumers miss data.
 
 ### Consuming
@@ -106,7 +108,7 @@ Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): 
 - [ ] Event named in past tense, business language, on a `<context>.<stream>.v<N>` topic (MSG-EVT)?
 - [ ] Envelope fields present; key = aggregate id (MSG-ENV-01, MSG-ORD-01)?
 - [ ] Contract change additive, AsyncAPI regenerated and examples updated; breaking → new type version and topic (MSG-CON)?
-- [ ] Publishing consistent with the database through the outbox; relay metrics, alert and parking of non-retryable rows (MSG-PUB)?
+- [ ] Publishing consistent with the database through the outbox; relay metrics, alert and parking of non-retryable rows (MSG-PUB)? Also for an e-mail or HTTP outbox without a broker: backoff over hours, rows claimed before sending (MSG-PUB-04)?
 - [ ] Broker other than Kafka: ADR with the capability mapping, own adapter packages?
 - [ ] Consumer idempotent and tested with a duplicate (MSG-IDM)?
 - [ ] Failure classification, bounded retries, dead-letter topic owned, alerted and replayable (MSG-ERR, MSG-DLT)?

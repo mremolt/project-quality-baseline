@@ -76,4 +76,5 @@ This repository is a shared quality baseline that our projects import. It define
 
 ## This repository (the baseline itself)
 
+- **Reviewing another codebase** to test or improve the baseline: load the skill `baseline-codebase-review`. It is listed under `baselineOnly` in `baseline-stacks.json`, so the sync never copies it.
 - **Keep [ARCHITECTURE.md](ARCHITECTURE.md) current.** Every change to `docs/baseline/`, the skills, templates or sync that alters the baseline's architecture, technologies or decisions updates `ARCHITECTURE.md` in the same change. The file shows the current state only: no changelog, no dates of changes, no superseded or reverted decisions ([DOC-ARC-09](docs/baseline/08-crosscutting-concepts/development/architecture-documentation.md)).

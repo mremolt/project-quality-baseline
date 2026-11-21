@@ -30,7 +30,12 @@
     "baseline-angular": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "93bc74922ec306645b2fb12e559a7f2d42169f23d69542e72154ce19c5d226f3"
+      "computedHash": "585049c51a867fec9800f99727ef73b2239442817425c0eaa1ba3e91347ad5f4"
+    },
+    "baseline-codebase-review": {
+      "source": "./skills",
+      "sourceType": "local",
+      "computedHash": "b7dcfad3db426cd989b9fbc00245ac23be1bb4cc8d0c40fb4ea76cd1eabd3c16"
     },
     "baseline-i18n": {
       "source": "./skills",
@@ -50,7 +55,7 @@
     "baseline-nextjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "db192a18b4a155b2456fc4e0576bc08d719f049337c33e9446bd1cf6f64c5470"
+      "computedHash": "2fd19103186315f8b8773ce110aeb5aa524c819aedfd54d42213ab8c5d37d74a"
     },
     "baseline-react": {
       "source": "./skills",
@@ -60,12 +65,12 @@
     "baseline-security": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "e15fee370ed396b1aecfffa19ee93a1a950cee2c7987e44fc7270ec3ae529bc2"
+      "computedHash": "cba05868a04cb1e2bb185898d29699f08eb6c019b0cb78e8618ff6abe396b8a1"
     },
     "baseline-spring": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "4c154ab06b28186e2602a599105b6374cb36fdc8bca92465e1458f90a0ce1ca7"
+      "computedHash": "c030d15a154afa9447301525cb486b6219ab701cd72b9904465d5bdb5c0a0ae5"
     },
     "baseline-tdd": {
       "source": "./skills",
@@ -96,7 +101,7 @@
     "ngrx-signals": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "95d18b6553927588e493303b130d7e2cc8fe265328c7948f570c752306e69275"
+      "computedHash": "9a785e15381b3c01ade17f6908a5abd2ea5bab62a3f053d85e37ba107927c278"
     },
     "orval": {
       "source": "orval-labs/orval",

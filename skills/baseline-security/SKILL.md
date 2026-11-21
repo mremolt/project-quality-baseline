@@ -17,7 +17,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | TLS, password hashing, encryption at rest, keys, random values | `security-requirements.md` (SEC-CRY-01..05), `spring-hardening.md` (SPRING-SEC-30) or `nestjs-hardening.md` (NEST-SEC-42) |
 | Project security artefacts | The sync creates them from templates once: `docs/security/{requirements,threat-model,exceptions,incident-runbook}.md`, `SECURITY.md`, the PR template with the SEC-REV-01 checklist, `frontend/public/.well-known/security.txt`. If one is missing, re-run the sync or copy it from the baseline's `templates/`; fill in the placeholders, never invent contacts or dates |
 | Auth, `Caller`, CORS, CSRF, actuator / probes | Spring: `spring.md`; NestJS: `nestjs.md` |
-| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md` (also prototype pollution, ReDoS, process hardening); Node BFF (NestJS or Next.js): `node-bff.md` |
+| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session, session store, OIDC client and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md` (also prototype pollution, ReDoS, process hardening); Node BFF (NestJS or Next.js): `node-bff.md` |
 | Browser code, storage, redirects, bundle, third-party scripts | `typescript.md` |
 | Angular templates, CSP, Trusted Types, XSRF, SSR, security E2E | `angular.md` |
 | React JSX and DOM safety, CSP nonce, Trusted Types, zod jitless, XSRF, security E2E | `react.md` (REACT-SEC-*) |
@@ -43,6 +43,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | String-built SQL/JPQL, `ORDER BY` from a request parameter | Bind parameters, identifiers from an allow-list (SPRING-SEC-31, NEST-SEC-25) |
 | Binding request JSON onto an entity, `ownerId` in a request body | Request records and schemas carry only what the caller may set (SPRING-SEC-34, NEST-SEC-27) |
 | 403 for another user's object | 404 (SPRING-SEC-36, NEST-SEC-29) |
+| In-memory servlet session in a Spring BFF; `client-authentication-method: none` outside local | Spring Session JDBC (SPRING-SEC-37); confidential client with PKCE (SPRING-SEC-38) |
 | `dangerouslySetInnerHTML`, `innerHTML` in React | Banned by lint; rich text only by ADR through one sanitizing component (REACT-SEC-01..03) |
 | Next.js server action trusting bound arguments, or without a session and input check | Every action is a public endpoint: session, authorization in the use case, zod parsing (`nextjs.md`) |
 | `NEXT_PUBLIC_*` for environment values, secrets in props of client components | Runtime configuration from the server, public subset only (`configuration/nextjs.md`, `nextjs.md`) |

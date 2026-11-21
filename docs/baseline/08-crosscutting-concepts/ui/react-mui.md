@@ -22,6 +22,7 @@ Implements: [10-quality-requirements/accessibility.md](../../10-quality-requirem
   *Why:* light, dark, forced colors and later brand changes then work everywhere.
 - **REACT-UI-06: Palette roles keep their meaning**: `error` only for errors, `primary` for the main action; `contrastText` on its own `main` background. A color never carries meaning alone (WCAG 1.4.1): errors also have text, states also have an icon or label.
 - **REACT-UI-07: Both color schemes meet the adopted AAA text contrast (7:1, A11Y-02, A11Y-09); MUI's default light palette does not and is darkened in the theme.** Verified values: light `primary.main: '#0d47a1'` and `text.secondary: 'rgba(0, 0, 0, 0.72)'`; the dark defaults (`primary.main: '#90caf9'`) pass. Every palette change re-runs the theme scans (REACT-UI-35).
+  - The roles used for text or icons that carry meaning (`error`, `warning`, `success`, `info`) meet the same ratio on `background.paper`: MUI's default light `warning.main` (`#ed6c02`, about 3:1) and `info.main` fail even 4.5:1 for small text. The theme sets a value for each role the product uses, or the product renders that text in `text.primary` next to an icon, and a theme scan covers a screen that shows each state's text. The values are not verified in the validated project: verify before first use.
   - `prefers-contrast: more` gets the same schemes, because they already meet 7:1 for text. A product whose brand palette cannot reach 7:1 adds overrides under `@media (prefers-contrast: more)` in the theme's `styleOverrides`, or records the deviation in its conformance notes (A11Y-02).
   - Forced colors (A11Y-28): wrap the theme with `enhanceHighContrast(createTheme(...))` (MUI 9.1 or later; adds `@media (forced-colors: active)` overrides with system colors). Own components that show a state only by background, shadow or tint add a `'@media (forced-colors: active)'` block with system colors (`CanvasText`, `Highlight`). The validated project did not run the forced-colors and high-contrast projects: verify before first use.
   ```ts
@@ -89,6 +90,8 @@ The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); t
 - **REACT-UI-34: Component tests interact with MUI widgets through roles and accessible names** (`getByRole('dialog', { name })`, `getByRole('textbox', { name: 'Reason' })`, `combobox`/`option` for `Select` and `Autocomplete`) with `user-event`; MUI has no test harnesses, and tests never query by MUI class names. Wait for dialog transitions with `waitFor`/`findBy`, not timers. `renderWithProviders` renders with the real theme ([testing/react.md](../testing/react.md)).
 - **REACT-UI-35: Every theme variant is scanned:** light and dark (`colorScheme: 'dark'` project, verified), high contrast and forced colors on the shell through the theme projects of [TS-TEST-28](../testing/typescript-e2e.md#matrix) (A11Y-09, A11Y-28); axe fails on AA and on the adopted AAA `color-contrast-enhanced`. Scans per viewport: A11Y-17. Responsive structure is tested per [TS-TEST-17..21](../testing/typescript-e2e.md).
 
+- **REACT-UI-36 (implements UI-21): A control that cannot be changed stays focusable and explained.** A grid cell or field the user may not edit now is `readOnly` (`slotProps.htmlInput.readOnly`) with `aria-describedby` pointing at a short reason, not `disabled`; `Dialog` forms with entered data guard `onClose` (`reason === 'backdropClick'` or `'escapeKeyDown'` with `formState.isDirty`) with a confirmation. A component test types into the form, presses Escape and asserts that the dialog stays.
+
 ## Skill overrides
 
 | Skill | Says | Our rule |
@@ -120,7 +123,7 @@ The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); t
 - [ ] `TextField` with visible label, `type`, `autoComplete`, `inputMode`; errors in `helperText` (REACT-UI-26)?
 - [ ] Status through a visible region or the `Announcer`; route `titleKey`; focus only on path changes; no extra route announcement (REACT-UI-29/30)?
 - [ ] Snackbars polite and never the only channel; progress and tables labelled (REACT-UI-31)?
-- [ ] Dialog labelled by its title; focus restored when the trigger can vanish (REACT-UI-32)?
+- [ ] Dialog labelled by its title; focus restored when the trigger can vanish (REACT-UI-32)? Dirty form guards `onClose`; unchangeable control `readOnly` with a reason (REACT-UI-36)?
 - [ ] Loading, empty and error states from `src/shared/ui/states/` (REACT-UI-33)?
 - [ ] Role-based component tests; theme projects cover the screen (REACT-UI-34/35)?
 

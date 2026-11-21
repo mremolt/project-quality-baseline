@@ -40,6 +40,9 @@ The Spring Boot 4 specifics of [08-crosscutting-concepts/testing/testing-by-arch
 - **SPRING-TEST-09: Asynchronous behaviour is awaited with Awaitility**, not `Thread.sleep` (SPRING-LIB-14).
 - **SPRING-TEST-10: Architecture tests are part of every service** (JAVA-ARCH-07): the template in `.agents/skills/baseline-spring/templates/test/ArchitectureTest.java`, extended per [05-building-block-view/spring.md](../../05-building-block-view/spring.md#architecture-test-template). The architecture test is a plain `*Test`; the OpenAPI spec test (SPRING-API-08) starts the full context and is an `*IT`.
 - **SPRING-TEST-11: `@Autowired` fields are allowed in test classes;** production code uses constructor injection (SPRING-ARCH-06). The ArchUnit field-injection rule analyses production classes only.
+- **SPRING-TEST-12: An architecture test fails when a `@RestController` in `adapter.in.rest` is not covered by a web slice test.** A controller is covered when a test class names it in `@WebMvcTest(controllers = …)` (grouped test classes that cover several controllers are fine) or is called `<Controller>Test`; a bare `@WebMvcTest` without `controllers` covers nothing, because it loads every controller. The test reads the annotation from the compiled test classes (ArchUnit over the test sources, template `ArchitectureTest.everyControllerHasAWebSliceTest`). The web slice test is where the 401/403/success cases of SPRING-SEC-10 and the problem+json assertions of SPRING-REST-13 live, so a new controller cannot skip them unnoticed. Reviews count uncovered controllers by running this test, not by sampling.
+- **SPRING-TEST-13: Integration tests control background work and reset state in one place.** Scheduling is switched off in tests by a property on the `@EnableScheduling` configuration (`@ConditionalOnProperty(name = "app.scheduling.enabled", matchIfMissing = true)`, set to `false` by the shared test infrastructure), and tests call the job's incoming port directly (RES-JOB-01). Database state between ITs is reset by one shared helper that truncates all application tables (`TRUNCATE … CASCADE` over the tables from `information_schema`, without the Flyway history table), not by DELETE lists per test class. Migrations are structure only: they insert no reference or default rows, because `TRUNCATE … CASCADE` also empties tables that cascade from a truncated table and a test would then depend on rows the helper just deleted. Rows the application needs in every environment come from an idempotent bootstrap runner (an `ApplicationRunner`), which tests start or replace with fixtures. A product that keeps seed rows in a migration records an ADR naming this rule, and the helper re-inserts exactly those rows after the truncate.
+  *Why:* a job running in the background of a shared test context races with the assertions; hand-kept DELETE lists break in order-dependent ways when a table is added.
 
 ## Agent checklist
 
@@ -48,6 +51,8 @@ The Spring Boot 4 specifics of [08-crosscutting-concepts/testing/testing-by-arch
 - [ ] Persistence test against real PostgreSQL with migrations; statement count asserted for query ports?
 - [ ] No `@DirtiesContext`, no `Thread.sleep`, no H2?
 - [ ] Test that starts a container or `@SpringBootTest` named `*IT` (SPRING-TEST-07)?
+- [ ] New controller named in a `@WebMvcTest(controllers = …)` (or `<Controller>Test`), enforced by the architecture test (SPRING-TEST-12)?
+- [ ] Scheduling off in ITs, jobs called through their port, one shared database reset (SPRING-TEST-13)?
 - [ ] `./mvnw verify` green (unit and integration tests)?
 
 ## Sources

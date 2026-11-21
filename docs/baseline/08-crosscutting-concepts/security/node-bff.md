@@ -28,6 +28,9 @@ These rules are written from documentation and scratch tests of the libraries; n
 
 - **NODE-BFF-10: A Node BFF is adopted only with its threat model and tests.** Which component is the BFF and which session store it uses are recorded in the BFF ADR (NODE-BFF-01) and the product's chapter 4; that decision also covers the session store as a shared cache (RES-CCH-04). Before the first product uses it, a threat model (SEC-TM-02) covers login, callback, session store, CSRF, refresh, logout and back-channel logout, and the tests of NODE-BFF-04..09 run in CI, including an end-to-end test that the frontend's XSRF header reaches the BFF and that every header of NODE-BFF-09 is present.
 
+- **NODE-BFF-11: The pre-login state of an anonymous caller is bounded.** Starting a login (`GET /auth/login`) is reachable without credentials, so what it stores is short-lived and capped: the pre-login record (or the session that carries it) expires after at most 10 minutes unless the callback completes, a purge job removes expired ones (RES-JOB-01), and the login start, the callback and the other public routes (back-channel logout, report endpoints) have a rate limit at the gateway or in the service (NEST-SEC-32), recorded in chapter 7. A test starts the login many times without a callback and asserts that the stored rows stay bounded after expiry and purge.
+  *Why:* each anonymous request that writes a durable row fills the session store; the only limit is disk.
+
 ## Agent checklist
 
 - [ ] BFF holds no business logic; API calls relayed with the user's token and explicit timeouts (NODE-BFF-01)?
@@ -39,6 +42,7 @@ These rules are written from documentation and scratch tests of the libraries; n
 - [ ] Logout at the IdP, back-channel logout with full token validation and `sid` index (NODE-BFF-08)?
 - [ ] Nonce CSP per response, HTML `no-store`, deep-link 404s, report endpoint limited (NODE-BFF-09)?
 - [ ] Threat model and the tests of NODE-BFF-04..09 in CI (NODE-BFF-10)?
+- [ ] Pre-login state expires within 10 minutes, purged, public routes rate-limited and the limit recorded in chapter 7 (NODE-BFF-11)?
 
 ## Sources
 

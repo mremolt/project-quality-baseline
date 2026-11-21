@@ -11,6 +11,9 @@ Framework-neutral rules for the UI layer of every frontend: layout across window
 - **UI-02: Navigation follows the window size:** compact → navigation bar (bottom) or modal drawer; medium → navigation rail; expanded and larger → rail or standard drawer. Navigation is consistent across pages (WCAG 3.2.3) and so is the help location (WCAG 3.2.6).
 - **UI-03: Spacing follows the 4/8 px grid**, through a small set of spacing custom properties defined once next to the theme.
 
+- **UI-22: Navigation between routes is a `nav` landmark with links, and the current one has `aria-current="page"`.** The `tablist`/`tab` pattern is only for panels that switch without leaving the page; a bar of tab-looking links that navigate may be styled like tabs but carries no tab roles.
+  *Why:* `role="tab"` promises roving focus, a `tabpanel` and in-page switching; assistive technology announces that and the page does something else (WCAG 4.1.2).
+
 ### Responsive layout
 
 - **UI-04: Window size is UI-adapter state.** One window-size contract in `src/shared/ui/layout` derives the size class from the UI-01 queries; components get it through the stack's injection mechanism, so component tests can stub it. It is never imported by `domain`, `application` or `ports`, never passed into a use case or command, and view-state stores don't read it.
@@ -38,20 +41,25 @@ Framework-neutral rules for the UI layer of every frontend: layout across window
 
 ### Screen readers
 
-- **UI-15: Status messages (A11Y-20) use a visible `role="status"` region or the form field's error element where possible; otherwise the app announcer.** The announcer is one contract in `src/shared/ui/a11y` whose implementation wraps a tested live-region utility. No hand-rolled `aria-live` elements per component, no nested live regions, no `ariaNotify()` for now. Only UI adapters use it: stores expose state, the component announces on change, so the wording stays in the UI adapter.
+- **UI-15: Status messages (A11Y-20) use a visible `role="status"` region or the form field's error element where possible; otherwise the app announcer.** The announcer is one contract in `src/shared/ui/a11y` whose implementation wraps a tested live-region utility. No hand-rolled `aria-live` elements per component, no nested live regions, no `ariaNotify()` for now. Only UI adapters use it: stores expose state, the component announces on change, so the wording stays in the UI adapter. A visible status region exists in the DOM before its text changes: it is rendered empty and then filled. A region inserted together with its text (`@if (saved) { <p role="status">…</p> }`) is often not announced. A repeated identical message is cleared first, so it is read again.
   *Why:* one consistent mechanism that tests can mock; tested announcers work around repeated-message bugs in screen readers.
 - **UI-16: Route title and focus (A11Y-21):** every route defines a title, and the app formats all titles the same way ("Page | App"). One app-wide route-focus handler in `src/platform/adapter/in/ui`, started once by the shell, runs after each completed navigation: when the URL path (without query and fragment) differs from the previous one, it focuses the routed `h1` (`tabindex="-1"`), falling back to `main`, with `preventScroll: true`; it does nothing on the first navigation. It treats back/forward like any other navigation, so the router's scroll restoration keeps the position. It waits for the heading to render through the framework's render hook, not with timers. The link of the current page has `aria-current="page"`.
   *Why:* client-side routers manage neither focus nor announcements.
 - **UI-17: Snackbars and toasts are polite, short, and never the only place for an error or a required action;** one with an action does not time out. Lazily loaded content announces its completion; every progress indicator and data table has an accessible label.
   *Why:* the content may be gone before a screen-reader user reaches it (WCAG 2.2.1).
-- **UI-18: Dialogs are labelled by their visible title**, focus moves into the dialog and returns to the trigger on close; when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly to a sensible element.
+- **UI-18: Dialogs are labelled by their visible title**, focus moves into the dialog and returns to the trigger on close; when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly to a sensible element. The same holds outside dialogs: an action that removes or replaces the control that triggered it (an inline "confirm delete" that swaps the button, deleting a row, switching a row to edit mode, opening a form elsewhere on the page) moves focus explicitly to the replacement, the next row, the form or the status message. After a successful command the page refreshes its data in place: it keeps the rendered view and the focused control and marks the region `aria-busy` while it reloads. It does not swap back to the initial loading state (UI-19), which would destroy the focused control.
   *Why:* dialog libraries restore focus only if the trigger element still exists.
 - **UI-19: Loading, empty and error states use shared components from `src/shared/ui`:** loading is a labelled progress indicator ("Loading orders"); an empty result says so and offers the next action ("No orders yet. Create order"); a load error says what failed in plain words and offers a retry button. Each state is a status message (UI-15, A11Y-20), keeps the page heading, and is a main state in the inventory (A11Y-27).
+- **UI-20: A command cannot be submitted twice while it runs.** From the first activation until the outcome is known, the control shows a pending state (`aria-busy`, a progress indicator, or disabled with the reason visible) and ignores further activations; the store tracks the request status per command. The server still protects itself (RES-IDM-02 for retryable `POST`s, ARCH-UC-16 for invariants); the UI guard does not replace it.
+  *Why:* a double click or a double Enter on "Book" otherwise sends two creates, and the second request either duplicates data or shows a confusing conflict right after the success.
   *Why:* the same three states appear on every screen; built once, they are accessible and tested once.
+
+- **UI-21: A dialog or panel with entered data does not discard it on Escape or a click outside.** While the form is dirty, closing asks for a confirmation (or keeps the dialog open with a visible message); a dialog without entered data closes at once. A control the user cannot change right now stays focusable with a visible or described reason (`readOnly` with `aria-describedby`, not a silent `disabled`).
+  *Why:* a mis-click outside a multi-field form loses the input (WCAG 3.3.4 intent, worst on touch), and a disabled cell tells keyboard and screen-reader users nothing.
 
 ## Tests
 
-Responsive structure and layout are tested with the viewport projects and checks of [TS-TEST-17..21](../testing/typescript-e2e.md); status messages, route focus and dialogs with the screen-reader assertions of [TS-TEST-23..27](../testing/typescript-e2e.md).
+Responsive structure and layout are tested with the viewport projects and checks of [TS-TEST-17..21](../testing/typescript-e2e.md); status messages, route focus and dialogs with the screen-reader assertions of [TS-TEST-23..27](../testing/typescript-e2e.md). Component tests cover each command: focus after the action lands on the element UI-18 names, and a second activation while the first is pending sends no second request (UI-20).
 
 ## Agent checklist
 
@@ -62,6 +70,9 @@ Responsive structure and layout are tested with the viewport projects and checks
 - [ ] Status via visible region or the announcer; route title; route focus only on path changes (UI-15, UI-16)?
 - [ ] Snackbars never the only error channel; progress and tables labelled; dialog focus restored when the trigger can vanish (UI-17, UI-18)?
 - [ ] Loading, empty and error states from the shared components (UI-19)?
+- [ ] Status regions rendered before their text changes (UI-15)? Focus moved when an action removes its trigger; refresh after a command keeps the view (UI-18)?
+- [ ] Commands show a pending state and ignore re-entry (UI-20)? Dirty dialog asks before closing; unchangeable control explained (UI-21)? Route navigation is a `nav` with `aria-current`, not a tab list (UI-22)?
+- [ ] Lists announce their result count after a filter or page change (A11Y-20); destructive and bulk actions confirm or can be undone (A11Y-30)?
 
 ## Sources
 

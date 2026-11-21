@@ -20,5 +20,7 @@ export {
   clientErrorRouteHandler,
   currentCaller,
   healthRouteHandlers,
+  logRequestError,
   publicRuntimeConfig,
+  serverReportError,
 } from './platform.composition.server';

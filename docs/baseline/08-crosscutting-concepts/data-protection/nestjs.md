@@ -37,6 +37,8 @@ return Number(res.numDeletedRows);
 
 - **NEST-DP-08: Retention, export and erasure adapters are tested against Testcontainers PostgreSQL with the real migrations** (NEST-DB-22) as `*.it.test.ts`: seed expired and current records in every table of the category (children included), run the adapter or the use case with the real transaction adapter, assert per table that exactly the expired rows are gone and the current ones stay. The use case's unit test uses a fixed clock function and asserts the cut-off and the batch loop (stops at 0 and on an aborted signal).
 - **NEST-DP-09: Code that handles personal data has a test asserting it does not reach the log** (DP-TEST-02, NEST-LOG-10): the Nest test module gets `LoggerModule.forRoot({ pinoHttp: [options, { write: (line) => lines.push(line) }] })` with the production redact options, the test drives the request with synthetic values (`erika.mustermann@example.test`, `Erika Mustermann`) and asserts that no captured line contains them, while the expected log line (with the pseudonymous id) is present.
+- **NEST-DP-10: By default an insert-only audit table is partitioned by month and purged by dropping partitions** (SEC-AUD-04; another mechanism per SEC-AUD-04 needs its reason in the deletion concept). The migration creates `audit_log` with `partition by range (occurred_at)` and keeps `revoke update, delete, truncate … from <runtime role>`; a retention job in `adapter/in/scheduling` (NEST-DP-01) creates the next partitions ahead of time and drops the expired ones through a connection of the owner (or purge) role, from its own small pool like the migration pool (NEST-DB-16), never through `executor()` of the request path. A `*.it.test.ts` inserts events in an old and a current partition, runs the job and asserts that only the old partition is gone and that the runtime role still cannot `DELETE` (NEST-DP-08).
+  *Why:* partitions make retention a metadata operation and keep the application role insert-only.
 
 ## Agent checklist
 
@@ -46,6 +48,7 @@ return Number(res.numDeletedRows);
 - [ ] New personal data: exporter and eraser registered for the context (NEST-DP-05); inventory and deletion concept updated (DP-INV-03)?
 - [ ] Event payloads with personal data justified; topic retention or tombstone documented (NEST-DP-06)?
 - [ ] Deletion `*.it.test.ts` per table; log-absence test with synthetic values (NEST-DP-08/09)?
+- [ ] Audit table partitioned by month, partitions dropped by the retention job under a separate role, runtime role still insert-only (NEST-DP-10)?
 
 ## Sources
 
