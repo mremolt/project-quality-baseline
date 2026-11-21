@@ -8,7 +8,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import { useQueryClient } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import { type ReactNode, useRef, useState } from 'react';
 import { useFormatter, useLocale, useTranslations } from 'use-intl';
@@ -20,11 +19,11 @@ import { EmptyState } from '../../../../../shared/ui/states/empty-state';
 import { ErrorState } from '../../../../../shared/ui/states/error-state';
 import { LoadingState } from '../../../../../shared/ui/states/loading-state';
 import { canBeCancelled, hasNextPage, hasPreviousPage, type Order, type OrderPage } from '../../../domain/order';
-import { useCancelOrderUseCase } from '../../../orders.tokens';
 import type { CancelOrderCommand } from '../../../ports/in/cancel-order.use-case';
 import { CancelOrderDialog } from './cancel-order-dialog';
-import { ordersKeys, useOrdersPage } from './orders.queries';
-import { cancelDismissed, cancelOrder, cancelRequested, selectOrdersView } from './orders.slice';
+import { useCancelOrderMutation, useOrdersPage } from './orders.queries';
+import { cancelClosed, cancelRequested, selectOrdersView } from './orders.slice';
+import { toErrorKey } from './orders-error-keys';
 
 const ordersRoute = getRouteApi('/orders');
 
@@ -85,8 +84,7 @@ export function OrdersPage(): ReactNode {
   const orders = useOrdersPage(page);
   const view = useAppSelector(selectOrdersView);
   const dispatch = useAppDispatch();
-  const cancelUseCase = useCancelOrderUseCase();
-  const queryClient = useQueryClient();
+  const cancel = useCancelOrderMutation();
   const announcer = useAnnouncer();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -95,20 +93,23 @@ export function OrdersPage(): ReactNode {
   const openCancel = (order: Order, trigger: HTMLElement) => {
     triggerRef.current = trigger;
     setDialogOrder(order);
+    cancel.reset();
     dispatch(cancelRequested(order.id));
   };
 
-  const submitCancel = async (command: CancelOrderCommand) => {
-    const result = await dispatch(cancelOrder({ useCase: cancelUseCase, command }));
-    if (cancelOrder.fulfilled.match(result) && dialogOrder) {
-      announcer.announce(t('cancel.done', { number: dialogOrder.number }));
-      await queryClient.invalidateQueries({ queryKey: ordersKeys.all });
-    }
+  // The mutation invalidates the orders queries itself; the page announces and closes the dialog (REACT-STATE-03).
+  const submitCancel = (command: CancelOrderCommand) => {
+    cancel.mutate(command, {
+      onSuccess: (cancelled) => {
+        announcer.announce(t('cancel.done', { number: cancelled.number }));
+        dispatch(cancelClosed());
+      },
+    });
   };
 
   const restoreFocus = () => {
     const trigger = triggerRef.current;
-    const target = view.cancelStatus !== 'succeeded' && trigger?.isConnected ? trigger : headingRef.current;
+    const target = !cancel.isSuccess && trigger?.isConnected ? trigger : headingRef.current;
     target?.focus();
     setDialogOrder(null);
   };
@@ -155,10 +156,10 @@ export function OrdersPage(): ReactNode {
       <CancelOrderDialog
         order={dialogOrder}
         open={view.cancelOrderId !== null}
-        pending={view.cancelStatus === 'pending'}
-        errorKey={view.cancelError}
-        onSubmit={(command) => void submitCancel(command)}
-        onDismiss={() => dispatch(cancelDismissed())}
+        pending={cancel.isPending}
+        errorKey={cancel.isError ? toErrorKey(cancel.error) : null}
+        onSubmit={submitCancel}
+        onDismiss={() => dispatch(cancelClosed())}
         onExited={restoreFocus}
       />
     </Box>

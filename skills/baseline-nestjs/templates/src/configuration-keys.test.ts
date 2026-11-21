@@ -12,7 +12,7 @@ interface Key {
   secret: boolean;
 }
 
-describe('configuration-keys.yaml (TEST-CFG-04)', () => {
+describe('configuration keys (TEST-CFG-03, TEST-CFG-04)', () => {
   it('lists exactly the keys the code defines', () => {
     const own = configSchemas.flatMap(describeKeys);
     const listed = parse(readFileSync('configuration-keys.yaml', 'utf8')) as Key[];
@@ -25,5 +25,19 @@ describe('configuration-keys.yaml (TEST-CFG-04)', () => {
         .map(pick)
         .sort(byKey),
     ).toEqual(own.map(pick).sort(byKey));
+  });
+
+  it('builds every secret-named key with secret() (NEST-CFG-08)', () => {
+    const secretName = /PASSWORD|SECRET|TOKEN|API_KEY|CREDENTIAL/;
+    const plain = configSchemas
+      .flatMap(describeKeys)
+      .filter((k) => secretName.test(k.key) && !k.secret)
+      .map((k) => k.key);
+    expect(plain).toEqual([]);
+  });
+
+  it('marks every secret-named key in configuration-keys.yaml as secret', () => {
+    const listed = parse(readFileSync('configuration-keys.yaml', 'utf8')) as Key[];
+    expect(listed.filter((k) => /PASSWORD|SECRET|TOKEN|API_KEY|CREDENTIAL/.test(k.key) && !k.secret)).toEqual([]);
   });
 });

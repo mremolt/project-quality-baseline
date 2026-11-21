@@ -3,18 +3,25 @@ import { createContext, use } from 'react';
 import type { CancelOrderUseCase } from './ports/in/cancel-order.use-case';
 import type { ListOrdersUseCase } from './ports/in/list-orders.use-case';
 
-export const ListOrdersContext = createContext<ListOrdersUseCase | null>(null);
-export const CancelOrderContext = createContext<CancelOrderUseCase | null>(null);
-
-function required<T>(value: T | null, name: string): T {
-  if (value === null) throw new Error(`${name} is not provided; render the orders composition above this component`);
-  return value;
+/** The feature's browser use cases, typed by their `ports/in` contracts; one object in one context (REACT-ARCH-09). */
+export interface OrdersUseCases {
+  readonly listOrders: ListOrdersUseCase;
+  readonly cancelOrder: CancelOrderUseCase;
 }
 
+export const OrdersContext = createContext<OrdersUseCases | null>(null);
+
+export function useOrdersUseCases(): OrdersUseCases {
+  const useCases = use(OrdersContext);
+  if (useCases === null) throw new Error('OrdersUseCases are not provided; render OrdersApiProvider above');
+  return useCases;
+}
+
+/** Selector hooks: what client components and query hooks call (REACT-ARCH-09). */
 export function useListOrders(): ListOrdersUseCase {
-  return required(use(ListOrdersContext), 'ListOrdersUseCase');
+  return useOrdersUseCases().listOrders;
 }
 
 export function useCancelOrder(): CancelOrderUseCase {
-  return required(use(CancelOrderContext), 'CancelOrderUseCase');
+  return useOrdersUseCases().cancelOrder;
 }

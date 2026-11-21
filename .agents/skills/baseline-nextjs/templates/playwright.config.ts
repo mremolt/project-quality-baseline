@@ -5,6 +5,8 @@ import { E2E_PORT } from './e2e/e2e-constants';
 const size = (width: number, height: number) => ({ viewport: { width, height } });
 const expanded = { browserName: 'chromium' as const, ...size(1024, 768) }; // the default cell (TS-TEST-29)
 const themed = { grep: /@theme/ };
+const responsive = { grep: /@responsive/ };
+const chromium = 'chromium' as const;
 
 export default defineConfig({
   testDir: './e2e',
@@ -17,7 +19,7 @@ export default defineConfig({
     locale: 'en-US',
     trace: 'retain-on-failure',
   },
-  // the standalone server in test mode (APP_TEST_STUBS=1): backend calls answered by the contract stubs (D10)
+  // the standalone server in test mode (APP_TEST_STUBS=1): backend calls answered by the contract stubs (NEXT-D5)
   webServer: {
     command: 'node e2e/stubbed-server.ts',
     url: `http://localhost:${String(E2E_PORT)}/readyz`,
@@ -32,5 +34,14 @@ export default defineConfig({
     // WebKit drops `Secure` cookies on http://localhost, so the `__Host-session` login needs an HTTPS test origin first
     { name: 'stubbed-dark', ...themed, use: { ...expanded, colorScheme: 'dark' } },
     { name: 'stubbed-high-contrast', ...themed, use: { ...expanded, contrast: 'more' } },
+    // T1 rows of TS-TEST-18 added after the reference build: verify before first use (NEXT-TEST-15)
+    {
+      name: 'stubbed-compact',
+      ...responsive,
+      use: { browserName: chromium, ...size(390, 844), isMobile: true, hasTouch: true },
+    },
+    { name: 'stubbed-medium', ...responsive, use: { browserName: chromium, ...size(768, 1024), hasTouch: true } },
+    { name: 'stubbed-reflow', ...responsive, use: { browserName: chromium, ...size(320, 800) } },
+    { name: 'stubbed-forced-colors', grep: /@shell/, use: { ...expanded, forcedColors: 'active' } },
   ],
 });

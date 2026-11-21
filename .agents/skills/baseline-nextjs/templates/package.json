@@ -75,7 +75,8 @@
     "yaml": "2.9.1"
   },
   "scripts": {
-    "generate:api": "orval",
+    "copy:api-spec": "node scripts/copy-api-spec.mjs",
+    "generate:api": "npm run copy:api-spec && orval",
     "dev": "npm run generate:api && next dev --hostname localhost",
     "dev:debug": "next dev --hostname localhost --inspect",
     "build": "npm run generate:api && next build",
@@ -88,7 +89,7 @@
     "check:arch": "depcruise src",
     "check:bundle": "node scripts/check-bundle.mjs",
     "test": "npm run generate:api && vitest run",
-    "e2e": "playwright test",
+    "e2e": "npm run build && playwright test",
     "verify": "npm run generate:api && npm run format:check && npm run lint && npm run typecheck && npm run check:arch && npm run test && npm run build && npm run check:bundle"
   }
 }

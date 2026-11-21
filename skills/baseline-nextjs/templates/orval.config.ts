@@ -1,6 +1,6 @@
 import { defineConfig } from 'orval';
 
-const spec = './openapi/orders-v1.yaml'; // product repo: '../backend/openapi/orders-v1.yaml' (TS-API-01)
+const spec = './openapi/orders-v1.yaml'; // product repo: copied from ../backend/openapi by copy:api-spec (TS-API-01)
 const generated = './src/features/orders/adapter/out/http/generated';
 const http = './src/platform/adapter/out/http';
 

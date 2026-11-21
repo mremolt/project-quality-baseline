@@ -43,12 +43,12 @@ N+1 check
 
 | Area | Answer |
 |---|---|
-| Access control: new endpoints authenticated and authorized; owner/tenant checked, foreign ids answer 404; no owner, tenant or role field in request records; 401/403 and `cross-user` tests? | |
+| Access control: new endpoints (incl. Next.js server actions and route handlers) authenticated and authorized; owner/tenant checked, foreign ids answer 404; no owner, tenant or role field in request records; 401/403 and `cross-user` tests? | |
 | Input and injection: size, length and type limits; bind parameters only, sort and identifiers from an allow-list, no process execution with user input; closed types for polymorphic JSON; uploads named, scanned, served safely? | |
-| Configuration: actuator exposure, debug features, forwarded-header strategy unchanged or tightened? | |
+| Configuration: management endpoint exposure (actuator, probes), debug features, forwarded-header strategy unchanged or tightened? | |
 | Output and errors: no stack traces or internals in responses, no sensitive data in logs? | |
 | Outbound: calls to user-influenced URLs allow-listed and address-filtered; timeouts set? | |
-| Browser and session: no `bypassSecurityTrust*`, `innerHTML`, tokens in browser storage; CSP and headers still strict; CSRF, CORS, session lifetimes and logout unchanged or tightened? | |
+| Browser and session: no `bypassSecurityTrust*`, `innerHTML`, `dangerouslySetInnerHTML`, tokens in browser storage or secrets in client props; CSP and headers still strict; CSRF, CORS, session lifetimes and logout unchanged or tightened? | |
 | Abuse: rate limits for expensive or abusable endpoints; abuse cases tested? | |
 | Cryptography and secrets: TLS, hashing, encryption at rest and keys per SEC-CRY-01..05; no credential in code, config, fixtures or logs (SEC-INC-01)? | |
 | Audit trail: security-relevant actions write an audit event with a pseudonymous id, tested? | |

@@ -11,7 +11,7 @@ This repository is a shared quality baseline that our projects import. It define
 
 ## Always read
 
-1. [README.md](docs/baseline/README.md): chapter index, stacks, doc conventions; defaults D1–D16 in [04-solution-strategy/README.md](docs/baseline/04-solution-strategy/README.md)
+1. [README.md](docs/baseline/README.md): chapter index, stacks, doc conventions; defaults D1–D17 in [04-solution-strategy/README.md](docs/baseline/04-solution-strategy/README.md)
 2. [04-solution-strategy/hexagonal-architecture.md](docs/baseline/04-solution-strategy/hexagonal-architecture.md): dependency rule and vocabulary
 3. [05-building-block-view/code-organization.md](docs/baseline/05-building-block-view/code-organization.md): where code goes
 

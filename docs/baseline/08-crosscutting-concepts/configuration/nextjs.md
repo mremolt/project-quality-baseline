@@ -20,18 +20,21 @@ Rules marked *verified* were built in the baseline's Next.js reference app (Next
 import 'server-only';
 
 const flag = z.enum(['0', '1']).default('0').transform((v) => v === '1');
-const secret = () => z.string().trim().min(16).transform((v) => new Secret(v));
+const secret = () => z.string().trim().min(16).transform((v) => new Secret(v)).meta({ secret: true }); // NEXT-CFG-06
 
 export const ServerConfigSchema = z
   .object({
     APP_ORIGIN: z.url({ protocol: /^https?$/ }).describe('Public origin of the app; base of the OIDC redirect URIs (never the Host header)'),
-    API_BASE_URL: z.url({ protocol: /^https?$/ }).describe('Base URL of the resource server'),
-    API_TIMEOUT_MS: z.coerce.number().int().min(100).max(60_000).default(12_000).describe('Deadline per backend call, ms (NEXT-RES-03)'),
+    API_BASE_URL: z
+      .url({ protocol: /^https?$/ })
+      .refine((v) => new URL(v).pathname === '/' && new URL(v).search === '') // origin only: a path would be dropped silently
+      .describe('Origin of the resource server, without a path: the spec paths start with /api/'),
+    API_TIMEOUT_MS: z.coerce.number().int().min(100).max(60_000).default(12_000).describe('Total deadline of one proxied call or server fetch: session lookup, token refresh, backend; ms (NEXT-RES-03)'),
     OIDC_ISSUER_URL: z.url({ protocol: /^https$/ }).describe('Issuer of the IdP'),
     OIDC_CLIENT_ID: z.string().min(1).describe('Client id of this BFF at the IdP'),
     OIDC_CLIENT_SECRET: secret().describe('Client secret (mounted file, CFG-05)'),
     OIDC_TIMEOUT_S: z.coerce.number().int().min(1).max(60).default(5).describe('Deadline per IdP call, s'),
-    REDIS_URL: z.url({ protocol: /^rediss?$/ }).transform((v) => new Secret(v)).describe('Session store URL incl. password'),
+    REDIS_URL: z.url({ protocol: /^rediss?$/ }).transform((v) => new Secret(v)).meta({ secret: true }).describe('Session store URL incl. password'),
     SESSION_IDLE_MINUTES: z.coerce.number().int().min(1).max(240).default(30).describe('Session idle timeout, min (NODE-BFF-07)'),
     SESSION_ABSOLUTE_HOURS: z.coerce.number().int().min(1).max(24).default(12).describe('Absolute session lifetime, h'),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug']).default('info').describe('pino log level'),
@@ -76,7 +79,7 @@ export async function register(): Promise<void> {
 - **NEXT-CFG-05: The browser gets an explicit public subset, mapped on the server and passed by the root layout to a client provider.** Replaces REACT-CFG-02..04 for Next.js (CFG-11 intent: runtime values from the serving origin, public only).
   - `PublicConfig` (`src/platform/config/public-config.ts`, isomorphic, exported by `src/platform/index.ts`) is a plain interface; `publicConfig(config)` in `server-config.ts` maps it field by field, never by spreading the server configuration.
   - The root layout (a server component) calls `publicRuntimeConfig()` from `@/platform/index.server` and passes the object to the root client providers, which render `PublicConfigProvider` (`'use client'`, `src/platform/adapter/in/ui/public-config.client.tsx`). Client components read it with `usePublicConfig()`, which throws outside the provider (REACT-ARCH-09).
-  - Fields: `environmentLabel`, `environmentName`, `release`, `commit` (error reports, REACT-OBS-05; [NEXT-REL-15](../../07-deployment-view/nextjs-delivery.md)) and `requestTimeoutMs` (the browser mutator's timeout, REACT-API). The root client providers hand the values to code outside React in their lazy `useState` initializer: `configureHttp()` gets the timeout ([NEXT-API-05](../api/nextjs-openapi-clients.md)), the error-reporting service gets environment and release (*verified* in the template).
+  - Fields: `environmentLabel`, `environmentName`, `release`, `commit` (error reports, REACT-OBS-05; [NEXT-REL-15](../../07-deployment-view/nextjs-delivery.md)) `requestTimeoutMs` (the browser mutator's timeout, REACT-API) and `clientErrorPath` (`/client-errors`, the BFF's error intake, NEXT-OBS-18; a constant fixed by the route file, not a configuration key). The root client providers hand the values to code outside React in their lazy `useState` initializer: `configureHttp()` gets the timeout ([NEXT-API-05](../api/nextjs-openapi-clients.md)), the error-reporting service gets environment and release, `HttpErrorReporting` the intake path (*verified* in the template).
   - The object is serialized into every HTML page and is public (TS-SEC-04, NEXT-SEC-06): no secret, no internal host name, no backend URL. A new field is reviewed like an API change.
 
 ```tsx

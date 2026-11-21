@@ -8,7 +8,7 @@ import { createApiProxy } from './api-proxy';
 describe('API proxy route handler', () => {
   const sessions = mock<SessionUseCase>();
   const backend = mock<ApiRelayUseCase>();
-  const proxy = createApiProxy(sessions, backend);
+  const proxy = createApiProxy(sessions, backend, 50);
   const cookie = { cookie: '__Host-session=s-1' };
   const relayed = (): ApiCall => {
     const request = backend.relay.mock.lastCall?.[1];
@@ -83,5 +83,29 @@ describe('API proxy route handler', () => {
     expect(response.status).toBe(409);
     expect(response.headers.get('content-type')).toBe('application/problem+json');
     expect(new TextDecoder().decode(relayed().body)).toBe('{"reason":"abc"}');
+  });
+
+  it('gives the session lookup and the relayed call one shared deadline (NEXT-RES-03)', async () => {
+    await proxy(new Request('https://shop.test/api/v1/orders', { headers: cookie }));
+
+    const lookupDeadline = sessions.resolve.mock.lastCall?.[1];
+    expect(lookupDeadline).toBeInstanceOf(AbortSignal);
+    expect(relayed().signal).toBe(lookupDeadline);
+  });
+
+  it('answers 504 when the deadline passes before the backend is called', async () => {
+    sessions.resolve.mockImplementation(
+      (_id, deadline) =>
+        new Promise((_, reject) => {
+          deadline?.addEventListener('abort', () => {
+            reject(deadline.reason as Error);
+          });
+        }),
+    );
+
+    const response = await proxy(new Request('https://shop.test/api/v1/orders', { headers: cookie }));
+
+    expect(response.status).toBe(504);
+    expect(backend.relay).not.toHaveBeenCalled();
   });
 });

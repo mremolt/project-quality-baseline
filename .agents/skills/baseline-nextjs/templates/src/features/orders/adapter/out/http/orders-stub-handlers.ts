@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { getCancelOrderMockHandler, getListOrdersMockHandler } from './generated/browser/orders/orders.msw';
 import type { Order } from './generated/model';
 
-/** Deterministic contract stubs for the stubbed E2E tier (D10); built from the Orval-generated handlers. */
+/** Deterministic contract stubs for the stubbed E2E tier (NEXT-D5); built from the Orval-generated handlers. */
 export const STUB_ORDERS: Order[] = [
   {
     id: 'o-1',

@@ -37,6 +37,7 @@ describe('handleCancelOrder (NEXT-TEST-06)', () => {
   it.each([
     ['an unknown key', { ...input, ownerId: 'someone-else' }],
     ['a wrong type', { ...input, reason: 42 }],
+    ['an id outside the spec format', { ...input, orderId: '..' }],
     ['no object', 'o-1'],
   ])('answers INVALID_INPUT for %s and calls nothing', async (_, bad) => {
     const { cancelOrder, deps } = setup();

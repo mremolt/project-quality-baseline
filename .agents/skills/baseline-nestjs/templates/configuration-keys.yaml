@@ -7,10 +7,22 @@
   required: false
   secret: false
   description: Maximum request body size
+- key: HTTP_MAX_HEADER_BYTES
+  required: false
+  secret: false
+  description: 'Maximum size of the request headers; larger get 431 (NEST-SEC-22)'
 - key: HTTP_REQUEST_TIMEOUT_MS
   required: false
   secret: false
-  description: Request budget (RES-TMO ladder)
+  description: 'Time to receive a whole request, slow-client guard (NEST-SEC-22)'
+- key: HTTP_HANDLER_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'Request budget: a handler running longer gets 503 (RES-TMO-04, NEST-SEC-22)'
+- key: HTTP_KEEP_ALIVE_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'Idle keep-alive time; longer than the idle timeout of the proxy in front (NEST-SEC-22)'
 - key: HTTP_TRUSTED_PROXIES
   required: false
   secret: false
@@ -48,6 +60,14 @@
   required: false
   secret: false
   description: Timeout of a key set fetch
+- key: AUTH_JWKS_COOLDOWN_MS
+  required: false
+  secret: false
+  description: Minimum time between key set fetches for an unknown kid (NEST-SEC-03)
+- key: AUTH_JWKS_CACHE_MAX_AGE_MS
+  required: false
+  secret: false
+  description: Maximum age of the cached key set (NEST-SEC-03)
 - key: DATABASE_HOST
   required: true
   secret: false
@@ -72,11 +92,77 @@
   required: false
   secret: false
   description: Pool size per instance (RES-CAP-02)
+- key: DATABASE_CONNECTION_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'Wait for a pool slot plus connecting, ms; then 503 (NEST-RES-01/04)'
+- key: DATABASE_STATEMENT_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'statement_timeout of the application pool, ms; below the transaction timeout (NEST-RES-01)'
+- key: DATABASE_TRANSACTION_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'transaction_timeout and idle_in_transaction_session_timeout of the application pool, ms; below the request budget (NEST-DB-04, RES-TX-02)'
 - key: DATABASE_MIGRATION_USER
   required: false
   secret: false
-  description: DDL user for migrations; only in the migration job
+  description: 'DDL user; set only where the service migrates at start-up, and in the migration job (NEST-REL-01/03)'
 - key: DATABASE_MIGRATION_PASSWORD
   required: false
   secret: true
-  description: Password of the DDL user; only in the migration job
+  description: 'Password of the DDL user; set together with the DDL user'
+- key: DATABASE_MIGRATION_LOCK_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'lock_timeout of migration DDL (NEST-DB-16, REL-DB-03)'
+- key: DATABASE_MIGRATION_STATEMENT_TIMEOUT_MS
+  required: false
+  secret: false
+  description: 'statement_timeout of the migration connection, the migration budget (NEST-DB-16, REL-DB-04)'
+- key: RELEASE_VERSION
+  required: false
+  secret: false
+  description: 'Release version, injected at deploy time; logged at start (NEST-REL-06, REL-VER-05)'
+- key: RESILIENCE_TRANSACTION_GUARD
+  required: false
+  secret: false
+  description: 'A remote call inside a transaction: fail (integration tests) or log a warning (NEST-RES-03)'
+# Library keys read by the OpenTelemetry SDK, not by own schemas (NEST-CFG-05/10, NEST-OBS-06). Required where the
+# SDK default is not the baseline value; the smoke start (TEST-CFG-02) sets them like a deployment.
+- key: OTEL_SERVICE_NAME
+  required: true
+  secret: false
+  description: 'Component name (NEST-OBS-06)'
+- key: OTEL_RESOURCE_ATTRIBUTES
+  required: true
+  secret: false
+  description: 'service.version=<release>,deployment.environment.name=<env> (NEST-OBS-06, NEST-REL-06)'
+- key: OTEL_EXPORTER_OTLP_ENDPOINT
+  required: true
+  secret: false
+  description: "The platform's OTLP collector (NEST-OBS-06)"
+- key: OTEL_TRACES_EXPORTER
+  required: false
+  secret: false
+  description: 'otlp (SDK default)'
+- key: OTEL_METRICS_EXPORTER
+  required: false
+  secret: false
+  description: 'otlp (SDK default)'
+- key: OTEL_LOGS_EXPORTER
+  required: true
+  secret: false
+  description: 'none: logs go to stdout (NEST-LOG-02); the SDK default is otlp'
+- key: OTEL_TRACES_SAMPLER
+  required: true
+  secret: false
+  description: 'parentbased_traceidratio, set explicitly per environment (OBS-13)'
+- key: OTEL_TRACES_SAMPLER_ARG
+  required: true
+  secret: false
+  description: 'Sampling ratio, for example 0.1, set explicitly per environment (OBS-13)'
+- key: OTEL_METRIC_EXPORT_INTERVAL
+  required: false
+  secret: false
+  description: 'Metric export interval, ms; SDK default 60000'

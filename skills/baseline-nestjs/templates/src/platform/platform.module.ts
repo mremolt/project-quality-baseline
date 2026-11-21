@@ -6,7 +6,8 @@ import type { Kysely } from 'kysely';
 import { HealthController } from './adapter/in/health/health.controller.js';
 import { ShutdownCallbacks } from './adapter/in/health/shutdown-callbacks.js';
 import { JWKS } from './adapter/in/rest/auth.guard.js';
-import { createDatabase, KYSELY } from './adapter/out/persistence/database.js';
+import { createDatabase } from './adapter/out/persistence/database.js';
+import { KYSELY } from './adapter/out/persistence/kysely.token.js';
 import { KyselyTransactionAdapter } from './adapter/out/persistence/kysely-transaction.adapter.js';
 import { loadConfig } from './config/load-config.js';
 import {
@@ -16,6 +17,8 @@ import {
   DatabaseConfig,
   HTTP_CONFIG,
   HttpConfig,
+  RESILIENCE_CONFIG,
+  ResilienceConfig,
 } from './config/platform.config.js';
 import { TRANSACTION_PORT } from './platform.tokens.js';
 
@@ -30,18 +33,32 @@ const http = loadConfig(HttpConfig);
     { provide: HTTP_CONFIG, useValue: http },
     { provide: AUTH_CONFIG, useFactory: () => loadConfig(AuthConfig) },
     { provide: DATABASE_CONFIG, useFactory: () => loadConfig(DatabaseConfig) },
+    { provide: RESILIENCE_CONFIG, useFactory: () => loadConfig(ResilienceConfig) }, // transactionGuard mode
     { provide: KYSELY, useFactory: (cfg: DatabaseConfig) => createDatabase(cfg), inject: [DATABASE_CONFIG] },
     KyselyTransactionAdapter,
     { provide: TRANSACTION_PORT, useExisting: KyselyTransactionAdapter },
     {
       provide: JWKS,
       useFactory: (cfg: AuthConfig) =>
-        createRemoteJWKSet(new URL(cfg.AUTH_JWKS_URI), { timeoutDuration: cfg.AUTH_JWKS_TIMEOUT_MS }),
+        createRemoteJWKSet(new URL(cfg.AUTH_JWKS_URI), {
+          timeoutDuration: cfg.AUTH_JWKS_TIMEOUT_MS,
+          cooldownDuration: cfg.AUTH_JWKS_COOLDOWN_MS,
+          cacheMaxAge: cfg.AUTH_JWKS_CACHE_MAX_AGE_MS,
+        }), // NEST-SEC-03
       inject: [AUTH_CONFIG],
     },
     ShutdownCallbacks,
   ],
-  exports: [HTTP_CONFIG, AUTH_CONFIG, KYSELY, TRANSACTION_PORT, KyselyTransactionAdapter, JWKS, ShutdownCallbacks],
+  exports: [
+    HTTP_CONFIG,
+    AUTH_CONFIG,
+    RESILIENCE_CONFIG,
+    KYSELY,
+    TRANSACTION_PORT,
+    KyselyTransactionAdapter,
+    JWKS,
+    ShutdownCallbacks,
+  ],
 })
 export class PlatformModule implements OnApplicationShutdown {
   constructor(@Inject(KYSELY) private readonly db: Kysely<unknown>) {}

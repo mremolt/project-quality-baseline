@@ -17,7 +17,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | TLS, password hashing, encryption at rest, keys, random values | `security-requirements.md` (SEC-CRY-01..05), `spring-hardening.md` (SPRING-SEC-30) or `nestjs-hardening.md` (NEST-SEC-42) |
 | Project security artefacts | The sync creates them from templates once: `docs/security/{requirements,threat-model,exceptions,incident-runbook}.md`, `SECURITY.md`, the PR template with the SEC-REV-01 checklist, `frontend/public/.well-known/security.txt`. If one is missing, re-run the sync or copy it from the baseline's `templates/`; fill in the placeholders, never invent contacts or dates |
 | Auth, `Caller`, CORS, CSRF, actuator / probes | Spring: `spring.md`; NestJS: `nestjs.md` |
-| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md`; Node BFF (NestJS or Next.js): `node-bff.md` (also prototype pollution, ReDoS, process hardening) |
+| Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md` (also prototype pollution, ReDoS, process hardening); Node BFF (NestJS or Next.js): `node-bff.md` |
 | Browser code, storage, redirects, bundle, third-party scripts | `typescript.md` |
 | Angular templates, CSP, Trusted Types, XSRF, SSR, security E2E | `angular.md` |
 | React JSX and DOM safety, CSP nonce, Trusted Types, zod jitless, XSRF, security E2E | `react.md` (REACT-SEC-*) |
@@ -36,7 +36,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 |---|---|
 | Custom JWT filter, JJWT, `@PreAuthorize` as default | Resource server, authorization on a `Caller` (SPRING-SEC-02/03) |
 | `@nestjs/passport`, `jsonwebtoken`, `@Roles` as the only check | One `jose` guard, authorization on a `Caller` in the use case (NEST-SEC-02/03/05) |
-| Bearer token in an Angular interceptor, token in `localStorage` | BFF session cookie, no tokens in the browser (SPRING-SEC-08, TS-SEC-01, NG-SEC-08) |
+| Bearer token in an Angular interceptor or React fetch wrapper, token in `localStorage` | BFF session cookie, no tokens in the browser (SPRING-SEC-08, NEST-SEC-12, TS-SEC-01, NG-SEC-08, REACT-SEC-06) |
 | API CSP `default-src 'self'`, `headers().disable()` | `default-src 'none'`, headers never disabled (SPRING-SEC-13, NEST-SEC-20) |
 | `bypassSecurityTrust*` to make a binding work | Forbidden by lint; an exception needs a code comment with reason and trusted source plus pull-request approval (NG-SEC-02) |
 | `<meta>` CSP, CDN-cached nonce, `base-uri 'none'` | BFF sets the CSP per request, `base-uri 'self'`, Trusted Types incl. `angular#components` (NG-SEC-05/06) |
@@ -54,7 +54,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 
 1. **Classify** the change by the areas of `security-review.md`: access control, input and injection, output and errors, outbound, browser and session, headers, abuse, deserialization, cryptography, secrets, audit trail, dependencies, design, personal data, pipeline.
 2. **Threat model** if it adds an entry point, outbound call, role or personal data (SEC-TM-02): the four questions in the PR template's threat-model section; update `docs/security/threat-model.md` on architecture changes (SEC-TM-01). Write abuse cases as tests (SEC-TM-03).
-3. **Apply the rules** of the matching docs, test first (`baseline-tdd`): `cross-user` tagged test (SPRING-SEC-16 / NEST-SEC-08), 401/403 (SPRING-SEC-10 / NEST-SEC-14), token rejection (SPRING-SEC-17 / NEST-SEC-04), session rotation and logout (SPRING-SEC-32/33 / NODE-BFF-07/08), XSS, header and deep-link E2E (NG-SEC-12), personal data absent from logs (SPRING-DP-07).
+3. **Apply the rules** of the matching docs, test first (`baseline-tdd`): `cross-user` tagged test (SPRING-SEC-16 / NEST-SEC-08), 401/403 (SPRING-SEC-10 / NEST-SEC-14), token rejection (SPRING-SEC-17 / NEST-SEC-04), session rotation and logout (SPRING-SEC-32/33 / NODE-BFF-07/08), XSS, header and deep-link E2E (NG-SEC-12 / REACT-SEC-09 / NEXT-SEC-09), personal data absent from logs (SPRING-DP-07 / NEST-DP-09).
 4. **Review**: answer the security section of the PR template (SEC-REV-01); cite rule ID plus ASVS/Top 10 reference (SEC-REV-03). Reachability decides severity.
 5. **Never** weaken a check to pass a build (SEC-REV-02); raise it. Propose shortcuts and draft an ADR (ARCH-SC-06).
 6. **Finish** with the stack's verify command green (`./mvnw verify`, `npm run verify`).

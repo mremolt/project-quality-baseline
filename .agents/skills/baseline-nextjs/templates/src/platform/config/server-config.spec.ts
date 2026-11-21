@@ -42,6 +42,7 @@ describe('server configuration (TEST-CFG-01)', () => {
     ['a missing environment kind', { ...valid, APP_ENVIRONMENT_KIND: undefined }, 'APP_ENVIRONMENT_KIND'],
     ['a plain-HTTP issuer', { ...valid, OIDC_ISSUER_URL: 'http://idp.test' }, 'OIDC_ISSUER_URL'],
     ['a time-out out of range', { ...valid, API_TIMEOUT_MS: '0' }, 'API_TIMEOUT_MS'],
+    ['a backend URL with a path', { ...valid, API_BASE_URL: 'http://gateway:8080/orders' }, 'API_BASE_URL'],
   ])('rejects %s and names the key', (_, env, key) => {
     expect(() => parseServerConfig(env)).toThrow(key);
   });
@@ -62,6 +63,7 @@ describe('server configuration (TEST-CFG-01)', () => {
       release: '1.4.0',
       commit: 'abc123',
       requestTimeoutMs: 20_000,
+      clientErrorPath: '/client-errors',
     });
   });
 });

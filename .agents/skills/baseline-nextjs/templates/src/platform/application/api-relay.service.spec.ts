@@ -20,15 +20,17 @@ describe('ApiRelayService', () => {
   const service = new ApiRelayService(sessions, backend);
 
   it('relays the call with the bearer token of the session', async () => {
-    sessions.accessToken.calledWith('s-1').mockResolvedValue('at-1');
+    const relayedCall = call();
+    sessions.accessToken.calledWith('s-1', relayedCall.signal).mockResolvedValue('at-1');
     backend.relay.mockResolvedValue(new Response(null, { status: 204 }));
 
-    const response = await service.relay('s-1', call());
+    const response = await service.relay('s-1', relayedCall);
 
     expect(response?.status).toBe(204);
     const relayed = backend.relay.mock.lastCall?.[0];
     expect(relayed?.headers.get('authorization')).toBe('Bearer at-1');
     expect(relayed?.headers.get('accept')).toBe('application/json');
+    expect(relayed?.signal).toBe(relayedCall.signal); // one deadline for the refresh and the backend call
   });
 
   it('relays nothing without an access token', async () => {

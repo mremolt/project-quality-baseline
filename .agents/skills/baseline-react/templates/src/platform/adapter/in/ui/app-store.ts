@@ -2,8 +2,8 @@ import { combineSlices, configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
 /**
- * Feature slices register here when their route chunk loads:
- * `declare module '…/platform/adapter/in/ui/app-store' { interface LazyLoadedSlices extends WithSlice<typeof slice> {} }`
+ * Feature slices add themselves by declaration merging through the platform's public entry, which re-exports this
+ * type (REACT-STATE-02): `declare module '…/platform' { interface LazyLoadedSlices extends WithSlice<typeof slice> {} }`
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- filled by declaration merging from each feature slice
 export interface LazyLoadedSlices {}

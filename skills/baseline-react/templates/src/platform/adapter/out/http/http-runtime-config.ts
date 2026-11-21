@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import type { LoadRuntimeConfigPort, RuntimeConfig } from '../../../ports/out/runtime-config.port';
+import type { RuntimeConfig } from '../../../domain';
+import type { LoadRuntimeConfigPort } from '../../../ports/out/runtime-config.port';
 
 const SameOriginPath = z
   .string()

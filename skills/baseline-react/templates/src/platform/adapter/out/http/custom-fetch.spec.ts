@@ -45,6 +45,28 @@ describe('customFetch', () => {
     expect(seen).toEqual(['token-1', null]);
   });
 
+  it('treats a malformed XSRF cookie as absent instead of throwing', async () => {
+    document.cookie = 'XSRF-TOKEN=%E0%A4%A';
+    const seen: (string | null)[] = [];
+    server.use(
+      http.post('*/api/echo', ({ request }) => {
+        seen.push(request.headers.get('X-XSRF-TOKEN'));
+        return HttpResponse.json({});
+      }),
+    );
+
+    await customFetch('/api/echo', { method: 'POST' });
+
+    expect(seen).toEqual([null]);
+  });
+
+  it('rejects a target on another origin without sending it', async () => {
+    await expect(customFetch('https://evil.example/api/echo', { method: 'POST' })).rejects.toMatchObject({
+      failure: 'unexpected',
+    });
+    expect(reportError.report).toHaveBeenCalledOnce();
+  });
+
   it('turns 401 into the unauthorized callback and a technical error, without reporting', async () => {
     server.use(http.get('*/api/echo', () => new HttpResponse(null, { status: 401 })));
 
@@ -64,6 +86,13 @@ describe('customFetch', () => {
     );
 
     await expect(customFetch('/api/echo', {})).rejects.toEqual(new HttpProblem(409, { code: 'X' }));
+  });
+
+  it('reports a 2xx body that is not JSON once, as the technical error it creates (TS-ARCH-18)', async () => {
+    server.use(http.get('*/api/text', () => new HttpResponse('<html>proxy page</html>', { status: 200 })));
+
+    await expect(customFetch('/api/text', { method: 'GET' })).rejects.toMatchObject({ failure: 'malformed-response' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(expect.any(TechnicalError), { status: 200 });
   });
 
   it('reports a time-out', async () => {

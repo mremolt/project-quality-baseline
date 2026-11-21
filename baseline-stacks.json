@@ -1,5 +1,5 @@
 {
-  "$comment": "Stacks a product can declare in its .baseline.json. The sync copies only the skills of the declared stacks (and the stacks they require) and keeps only the AGENTS.md lines tagged with one of them. See docs/baseline/08-crosscutting-concepts/development/agent-skills.md#declared-stacks. \"detect\" (used only when a product has no .baseline.json yet): \"<component-folder-glob>/<file>[#<text the file must contain>]\".",
+  "$comment": "Stacks a product can declare in its .baseline.json. The sync copies only the skills and the Claude Code hooks (files in .claude/hooks, with their .claude/settings.json entries) of the declared stacks and the stacks they require, and keeps only the AGENTS.md lines tagged with one of them; skills and hooks no stack claims are always copied. See docs/baseline/08-crosscutting-concepts/development/agent-skills.md#declared-stacks. \"detect\" (used only when a product has no .baseline.json yet): \"<component-folder-glob>/<file>[#<text the file must contain>]\".",
   "shared": [
     "baseline-tdd",
     "baseline-security",
@@ -12,6 +12,7 @@
       "skills": [
         "java-hibernate-jpa"
       ],
+      "hooks": [],
       "detect": []
     },
     "spring": {
@@ -23,6 +24,9 @@
         "spring-boot-testing",
         "spring-security",
         "spring-observability"
+      ],
+      "hooks": [
+        "baseline-spring-reminder.mjs"
       ],
       "detect": [
         "backend*/pom.xml#spring-boot"
@@ -37,6 +41,7 @@
         "playwright-best-practices",
         "playwright-cli"
       ],
+      "hooks": [],
       "detect": []
     },
     "angular": {
@@ -50,6 +55,9 @@
         "angular-material-design",
         "ngrx-signals"
       ],
+      "hooks": [
+        "baseline-angular-reminder.mjs"
+      ],
       "detect": [
         "frontend*/angular.json"
       ]
@@ -59,6 +67,7 @@
       "skills": [
         "vitest"
       ],
+      "hooks": [],
       "detect": []
     },
     "nestjs": {
@@ -67,6 +76,9 @@
       ],
       "skills": [
         "baseline-nestjs"
+      ],
+      "hooks": [
+        "baseline-nestjs-reminder.mjs"
       ],
       "detect": [
         "backend*/package.json#@nestjs/core"
@@ -83,6 +95,9 @@
         "material-ui-theming",
         "material-ui-styling"
       ],
+      "hooks": [
+        "baseline-react-reminder.mjs"
+      ],
       "detect": [
         "frontend*/vite.config.ts#@vitejs/plugin-react"
       ]
@@ -93,6 +108,9 @@
       ],
       "skills": [
         "baseline-nextjs"
+      ],
+      "hooks": [
+        "baseline-nextjs-reminder.mjs"
       ],
       "detect": [
         "frontend*/next.config.ts"

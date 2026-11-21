@@ -127,8 +127,6 @@ expect(apiCalls.length, 'orders screen request budget').toBeLessThanOrEqual(2);
 
 Rules TS-TEST-17..27 and the matrix rules from TS-TEST-28 on are in [typescript-e2e.md](typescript-e2e.md): viewports and the tiered matrix, themes, reflow and text spacing, resize transitions, target size, visual regression, screen reader assertions, flaky tests and the time budget.
 
-
-
 ## Skill overrides
 
 | Skill | Says | Our rule |

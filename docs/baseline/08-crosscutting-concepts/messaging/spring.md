@@ -128,7 +128,7 @@ create index outbox_unsent on outbox_messages (position) where sent_at is null;
 
 ### Contract
 
-- **SPRING-MSG-11: The AsyncAPI document is generated with Springwolf and committed** (MSG-CON-01): `io.github.springwolf:springwolf-kafka` 2.x (Boot 4 support since 2.0, AsyncAPI 3 output; not managed by Boot, pin it). Springwolf annotations stay in the Kafka adapter packages (`domainAndPortsAreFrameworkFree` in the ArchUnit template covers `io.github.springwolf..`). An `*IT` fetches `/springwolf/docs` as YAML and fails if `asyncapi/<context>-v<N>.yaml` differs, like SPRING-API-08. The Springwolf UI and endpoint are off outside local development (SPRING-SEC-23). Springwolf 2.x uses Jackson 2 internally, like springdoc; the `noJackson2` rule for our own code is unaffected (SPRING-LIB-04).
+- **SPRING-MSG-11: The AsyncAPI document is generated with Springwolf and committed** (MSG-CON-01): `io.github.springwolf:springwolf-kafka` 2.x (Boot 4 support since 2.0, AsyncAPI 3 output; not managed by Boot, pin it). Springwolf annotations stay in the Kafka adapter packages (`domainAndPortsAreFrameworkFree` in the ArchUnit template covers `io.github.springwolf..`). An `*IT` fetches `/springwolf/docs` as YAML and fails if `asyncapi/<context>-v<N>.yaml` differs, like SPRING-API-08. The Springwolf UI and endpoint are off outside local development (SPRING-SEC-23). Springwolf 2.x uses Jackson 2 internally, like springdoc; the `noJackson2` rule for our own code is unaffected (SPRING-LIB-04). Springwolf 2.x cannot be combined with springdoc 3.2.1+ (conflicting swagger-core lines, `VerifyError` at start-up); a service with Kafka stays on Boot 4.1 / springdoc 3.2.0 until a Springwolf release on swagger-core 3 is out.
 
 ### Tests
 

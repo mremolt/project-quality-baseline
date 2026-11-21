@@ -12,21 +12,22 @@ src/
   proxy.ts                      ← per-request nonce, CSP and security headers, server-action origin gate (NEXT-ARCH-11)
   instrumentation.ts            ← server: OpenTelemetry, onRequestError, test stubs (NEXT-OBS, NEXT-D5)
   instrumentation-client.ts     ← browser, before app code: z.config({ jitless: true }), Trusted Types default policy
+  telemetry.ts  backend-stubs.ts ← imported only by instrumentation.ts: OpenTelemetry SDK; MSW stubs in test mode
   app/                          ← routing and root composition only (NEXT-ARCH-01)
     layout.tsx                  ← root layout: nonce, locale, public config → <Providers>, <AppShell>
     providers.tsx               ← 'use client': Emotion cache with nonce, theme, public config, store, QueryClient
     app-shell.tsx  theme.ts     ← skip link, banner, navigation, <main>; MUI theme
     page.tsx  orders/page.tsx   ← one-line re-exports of a feature pages file
     api/[...path]/route.ts      ← binds the platform's API proxy (browser → backend, token relay)
-    auth/{login,callback,logout}/route.ts  livez/route.ts  readyz/route.ts   ← bind platform handlers
+    auth/{login,callback,logout}/route.ts  client-errors/route.ts  livez/route.ts  readyz/route.ts   ← bind platform handlers
   platform/                     ← same rings and rules as a feature (REACT-ARCH-04)
     domain/                     ← Caller, TechnicalError, UnauthenticatedError
-    ports/in/ ports/out/ application/   ← session and API-relay use cases; session store, IdP, backend-relay ports
-    adapter/in/next/            ← route handlers (auth, API proxy, health), security headers, CSRF check
-    adapter/in/ui/              ← store.ts (combineSlices), store-provider.tsx, public-config.tsx
+    ports/in/ ports/out/ application/   ← session, API-relay and client-error intake use cases; session store, IdP, backend-relay, client-error log ports
+    adapter/in/next/            ← route handlers (auth, API proxy, client errors, health), security headers, CSRF check
+    adapter/in/ui/              ← store.ts (combineSlices), store-provider.client.tsx, public-config.client.tsx
     adapter/in/i18n/request.ts  ← next-intl request config
     adapter/out/http/           ← browser-fetch.ts, server-fetch.ts (Orval mutators), fetch-backend-relay.ts
-    adapter/out/{oidc,session,logging}/   ← openid-client, Redis session store, pino
+    adapter/out/{oidc,session,logging}/   ← openid-client, Redis session store (sessions, pre-login records, refresh lock), pino
     config/                     ← server-config.ts (zod, server-only), public-config.ts
     platform.composition.server.ts   ← server singletons (Redis, OIDC), route handlers, configureServerFetch()
     index.ts  index.client.ts  index.server.ts   ← the three entry points (NEXT-ARCH-14)
@@ -35,14 +36,15 @@ src/
       domain/  application/  ports/in/  ports/out/     ← isomorphic core (NEXT-ARCH-08)
       adapter/in/ui/            ← orders-screen.server.tsx, orders-panel.client.tsx, cancel-order-form.client.tsx,
                                   orders-view.slice.ts, orders-queries.ts, orders-error-keys.ts
-      adapter/in/next/          ← orders-actions.ts ('use server')
+      adapter/in/next/          ← orders-actions.ts ('use server'), cancel-order.handler.ts (action body, NEXT-TEST-06)
       adapter/out/http/         ← http-orders.ts, orders-http.browser.ts, orders-http.server.ts, mappers, generated/
       adapter/out/next/         ← server-action-orders.ts (browser side of the server action)
-      orders.tokens.ts          ← contexts + use<UseCase>() hooks (REACT-ARCH-09)
-      orders.composition.tsx    ← 'use client': browser adapters and use cases, slice injection, providers
+      orders.tokens.ts          ← OrdersUseCases type, the feature's one context, selector hooks (REACT-ARCH-09)
+      orders.api.tsx            ← 'use client': createOrdersUseCases() (browser adapters, use cases), <OrdersApiProvider>
+      orders.composition.tsx    ← 'use client': slice injection, the API provider around the page (NEXT-ARCH-15)
       orders.composition.server.ts ← server-only: server adapters and use cases per request (cache)
       orders.pages.ts           ← page and metadata for src/app/orders/page.tsx; wires server use cases
-      index.ts                  ← public API (TS-ARCH-19); never pages
+      index.ts                  ← public API (TS-ARCH-19): re-exports orders.api.tsx and the published hooks; never pages
   shared/ui/                    ← formatting, presentational components
   testing/                      ← render-with-providers.tsx
 test/                           ← architecture.spec.ts, fixtures/arch-violation/
@@ -123,23 +125,23 @@ export async function cancelOrderAction(input: unknown): Promise<CancelOrderActi
   }
 }
 
-// features/orders/orders.composition.tsx ('use client')
-const cancelOrder = new CancelOrderService(new ServerActionOrders(cancelOrderAction));
+// features/orders/orders.api.tsx ('use client'): the browser factory (REACT-ARCH-10)
+cancelOrder: new CancelOrderService(new ServerActionOrders(cancelOrderAction)),
 ```
 
-- **NEXT-ARCH-05: Route handlers are incoming adapters of the platform: BFF endpoints, the API proxy and probes.** The handlers live in `src/platform/adapter/in/next/`, are created by `platform.composition.server.ts` and call platform use cases (session, API relay), never an outgoing port or `fetch` directly; `src/app/**/route.ts` only binds them (NEXT-ARCH-01). The set is fixed: `/auth/login`, `/auth/callback`, `/auth/logout`, `/api/[...path]` (proxy to the backend with token relay, [api/nextjs-openapi-clients.md](../08-crosscutting-concepts/api/nextjs-openapi-clients.md)), `/livez`, `/readyz`, and where adopted the CSP report and back-channel logout endpoints. Features expose no REST endpoints of their own: the backend owns the API (API-CON-*), the app relays it. In the validation project the first proxy version called the outgoing relay port directly; `ui-no-outgoing-ports` caught it and the `ApiRelayService` use case was added.
+- **NEXT-ARCH-05: Route handlers are incoming adapters of the platform: BFF endpoints, the API proxy and probes.** The handlers live in `src/platform/adapter/in/next/`, are created by `platform.composition.server.ts` and call platform use cases (session, API relay, client-error intake), never an outgoing port or `fetch` directly; `src/app/**/route.ts` only binds them (NEXT-ARCH-01). The set is fixed: `/auth/login`, `/auth/callback`, `/auth/logout`, `/api/[...path]` (proxy to the backend with token relay, [api/nextjs-openapi-clients.md](../08-crosscutting-concepts/api/nextjs-openapi-clients.md)), `/client-errors` (the browser's error reports, [NEXT-OBS-18](../08-crosscutting-concepts/observability/nextjs.md)), `/livez`, `/readyz`, and where adopted the CSP report and back-channel logout endpoints. `isRouteHandlerPath()` in `security-headers.ts` lists the same prefixes: `proxy.ts` gives them the API CSP and leaves their origin checks to the handlers (NEXT-SEC-05). Features expose no REST endpoints of their own: the backend owns the API (API-CON-*), the app relays it. In the validation project the first proxy version called the outgoing relay port directly; `ui-no-outgoing-ports` caught it and the `ApiRelayService` use case was added.
 
 ### Client boundary
 
-- **NEXT-ARCH-06: Server-only code is marked with `import 'server-only'`, client code with `'use client'`, and both are visible in the file name.** Every server-only module starts with `import 'server-only'`: server compositions, the server mutator, server HTTP adapters (`*.server.ts`), `platform/index.server.ts`, server configuration. A client bundle that reaches one fails `next build`. `'use client'` appears only in files with the suffix `.client.tsx`, in client compositions (`<feature>.composition.tsx`) and in the root client files `src/app/providers.tsx`, `app-shell.tsx`, `theme.ts`; `'use server'` only in `adapter/in/next/*-actions.ts`. Suffixes in addition to REACT-ARCH-02: `.server.tsx` (server component), `.server.ts` (server-only module), `.client.tsx` (client component), `.composition.tsx` (client composition), `.composition.server.ts` (server composition), `.pages.ts` (pages file), `-actions.ts` (server actions), `.browser.ts` (browser-only adapter factory). The suffixes exist because dependency-cruiser cannot read directives (NEXT-ARCH-13); ESLint enforces the directive-to-suffix match (NEXT-TOOL-06).
-- **NEXT-ARCH-07: Nothing secret crosses to the client.** Props passed from a server component to a client component, and the return values of server actions, are serialized into the HTML and the RSC payload. They carry only what the UI shows: domain data mapped by the adapter (never DTOs with internal fields), the public configuration subset (NEXT-D7) and translated text. Never tokens, session ids, server configuration, secrets or error details. Taint APIs and the review checks are in [security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md).
+- **NEXT-ARCH-06: Server-only code is marked with `import 'server-only'`, client code with `'use client'`, and both are visible in the file name.** Every server-only module starts with `import 'server-only'`: server compositions, the server mutator, server HTTP adapters (`*.server.ts`), `platform/index.server.ts`, server configuration. A client bundle that reaches one fails `next build`. `'use client'` appears only in files with the suffix `.client.tsx`, in client compositions (`<feature>.composition.tsx`), in the feature API file (`<feature>.api.tsx`, REACT-ARCH-11) and in the root client files `src/app/providers.tsx`, `app-shell.tsx`, `theme.ts`; `'use server'` only in `adapter/in/next/*-actions.ts`. Suffixes in addition to REACT-ARCH-02: `.server.tsx` (server component), `.server.ts` (server-only module), `.client.tsx` (client component), `.composition.tsx` (client composition), `.api.tsx` (published feature API, a client file), `.composition.server.ts` (server composition), `.pages.ts` (pages file), `-actions.ts` (server actions), `.browser.ts` (browser-only adapter factory). The suffixes exist because dependency-cruiser cannot read directives (NEXT-ARCH-13); ESLint enforces the directive-to-suffix match (NEXT-TOOL-06).
+- **NEXT-ARCH-07: Nothing secret crosses to the client.** Props passed from a server component to a client component, and the return values of server actions, are serialized into the HTML and the RSC payload. They carry only what the UI shows: domain data mapped by the adapter (never DTOs with internal fields) and the public configuration subset (NEXT-D7); text is translated on each side, never passed across (NEXT-I18N-07). Never tokens, session ids, server configuration, secrets or error details. Taint APIs and the review checks are in [security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md).
 - **NEXT-ARCH-08: The core is isomorphic.** `domain`, `ports` and `application` import nothing from `next`, `react`, `server-only`, `next-intl` or Node.js built-ins, so the same use-case class runs on the server with the server adapter and in the browser with the browser adapter (`ListOrdersService` in both compositions of the validation project). Server/client differences live only in adapters and compositions. Domain types that cross the boundary as props are plain readonly data (TS-ARCH-16), not class instances with methods, because the RSC payload drops prototypes.
 
 ### Data loading and rendering
 
 - **NEXT-ARCH-09: Server-side waterfalls are N+1 problems** (API-N1-01). Typical Next.js traps: sequential `await`s in one server component, nested async server components that each wait for their parent's data, and a server component per row that calls a use case. Fix independent loads with `Promise.all` (S6); per-row loads with a view or batch endpoint (S1, S2) and request coalescing in the outgoing adapter (S4, TS-ARCH-15). React `cache()` deduplicates identical calls within one request but never batches different ones. Recommend a strategy; the developer decides (API-N1-02).
-- **NEXT-ARCH-10: Rendering is dynamic by default** (NEXT-D3). The root layout reads `headers()` for the nonce, so every route renders per request (`ƒ` in the `next build` output; verified). A page may be static or cached only when it is public, holds no personal data and needs no nonce, with the reason in the code review. Pages with personal data never use `export const dynamic = 'force-static'`, `revalidate`, `'use cache'`, `unstable_cache` or `fetch` cache options. Cache Components (`cacheComponents`) and Partial Prefetching need an ADR. Static public pages were not built in the validation project: to verify before first use, including how they get their CSP.
-- **NEXT-ARCH-11: `src/proxy.ts` sets the per-request nonce, the CSP and security headers, and gates server actions; it holds no business logic.** It exports `proxy(request)` and `config.matcher` (Next.js 16 renamed `middleware.ts`; that file name is not used). It never calls a backend, a use case other than the session, or a database, and never renders. Its security content (nonce, headers, the `Next-Action` origin check, session handling): [security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md).
+- **NEXT-ARCH-10: Rendering is dynamic by default** (NEXT-D3). The root layout reads `headers()` for the nonce, so every route renders per request (`ƒ` in the `next build` output; verified). A page may be static or cached only when it is public, holds no personal data and needs no nonce, and only with an ADR that covers its CSP (NEXT-RES-07). Pages with personal data never use `export const dynamic = 'force-static'`, `revalidate`, `'use cache'`, `unstable_cache` or `fetch` cache options. Cache Components (`cacheComponents`) and Partial Prefetching need an ADR. Static public pages were not built in the validation project: to verify before first use, including how they get their CSP.
+- **NEXT-ARCH-11: `src/proxy.ts` sets the per-request nonce, the CSP and security headers, and gates writes to page paths (server actions); it holds no business logic.** It exports `proxy(request)` and `config.matcher` (Next.js 16 renamed `middleware.ts`; that file name is not used). It never calls a backend, a use case other than the session, or a database, and never renders. Its security content (nonce, headers, the origin gate for page writes, session handling): [security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md).
 
 ## New app
 
@@ -165,7 +167,8 @@ const STORE_FILE = '\\.slice\\.tsx?$';
 const PAGES_FILE = '^src/features/[^/]+/[^/]+\\.pages\\.tsx?$';
 const SERVER_ACTIONS = '/adapter/in/next/[^/]+-actions\\.ts$';
 const HTTP_MUTATOR = '^src/platform/adapter/out/http/(browser|server)-fetch\\.ts$'; // imported by Orval output only
-const CLIENT_FILE = ['\\.client\\.tsx?$', '\\.composition\\.tsx$', '^src/app/(providers|app-shell|theme)\\.tsx?$'];
+const FEATURE_API_FILE = '^src/features/[^/]+/[^/]+\\.api\\.tsx$'; // the published feature API (REACT-ARCH-11)
+const CLIENT_FILE = ['\\.client\\.tsx?$', '\\.composition\\.tsx$', FEATURE_API_FILE, '^src/app/(providers|app-shell|theme)\\.tsx?$'];
 const SERVER_ONLY = ['\\.server\\.tsx?$', 'node_modules/server-only/', 'node_modules/next/dist/[^/]+/headers'];
 const ROUTE_NAMES = '(page|layout|route|loading|error|not-found|template|default)\\.tsx?$';
 const ROUTE_FILE = [`^src/app/${ROUTE_NAMES}`, `^src/app/.*/${ROUTE_NAMES}`]; // one pattern with (.+/)? is rejected as unsafe
@@ -179,6 +182,7 @@ Next.js changes to the template rules:
 | `platform-only-via-index` | `from.path` adds `testing`; `to.pathNot` allows the three entries (`index.ts`, `index.client.ts`, `index.server.ts`, NEXT-ARCH-14) and `HTTP_MUTATOR` |
 | `feature-routes-only-from-app`, `feature-routes-only-lazy` | removed: there are no routes files; replaced by `feature-pages-only-from-app` |
 | `composition-root-not-imported` | `from.pathNot`: `PAGES_FILE`, `'^src/app/'`, the feature `index.ts`, `'^src/platform/index\\.server\\.ts$'` and `SERVER_ACTIONS` (the stated exception of NEXT-ARCH-04) |
+| `http-clients-only-in-http-adapter` | `from.pathNot` adds `FEATURE_API_FILE` (the browser factory creates the adapters) |
 | `options` | adds `enhancedResolveOptions: { exportsFields: ['exports'], conditionNames: ['import', 'types', 'default'] }` and an `exclude` of `.next/` and `test/fixtures/` |
 
 Next.js rules:
@@ -228,14 +232,22 @@ Next.js rules:
   from: { pathNot: ['/adapter/out/http/generated/', '^src/platform/'] },
   to: { path: HTTP_MUTATOR },
 },
+{
+  name: 'feature-api-without-ui', severity: 'error',
+  comment: 'REACT-ARCH-11: the published API imports adapters, use cases and the context only; never UI components or the slice',
+  from: { path: FEATURE_API_FILE },
+  to: { path: ['/adapter/in/ui/', STORE_FILE, COMPOSITION_FILE] },
+},
 ```
+
+The API file may import the feature's server actions (`adapter/in/next/*-actions.ts`), because the browser's cancel adapter receives the action from it (NEXT-ARCH-04); hence `/adapter/in/ui/` instead of the React rule's `/adapter/in/`. The rule passes on the real sources; it has no canary fixture in the Next.js template yet.
 
 `app-uses-features-via-index-or-pages`, `http-mutator-only-from-generated` and `HTTP_MUTATOR` in `platform-only-via-index` are carried over from the React rules; in the template they pass on the real sources and fire on probes (a feature adapter importing the browser mutator, a route file importing a server composition; *verified*). All rules and the five canary assertions run there.
 
 ## Platform entries and client wiring
 
-- **NEXT-ARCH-14: The platform has three entry points.** `src/platform/index.ts` is isomorphic (domain errors, `Caller`, the `PublicConfig` type, `HttpProblem`); `index.client.ts` holds what needs the browser React runtime (Redux store and hooks, `StoreProvider`, `PublicConfigProvider`, `usePublicConfig`); `index.server.ts` starts with `import 'server-only'` and exports route handlers, `currentCaller()`, `publicRuntimeConfig()`, the logger and the security-header helpers. Server components, server actions and pages files never import `index.client.ts`: `react-redux` resolved under the `react-server` condition fails `next build` ("collect page data": `useDispatch.withTypes is not a function`). Client files never import `index.server.ts`. A feature's core still imports only `src/platform/domain/index.ts` (REACT-ARCH-04). Enforced by `platform-only-via-index`, `server-never-imports-client-entry` and `client-uses-client-platform-entry`.
-- **NEXT-ARCH-15: The client composition `<feature>.composition.tsx` is a `'use client'` file.** It is the Next.js form of REACT-ARCH-10: it injects the feature's slice (`rootReducer.inject(slice)` at module level), creates the browser adapters and use cases once at module level, and renders the context providers of `<feature>.tokens.ts`. It also runs in the server's SSR pass, once per process, so everything it creates is stateless and holds no user data. It does not export a route component; the pages file renders it around the server screen (NEXT-ARCH-02). The feature's `index.ts` re-exports its provider as `<Feature>ApiProvider` (REACT-ARCH-11); a server component never renders another feature's provider through `index.ts` and calls another feature's server use cases only through that feature's published API (TS-ARCH-19).
+- **NEXT-ARCH-14: The platform has three entry points.** `src/platform/index.ts` is isomorphic (domain errors, `Caller`, the `PublicConfig` type, `HttpProblem`); `index.client.ts` holds what needs the browser React runtime (Redux store and hooks, `StoreProvider`, `PublicConfigProvider`, `usePublicConfig`, `ReportErrorProvider`, `useReportError`); `index.server.ts` starts with `import 'server-only'` and exports route handlers, `currentCaller()`, `publicRuntimeConfig()`, the logger and the security-header helpers. Server components, server actions and pages files never import `index.client.ts`: `react-redux` resolved under the `react-server` condition fails `next build` ("collect page data": `useDispatch.withTypes is not a function`). Client files never import `index.server.ts`. A feature's core still imports only `src/platform/domain/index.ts` (REACT-ARCH-04). Enforced by `platform-only-via-index`, `server-never-imports-client-entry` and `client-uses-client-platform-entry`.
+- **NEXT-ARCH-15: The client composition `<feature>.composition.tsx` and the feature API file `<feature>.api.tsx` are `'use client'` files.** They are the Next.js form of REACT-ARCH-10/11: the API file holds the browser factory (`createOrdersUseCases({ reportError })`: browser HTTP adapter, server-action adapter, use cases) and `<OrdersApiProvider>`, which calls it in a lazy `useState` initializer with `useReportError()` from `@/platform/index.client` and provides the use-case object in the feature's one context; the composition injects the feature's slice (`rootReducer.inject(slice)` at module level) and renders the API provider around its children. The provider also runs in the server's SSR pass, once per render, so everything the factory creates is stateless and holds no user data. The composition does not export a route component; the pages file renders it around the server screen (NEXT-ARCH-02). The feature's `index.ts` re-exports `<Feature>ApiProvider` from the API file, which imports no UI and no slice (`feature-api-without-ui`, REACT-ARCH-11); a server component never renders another feature's provider through `index.ts` and calls another feature's server use cases only through that feature's published API (TS-ARCH-19).
 - **NEXT-ARCH-16: Server-rendered data reaches TanStack Query as `initialData`.** The server component loads through the server use case and passes the domain data as a prop; the client component calls the feature's query hook with `initialData` (`useQuery({ ...ordersQuery(listOrders), initialData })`). After a command the client invalidates the keys and refetches through the browser use case and the `/api` proxy (REACT-ARCH-13). Query clients follow REACT-ARCH-13: one `QueryClient` per browser tab, created with a lazy `useState` in `providers.tsx` (one per request render during SSR). The Redux store follows the same pattern (`StoreProvider` with `useState(makeStore)`). A prefetch with `HydrationBoundary` is allowed when it calls the same server use case.
 - **NEXT-ARCH-17: Lazy client UI inside a page uses `next/dynamic`.** Features are already split per route (NEXT-ARCH-01); within a page, a heavy client part that is not needed for the first paint (a dialog, an editor) loads with `dynamic(() => import('./cancel-order-form.client'), { ssr: false })`. Every lazily loaded chunk goes through the Trusted Types default policy of `instrumentation-client.ts` ([security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md)); E2E covers at least one lazy chunk.
 

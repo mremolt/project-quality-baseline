@@ -8,14 +8,15 @@ export const logger = pino({
   level: 'info', // instrumentation.ts sets the configured LOG_LEVEL at start
   base: { service: 'orders-frontend' },
   redact: {
+    // `*.key` matches one level down only: the top-level keys and header objects are listed too (NEXT-OBS-10)
     paths: [
-      '*.authorization',
-      '*.cookie',
-      '*.accessToken',
-      '*.refreshToken',
-      '*.idToken',
-      '*.xsrfToken',
-      '*.sessionId',
+      ...['authorization', 'cookie', 'accessToken', 'refreshToken', 'idToken', 'xsrfToken', 'sessionId'].flatMap(
+        (key) => [key, `*.${key}`],
+      ),
+      ...['authorization', 'cookie', 'set-cookie', 'x-xsrf-token'].flatMap((name) => [
+        `headers["${name}"]`,
+        `*.headers["${name}"]`,
+      ]),
     ],
     censor: '[redacted]',
   },

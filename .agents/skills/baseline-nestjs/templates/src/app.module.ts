@@ -42,6 +42,7 @@ const probes = ['/livez', '/readyz'];
             'res.headers["set-cookie"]',
             '*.password',
             '*.email',
+            'email',
           ],
           censor: '[redacted]',
         },

@@ -4,6 +4,7 @@ A prompt for starting an unattended agentic implementation in a product reposito
 
 Before using it:
 
+- Decide the product's stacks and write them to `.baseline.json` at the project root (for example `{ "stacks": ["spring", "angular"] }`; known stacks: `baseline-stacks.json`). In a new repository there are no component folders to detect them from, so without the file the sync copies every stack's skills and `AGENTS.md` lines ([declared stacks](../docs/baseline/08-crosscutting-concepts/development/agent-skills.md#declared-stacks)).
 - Sync the baseline into the project (see the [README](../README.md#bringing-the-baseline-into-a-project)).
 - Replace the placeholders:
   - `<PLANNING_DOCS>`: the product's requirement or planning documents (folder or files)

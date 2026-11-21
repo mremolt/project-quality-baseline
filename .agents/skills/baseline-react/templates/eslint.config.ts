@@ -29,7 +29,7 @@ function warnAsError(config: Linter.Config): Linter.Config {
   return { ...config, rules };
 }
 
-
+// REACT-TOOL-03: the hooks and compiler rules @eslint-react re-implements; switched off in the *.tsx block below
 const eslintReactHooksDuplicates = [
   'rules-of-hooks',
   'exhaustive-deps',

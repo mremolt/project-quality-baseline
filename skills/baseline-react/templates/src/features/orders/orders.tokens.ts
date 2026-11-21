@@ -3,18 +3,25 @@ import { createContext, use } from 'react';
 import type { CancelOrderUseCase } from './ports/in/cancel-order.use-case';
 import type { LoadOrdersUseCase } from './ports/in/load-orders.use-case';
 
-export const LoadOrdersContext = createContext<LoadOrdersUseCase | null>(null);
-export const CancelOrderContext = createContext<CancelOrderUseCase | null>(null);
-
-function provided<T>(useCase: T | null, hook: string): T {
-  if (useCase === null) throw new Error(`${hook} used outside OrdersProvider or OrdersApiProvider`);
-  return useCase;
+/** The feature's use cases, typed by their `ports/in` contracts; one object in one context (REACT-ARCH-09). */
+export interface OrdersUseCases {
+  readonly loadOrders: LoadOrdersUseCase;
+  readonly cancelOrder: CancelOrderUseCase;
 }
 
-export function useLoadOrdersUseCase(): LoadOrdersUseCase {
-  return provided(use(LoadOrdersContext), 'useLoadOrdersUseCase');
+export const OrdersContext = createContext<OrdersUseCases | null>(null);
+
+export function useOrdersUseCases(): OrdersUseCases {
+  const useCases = use(OrdersContext);
+  if (useCases === null) throw new Error('useOrdersUseCases used outside OrdersApiProvider');
+  return useCases;
 }
 
-export function useCancelOrderUseCase(): CancelOrderUseCase {
-  return provided(use(CancelOrderContext), 'useCancelOrderUseCase');
+/** Selector hooks: what components and query hooks call (REACT-ARCH-09). */
+export function useLoadOrders(): LoadOrdersUseCase {
+  return useOrdersUseCases().loadOrders;
+}
+
+export function useCancelOrder(): CancelOrderUseCase {
+  return useOrdersUseCases().cancelOrder;
 }

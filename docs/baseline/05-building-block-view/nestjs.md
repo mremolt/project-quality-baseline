@@ -61,7 +61,7 @@ Copy `.agents/skills/baseline-nestjs/templates/dependency-cruiser.cjs` to `backe
 | `tokens-only-ports` | Tokens files import only their own ports (NEST-ARCH-03) |
 | `feature-module-only-from-app-module` | Only `app.module.ts` and the context's `index.ts` import a context module (NEST-ARCH-01) |
 | `db-client-only-in-persistence-adapter` | `kysely` and `pg` only in persistence adapters, scheduling adapters (cluster lock) and the readiness check (NEST-ARCH-11) |
-| `kysely-token-only-in-persistence` | The Kysely instance token is injected only in `src/platform/adapter/out/persistence` and context persistence adapters (NEST-DB rules) |
+| `kysely-token-only-in-persistence` | `KYSELY` (`src/platform/adapter/out/persistence/kysely.token.ts`) is imported only by platform persistence, `platform.module.ts`, scheduling adapters (cluster lock) and the readiness check; context persistence adapters use `KyselyTransactionAdapter.executor()` (NEST-DB-04). The canary contains a context adapter that imports it |
 | `kafka-client-only-in-messaging-adapter` | `@platformatic/kafka` only in `adapter/in/messaging` and `adapter/out/messaging` (NEST-MSG rules) |
 | `no-locale-in-core` (ESLint) | No `Intl`, `toLocale*` or `localeCompare` in the core (NEST-I18N rules) |
 | `generated-api-only-in-http-adapter` | Generated clients only in `adapter/out/http` (API-CON-09) |
@@ -82,4 +82,4 @@ Copy `.agents/skills/baseline-nestjs/templates/dependency-cruiser.cjs` to `backe
 
 ## Sources
 
-NestJS documentation: custom providers (`useFactory`, `useExisting`), injection scopes, circular dependency, lifecycle events (docs.nestjs.com). Validated against a template service (NestJS 12.6, Fastify adapter), 2026-11-20.
+NestJS documentation: custom providers (`useFactory`, `useExisting`), injection scopes, circular dependency, lifecycle events (docs.nestjs.com). Validated against a template service (NestJS 12.5, Fastify adapter), 2026-11-20.

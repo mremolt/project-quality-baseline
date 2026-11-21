@@ -17,7 +17,7 @@ What the React SPA reference build verified: provider, typed keys and catalog sh
   Per-feature catalog files that load with the feature's route chunk and merge into the provider's messages were not built in the validated project; the Weblate file layout for this shape, and lazy loading, are to verify before first use. Until then a feature owns its namespace in the shared files, and only its own code uses it.
 - **REACT-I18N-03: Keys are stable semantic ids** `<feature>.<screen-or-component>.<element>[.<state>]`, lower-camel segments (`orders.cancel.reasonInvalid`), never the English sentence. A changed meaning gets a new key. Enum strings from the API map to `<namespace>.<enumType>.<VALUE>` (`orders.status.SHIPPED`), the shared `enum.<type>.<value>` convention inside the feature namespace.
   *Why:* stale translations stay silent otherwise.
-- **REACT-I18N-04: Slices, thunks, selectors, use cases and error mappers return codes or keys, never translated text.** Translation happens in components: `const t = useTranslations('orders')`, then `t('page.title')` or `` t(`errors.${errorKey}`) `` for a key held in a slice (REACT-STATE-07). An unknown error code maps to a generic key, never to the server's `detail`.
+- **REACT-I18N-04: Slices, mutations, selectors, use cases and error mappers return codes or keys, never translated text.** Translation happens in components: `const t = useTranslations('orders')`, then `t('page.title')` or `` t(`errors.${toErrorKey(mutation.error)}`) `` for a command error (REACT-STATE-07). An unknown error code maps to a generic key, never to the server's `detail`.
   *Why:* the core stays language-free (I18N-02) and tests stay deterministic.
 - **REACT-I18N-05: Keys are typed against the source catalog.** `messages.ts` registers the types: `declare module 'use-intl' { interface AppConfig { Locale: AppLocale; Messages: typeof en } }`. A key missing from `en.json` is then a type error, including template-literal keys built from a union type (`` `status.${order.status}` ``), and route title keys are typed the same way (`MessageKeys<Messages, NestedKeyOf<Messages>>`, REACT-UI-30). `MESSAGES: Readonly<Record<AppLocale, typeof en>>` forces every catalog to the source's shape, so a missing translation fails `tsc`.
   That strict shape fits products whose locales are all release-blocking. A product that ships partly translated locales (TOOL-I18N-05) types non-source catalogs as partial and deep-merges them over the source catalog, which also gives the fallback of I18N-09; verify before first use.
@@ -63,7 +63,7 @@ Verify before first use ([chapter 11](../../11-risks-and-technical-debt/README.m
 |---|---|---|
 | Generic habit | `react-i18next` / `i18next` as the default React i18n library | `use-intl`; another library needs an ADR (REACT-I18N-01) |
 | Generic habit, `react-intl` docs | Source sentence as the message id, `defaultMessage` in components | Semantic keys in catalogs; no text in components (REACT-I18N-03/06) |
-| Generic habit | `t()` inside thunks, slices or use cases; translated text in Redux state | Keys in the core and in slices, text in components (REACT-I18N-04, REACT-STATE-07) |
+| Generic habit | `t()` inside mutation hooks, slices or use cases; translated text in Redux state | Keys in the core and in slices, text in components (REACT-I18N-04, REACT-STATE-07) |
 | Generic habit | `count === 1 ? 'order' : 'orders'`, string concatenation | ICU in the catalog (REACT-I18N-07) |
 | Generic habit | `Number(amount).toLocaleString()`, `toLocaleDateString()` without a locale | `formatMoney` on the decimal string, `useFormatter()` with the active locale (REACT-I18N-10) |
 | Generic habit | Locale in the URL (`/de/orders`) for an authenticated app | No locale in the URL ([i18n.md](i18n.md#decisions)); Next.js public pages: [nextjs.md](nextjs.md) |
@@ -72,7 +72,7 @@ Verify before first use ([chapter 11](../../11-risks-and-technical-debt/README.m
 ## Agent checklist
 
 - [ ] Every new user-visible string, including `aria-label`, `title`, MUI `label`/`helperText` and the route title, uses a key in the source catalog with context (REACT-I18N-03/06)?
-- [ ] Slices, thunks and error mappers return keys or codes only (REACT-I18N-04)?
+- [ ] Slices, mutation hooks and error mappers return keys or codes only (REACT-I18N-04)?
 - [ ] Keys typed through `AppConfig`; no `as` casts on keys (REACT-I18N-05)?
 - [ ] Plurals and variables through ICU placeholders (REACT-I18N-07)?
 - [ ] Money through `formatMoney` on the decimal string; dates through `useFormatter()`; locale passed in, nothing cached by value (REACT-I18N-10)?

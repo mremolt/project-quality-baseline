@@ -49,7 +49,7 @@ sequenceDiagram
   S-->>V: new view state (signals)
 ```
 
-Rules: NG-STATE-02, NG-ARCH-13, TS-ARCH-04, TS-API.
+Rules: NG-STATE-02, NG-ARCH-13, TS-ARCH-04, TS-API. React: a Redux Toolkit slice holds view state that several components share, and commands are TanStack mutations that call the use case (REACT-STATE-03), server data is loaded by TanStack Query whose `queryFn` calls the use case (REACT-ARCH-13); Next.js server components and server actions call use cases from the request-scoped server composition (NEXT-ARCH-02..04).
 
 ## Message from Kafka
 
@@ -57,4 +57,4 @@ The listener in `adapter.in.kafka` deserializes, maps to a command with a system
 
 ## Browser login (BFF)
 
-The browser authenticates against the backend-for-frontend with OIDC; the BFF keeps the tokens and gives the browser a session cookie; API calls go through the BFF, which relays the access token to the resource server (SPRING-SEC-03/08/09, NEST-SEC-03/12/13).
+The browser authenticates against the backend-for-frontend with OIDC; the BFF keeps the tokens and gives the browser a session cookie; API calls go through the BFF, which relays the access token to the resource server (SPRING-SEC-03/08/09, NEST-SEC-03/12/13; Node BFFs including Next.js: NODE-BFF-01..09). Starting a login never ends a live session: the pre-login state (PKCE verifier, state, nonce, return target) lives server-side until the callback, which issues a new session id (NODE-BFF-02/07).

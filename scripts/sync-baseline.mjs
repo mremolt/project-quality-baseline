@@ -197,7 +197,7 @@ for (const n of old) {
   if (!names.includes(n)) {
     fs.rmSync(path.join(agentSkills, n), { recursive: true, force: true });
     fs.rmSync(path.join(claudeSkills, n), { recursive: true, force: true });
-    log(`removed skill ${n} (no longer in the baseline)`);
+    log(`removed skill ${n} (no longer in the baseline, or only used by stacks the project does not declare)`);
   }
 }
 let junctions = false;
@@ -215,11 +215,20 @@ if (junctions) {
     + ' Enable Developer Mode and `git config core.symlinks true`, then re-run, before committing .claude/skills');
 }
 
-// lock file: baseline entries win; local-path entries (our own skills) are not carried over
+// lock file: baseline entries win; local-path entries (our own skills) and skills of undeclared stacks are not carried over
 const baseLock = readJson(path.join(base, 'skills-lock.json'));
-baseLock.skills = Object.fromEntries(Object.entries(baseLock.skills ?? {}).filter(([, v]) => v.sourceType !== 'local'));
+const baseLockNames = Object.keys(baseLock.skills ?? {});
+baseLock.skills = Object.fromEntries(Object.entries(baseLock.skills ?? {})
+  .filter(([n, v]) => v.sourceType !== 'local' && names.includes(n)));
 const lockFile = path.join(target, 'skills-lock.json');
 const lock = fs.existsSync(lockFile) ? deepMerge(readJson(lockFile), baseLock) : baseLock;
+// Baseline skills of undeclared stacks leave the lock file unless the project installed them itself (folder present).
+for (const n of baseLockNames) {
+  if (!names.includes(n) && lock.skills && n in lock.skills && !fs.existsSync(path.join(agentSkills, n))) {
+    delete lock.skills[n];
+    log(`skills-lock.json: removed entry ${n} (stack not declared)`);
+  }
+}
 // Skills the baseline dropped (removed above) leave the lock file too; the project's own entries stay.
 for (const n of old) {
   if (!names.includes(n) && lock.skills && n in lock.skills) {
@@ -232,31 +241,42 @@ log('skills-lock.json merged');
 
 // ---------------------------------------------------------------- Claude Code hooks
 // Baseline hooks are files named baseline-* in .claude/hooks. Their settings entries are owned by the
-// baseline: old ones (any command pointing at .claude/hooks/baseline-) are dropped, current ones added.
+// baseline: old ones (any command pointing at .claude/hooks/baseline-) are dropped, and the current ones of
+// the hooks the project gets (shared, or owned by a declared stack in baseline-stacks.json) are added.
 const hooksDir = path.join(target, '.claude', 'hooks');
 fs.mkdirSync(hooksDir, { recursive: true });
 for (const e of entries(hooksDir)) {
   if (e.name.startsWith('baseline-')) fs.rmSync(path.join(hooksDir, e.name), { force: true });
 }
-for (const e of entries(path.join(base, '.claude', 'hooks'))) {
-  if (e.name.startsWith('baseline-')) fs.copyFileSync(path.join(base, '.claude', 'hooks', e.name), path.join(hooksDir, e.name));
-}
+const hookNames = entries(path.join(base, '.claude', 'hooks'))
+  .filter((e) => e.isFile() && e.name.startsWith('baseline-') && stacks.wantsHook(e.name))
+  .map((e) => e.name)
+  .sort();
+for (const n of hookNames) fs.copyFileSync(path.join(base, '.claude', 'hooks', n), path.join(hooksDir, n));
+log(`hooks: ${hookNames.join(' ') || '(none)'}`);
 const settingsFile = path.join(target, '.claude', 'settings.json');
 if (!fs.existsSync(settingsFile)) write(settingsFile, '{}\n');
 let settings;
 try { settings = JSON.parse(read(settingsFile)); } catch { settings = undefined; }
 if (settings && typeof settings === 'object') {
-  const isBaseline = (h) => typeof h?.command === 'string' && h.command.includes('.claude/hooks/baseline-');
+  const BASELINE_HOOK = /\.claude\/hooks\/(baseline-[^"'\s/\\]+)/;
+  const hookFile = (h) => (typeof h?.command === 'string' ? BASELINE_HOOK.exec(h.command)?.[1] : undefined);
   const baseHooks = readJson(path.join(base, '.claude', 'settings.json')).hooks ?? {};
   const hooks = settings.hooks ?? {};
   for (const event of Object.keys(hooks)) {
     hooks[event] = hooks[event]
-      .map((group) => ({ ...group, hooks: (group.hooks ?? []).filter((h) => !isBaseline(h)) }))
+      .map((group) => ({ ...group, hooks: (group.hooks ?? []).filter((h) => !hookFile(h)) }))
       .filter((group) => group.hooks.length > 0);
     if (hooks[event].length === 0) delete hooks[event];
   }
-  for (const [event, groups] of Object.entries(baseHooks)) hooks[event] = [...(hooks[event] ?? []), ...groups];
-  settings.hooks = hooks;
+  for (const [event, groups] of Object.entries(baseHooks)) {
+    const wanted = groups
+      .map((group) => ({ ...group, hooks: (group.hooks ?? []).filter((h) => !hookFile(h) || hookNames.includes(hookFile(h))) }))
+      .filter((group) => group.hooks.length > 0);
+    if (wanted.length > 0) hooks[event] = [...(hooks[event] ?? []), ...wanted];
+  }
+  if (Object.keys(hooks).length > 0) settings.hooks = hooks;
+  else delete settings.hooks;
   writeJson(settingsFile, settings);
   log('.claude/settings.json hooks merged');
 } else {
@@ -296,14 +316,21 @@ function resolveStacks(dir, defs) {
   const active = new Set();
   const add = (s) => { if (!active.has(s)) { active.add(s); defs.stacks[s].requires.forEach(add); } };
   (declared ? wanted : known).forEach(add);
-  const owner = new Map();
-  for (const [s, def] of Object.entries(defs.stacks)) for (const k of def.skills) owner.set(k, [...(owner.get(k) ?? []), s]);
+  const ownersOf = (key) => {
+    const owner = new Map();
+    for (const [s, def] of Object.entries(defs.stacks)) for (const k of def[key] ?? []) owner.set(k, [...(owner.get(k) ?? []), s]);
+    return owner;
+  };
+  const skillOwner = ownersOf('skills');
+  const hookOwner = ownersOf('hooks');
   return {
     declared,
     created,
     active,
     // Shared skills and skills no stack claims are always copied.
-    wantsSkill: (n) => defs.shared.includes(n) || !owner.has(n) || owner.get(n).some((s) => active.has(s)),
+    wantsSkill: (n) => defs.shared.includes(n) || !skillOwner.has(n) || skillOwner.get(n).some((s) => active.has(s)),
+    // Hooks no stack claims are always copied.
+    wantsHook: (n) => !hookOwner.has(n) || hookOwner.get(n).some((s) => active.has(s)),
   };
 }
 

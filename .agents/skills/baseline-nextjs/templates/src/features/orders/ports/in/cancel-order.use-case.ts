@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const CancelOrderCommandSchema = z.object({
-  orderId: z.string().min(1).max(64),
+  orderId: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), // the spec's id format: no '.', '/' or '%' (path steering)
   reason: z.string().trim().min(3).max(500),
 });
 

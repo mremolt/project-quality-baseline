@@ -13,6 +13,7 @@ import {
   HttpErrorReporting,
   listenForGlobalErrors,
   PublicConfigProvider,
+  ReportErrorProvider,
   ReportErrorService,
   type ReportErrorUseCase,
   StoreProvider,
@@ -45,7 +46,7 @@ function currentRoute(): string {
 /** Browser HTTP stack and error reporting, set up once before any child renders (NEXT-API-05). */
 function startBrowserPlatform(config: PublicConfig): ReportErrorUseCase {
   const reportError = new ReportErrorService(
-    new HttpErrorReporting('/api/client-errors'), // relayed to the backend like every API call (REACT-OBS-03)
+    new HttpErrorReporting(config.clientErrorPath), // the BFF's own intake, logged there (NEXT-OBS-18)
     { enabled: true, environment: config.environmentName, release: config.release, maxReports: 20 },
     currentRoute,
   );
@@ -69,7 +70,7 @@ interface ProvidersProps {
   readonly children: ReactNode;
 }
 
-/** Root client providers: Emotion cache with the CSP nonce, theme, public config, Redux store, query cache. */
+/** Root client providers: Emotion cache with the CSP nonce, theme, public config, reporting, Redux store, query cache. */
 export function Providers({ nonce, publicConfig, children }: ProvidersProps): ReactNode {
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [reportError] = useState(() => startBrowserPlatform(publicConfig));
@@ -88,9 +89,11 @@ export function Providers({ nonce, publicConfig, children }: ProvidersProps): Re
       <ThemeProvider theme={reducedMotion ? reducedMotionTheme : theme}>
         <CssBaseline />
         <PublicConfigProvider value={publicConfig}>
-          <StoreProvider>
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-          </StoreProvider>
+          <ReportErrorProvider value={reportError}>
+            <StoreProvider>
+              <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+            </StoreProvider>
+          </ReportErrorProvider>
         </PublicConfigProvider>
       </ThemeProvider>
     </AppRouterCacheProvider>

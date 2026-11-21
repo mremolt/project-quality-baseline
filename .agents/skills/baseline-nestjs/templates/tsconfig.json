@@ -21,7 +21,8 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true
   },
-  "include": ["src", "test", "vitest.config.ts", "eslint.config.ts"]
+  "include": ["src", "test", "scripts", "vitest.config.ts", "eslint.config.ts"]
 }

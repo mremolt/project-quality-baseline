@@ -9,12 +9,19 @@ How a NestJS backend meets [delivery-and-release.md](delivery-and-release.md) (R
 - **NEST-REL-01: By default the new version migrates at start-up, before it listens.** `main.ts` runs the migration (`migrateToLatest`, NEST-DB-14) with the DDL credentials, then `createApp()` and `listen()`, so an instance is never ready on an old schema and a failed migration fails the start (REL-DB-05: the old version keeps serving). The DDL credentials are their own keys (`DATABASE_MIGRATION_USER`, `DATABASE_MIGRATION_PASSWORD` as a secret file, NEST-CFG-07) and are used only by the one-connection migration pool, which is closed before the app starts; the application pool uses the DML user (NEST-DB-17).
 
 ```ts
-// src/main.ts
+// src/main.ts (excerpt)
 const db = loadConfig(DatabaseConfig);
-if (db.DATABASE_MIGRATION_USER) await migrateToLatest(createMigrationDb(db)); // start-up variant
-else await assertSchemaCurrent(createDatabase(db));                           // pre-deploy variant (NEST-REL-03)
+if (db.DATABASE_MIGRATION_USER) {
+  const ddl = createMigrationDatabase(db);    // start-up variant
+  await migrateToLatest(ddl);
+  await ddl.destroy();
+} else {
+  const dml = createDatabase(db);             // pre-deploy variant (NEST-REL-03): refuse to start on a pending migration
+  await assertSchemaCurrent(dml);
+  await dml.destroy();
+}
 const app = await createApp();
-await app.listen({ port: config.HTTP_PORT, host: '0.0.0.0' });
+await app.listen({ port: loadConfig(HttpConfig).HTTP_PORT, host: '0.0.0.0' });
 ```
 
 - **NEST-REL-02: Parallel instances and the start-up budget.** Kysely's advisory lock serialises instances (NEST-DB-15); the waiting ones find the schema current and start. Their wait is bounded only by the migration connection's `statement_timeout` (default 120 s, NEST-DB-16), so the platform's start-up budget is at least the measured start plus that value (REL-DB-03/04, REL-RUN-04). Every DDL statement waits at most `lock_timeout` (5 s) for a table lock.
@@ -27,7 +34,7 @@ await app.listen({ port: config.HTTP_PORT, host: '0.0.0.0' });
 
 ### Version (REL-VER-05)
 
-- **NEST-REL-06: The image does not carry the release version; the deployment injects it** (REL-CD-01). `package.json` `version` stays `0.0.0` (it must exist: npm tooling fails without it; NODE-TOOL-10). The release version is configuration: `RELEASE_VERSION` (default `unreleased`) in the platform config schema, logged once at start, and set as `service.version` in `OTEL_RESOURCE_ATTRIBUTES` (NEST-OBS-06). The commit is built in: the image build writes `dist/build-info.json` (`{ "commit": "<sha>" }`) from the CI variable, and the start line logs both. A product that offers an info endpoint returns exactly these two values (no configuration, no dependency list).
+- **NEST-REL-06: The image does not carry the release version; the deployment injects it** (REL-CD-01). `package.json` `version` stays `0.0.0` (it must exist: npm tooling fails without it; NODE-TOOL-10). The release version is configuration: `RELEASE_VERSION` (default `unreleased`) in the platform config schema, logged once at start, and set as `service.version` in `OTEL_RESOURCE_ATTRIBUTES` (NEST-OBS-06). The commit is built in: the image build writes `dist/build-info.json` (`{ "commit": "<sha>" }`) from the CI variable (`docker build --build-arg GIT_COMMIT=<sha>`), and the start line logs both. In the template, `RELEASE_VERSION` is in `ReleaseConfig`, `readBuildInfo()` (`src/platform/config/build-info.ts`) reads the file and answers `unknown` where no image build ran (watch mode, tests), and `main.ts` logs `{ releaseVersion, commit }` once before `listen()`. A product that offers an info endpoint returns exactly these two values (no configuration, no dependency list).
 
 ### Image (REL-IMG, REL-RUN)
 
@@ -43,6 +50,9 @@ RUN npm ci
 COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
 RUN npm run build
+# the commit is built in, the release version injected at deploy time (NEST-REL-06)
+ARG GIT_COMMIT=unknown
+RUN printf '{"commit":"%s"}\n' "$GIT_COMMIT" > dist/build-info.json
 
 FROM node:26-trixie-slim@sha256:<digest> AS prod-deps
 WORKDIR /app

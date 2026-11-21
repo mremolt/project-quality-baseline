@@ -27,6 +27,11 @@ export function toOrderPage(dto: z.output<typeof ListOrdersResponse>): OrderPage
   };
 }
 
+/** Loading a page has no business errors: any problem answer is unexpected; `HttpProblem` never leaves the adapter. */
+export function toLoadOrdersError(error: unknown): unknown {
+  return error instanceof HttpProblem ? new TechnicalError('unexpected', { cause: error }) : error;
+}
+
 /** The one place that turns problem codes and statuses into the feature's domain errors (TS-ARCH-18). */
 export function toOrdersError(error: unknown, orderId: string): unknown {
   if (!(error instanceof HttpProblem)) return error; // TechnicalError or the caller's abort: unchanged

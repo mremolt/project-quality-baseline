@@ -69,7 +69,7 @@ Option names change between Orval versions; the installed `orval` skill and orva
 - **TS-API-06: The adapter maps to domain types and returns `Promise`** (TS-D1), honoring the caller's `AbortSignal`: the signal reaches the HTTP call, so an aborted load cancels the request. A client that returns observables is converted with a shared helper that honors the signal (per stack).
 - **TS-API-07: Batching and caching (API-N1 S4/S5) are decorators in the same folder**, implementing the same port and wrapping the plain adapter. They are wired in the composition file and have their own adapter tests (one batch call for N items, one call for repeated requests).
 - **TS-API-08: A spec change is reviewed together with its effect on the frontend**: spec diff, regenerated code compiles, adapter tests green. In the same repository this is the pull request that changes the backend (REPO-API-01). With a separate repository, updating the pinned copy is its own pull request. A breaking change in the spec shows up as compile errors in the adapters, which is the point.
-- **TS-API-09: `urlEncodeParameters: true` is set in every Orval client output.** Without it Orval interpolates path parameters raw into the URL template (`/orders/${orderId}`), so a value containing `/`, `?`, `#` or `..` changes the path or query of the request (path traversal to another endpoint of the same API, injected query parameters; OWASP ASVS 5.0 V1 encoding). With it the generated code calls `encodeURIComponent(String(orderId))`. Domain value objects validate their format as well, but the encoding does not rely on that.
+- **TS-API-09: `urlEncodeParameters: true` is set in every Orval client output.** Without it Orval interpolates path parameters raw into the URL template (`/orders/${orderId}`), so a value containing `/`, `?` or `#` changes the path or query of the request (another endpoint of the same API, injected query parameters; OWASP ASVS 5.0 V1 encoding). With it the generated code calls `encodeURIComponent(String(orderId))`. **Encoding does not stop dot segments:** `encodeURIComponent('..')` is `..`, and `new URL()` resolves `..` and `%2e%2e` segments, so `/orders/../admin` still leaves the intended path. Therefore id path parameters also get a format constraint in the spec (`pattern`, `format: uuid`), which the domain value object and the backend enforce, and code that sends the request (a server-side relay or mutator) asserts that the resolved URL stays on the expected origin and path prefix.
 
 ## Examples
 
@@ -158,7 +158,6 @@ it('rejects a malformed response', async () => {
 ## Skill overrides (`orval` skill)
 
 Stack-specific rows are in the stack's clients doc.
-
 
 | Skill says | Our rule |
 |---|---|

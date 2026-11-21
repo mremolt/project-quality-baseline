@@ -6,13 +6,13 @@ import { FetchBackendRelay } from './fetch-backend-relay';
 
 describe('FetchBackendRelay', () => {
   const server = setupServer();
-  const relay = new FetchBackendRelay('http://backend.test', 100);
+  const relay = new FetchBackendRelay('http://backend.test');
   const request = (pathAndQuery: string) => ({
     method: 'GET',
     pathAndQuery,
     headers: new Headers({ authorization: 'Bearer at-1' }),
     body: undefined,
-    signal: new AbortController().signal,
+    signal: AbortSignal.timeout(100), // the call's deadline, created by the API proxy
   });
 
   beforeAll(() => {
@@ -52,5 +52,9 @@ describe('FetchBackendRelay', () => {
     );
 
     expect((await relay.relay(request('/api/v1/moved'))).status).toBe(502);
+  });
+
+  it('answers 400 and calls nothing for a path that would leave the API', async () => {
+    expect((await relay.relay(request('/api/v1/orders/%2e%2e/%2e%2e/admin'))).status).toBe(400);
   });
 });

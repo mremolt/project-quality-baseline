@@ -8,30 +8,27 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
-import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
-import { useAppDispatch, useAppSelector } from '@/platform/index.client';
+import { useAppDispatch } from '@/platform/index.client';
 
 import type { Order } from '../../../domain/order';
-import { useCancelOrder } from '../../../orders.tokens';
 import {
   CancelOrderCommand,
   CancelOrderCommandSchema,
   type CancelOrderInput,
 } from '../../../ports/in/cancel-order.use-case';
-import { ordersQueryKeys } from './orders-queries';
-import { cancelOrder, selectionCleared, selectOrdersView } from './orders-view.slice';
+import { ordersErrorKey } from './orders-error-keys';
+import { useCancelOrderMutation } from './orders-queries';
+import { orderCancelled, selectionCleared } from './orders-view.slice';
 
 export function CancelOrderForm({ order }: { readonly order: Order }): ReactNode {
   const t = useTranslations('orders.cancel');
   const tErrors = useTranslations('orders');
-  const useCase = useCancelOrder();
   const dispatch = useAppDispatch();
-  const queryClient = useQueryClient();
-  const { cancelStatus, errorKey } = useAppSelector(selectOrdersView);
+  const cancel = useCancelOrderMutation();
   const {
     control,
     handleSubmit,
@@ -41,9 +38,9 @@ export function CancelOrderForm({ order }: { readonly order: Order }): ReactNode
     defaultValues: { orderId: order.id, reason: '' },
   });
 
-  const submit = handleSubmit(async (input) => {
-    const result = await dispatch(cancelOrder({ useCase, command: CancelOrderCommand.of(input) }));
-    if (cancelOrder.fulfilled.match(result)) await queryClient.invalidateQueries({ queryKey: ordersQueryKeys.all });
+  // The mutation invalidates the orders queries itself; the form tells the panel which order it cancelled.
+  const submit = handleSubmit((input) => {
+    cancel.mutate(CancelOrderCommand.of(input), { onSuccess: () => dispatch(orderCancelled(order.id)) });
   });
 
   return (
@@ -51,9 +48,9 @@ export function CancelOrderForm({ order }: { readonly order: Order }): ReactNode
       <form noValidate onSubmit={(event) => void submit(event)}>
         <DialogTitle id="cancel-order-title">{t('heading', { number: order.number })}</DialogTitle>
         <DialogContent>
-          {errorKey && (
+          {cancel.isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {tErrors(errorKey)}
+              {tErrors(ordersErrorKey(cancel.error))}
             </Alert>
           )}
           <Controller
@@ -77,7 +74,7 @@ export function CancelOrderForm({ order }: { readonly order: Order }): ReactNode
         </DialogContent>
         <DialogActions>
           <Button onClick={() => dispatch(selectionCleared())}>{t('close')}</Button>
-          <Button type="submit" variant="contained" loading={cancelStatus === 'pending'}>
+          <Button type="submit" variant="contained" loading={cancel.isPending}>
             {t('submit')}
           </Button>
         </DialogActions>

@@ -8,3 +8,6 @@ test-results/
 next-env.d.ts
 *.tsbuildinfo
 .env*.local
+# product repository: copied from ../backend/openapi by `npm run copy:api-spec` (NEXT-REL-06);
+# a separate frontend repository commits its copy and deletes this line
+/openapi/

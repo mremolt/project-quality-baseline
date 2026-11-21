@@ -32,6 +32,16 @@ const noProcessImport = [
   { name: 'process', message: 'Configuration only in src/platform/config (NODE-ARCH-12).' },
   { name: 'node:process', message: 'Configuration only in src/platform/config (NODE-ARCH-12).' },
 ];
+const noProcessEnv = {
+  object: 'process',
+  property: 'env',
+  message: 'Configuration only in src/platform/config (NODE-ARCH-12).',
+};
+const noRawSql = ['raw', 'lit'].map((property) => ({
+  object: 'sql',
+  property,
+  message: 'Values as bind parameters; identifiers from an allow-list (NEST-DB-07, NEST-SEC-25).',
+}));
 const noCodeExecution = ['child_process', 'node:child_process', 'vm', 'node:vm'].map((name) => ({
   name,
   message: 'No child processes or dynamic code (NEST-SEC-26).',
@@ -73,10 +83,7 @@ export default defineConfig(
       '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
       '@typescript-eslint/no-unsafe-class-instance-assignment': 'off', // Nest types option objects as classes
       'no-console': 'error',
-      'no-restricted-properties': [
-        'error',
-        { object: 'process', property: 'env', message: 'Configuration only in src/platform/config (NODE-ARCH-12).' },
-      ],
+      'no-restricted-properties': ['error', noProcessEnv, ...noRawSql],
       'no-restricted-imports': ['error', { paths: [...noProcessImport, ...noCodeExecution] }],
       'no-restricted-globals': [
         'error',
@@ -106,7 +113,8 @@ export default defineConfig(
       ],
       'no-restricted-properties': [
         'error',
-        { object: 'process', property: 'env', message: 'Configuration only in src/platform/config (NODE-ARCH-12).' },
+        noProcessEnv,
+        ...noRawSql,
         ...[
           'toLocaleString',
           'toLocaleDateString',

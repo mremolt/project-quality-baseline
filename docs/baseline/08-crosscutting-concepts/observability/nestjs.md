@@ -54,12 +54,12 @@ ready() {
 
 ```ts
 // src/instrumentation.ts
-import { register } from 'node:module';
 import { FastifyOtelInstrumentation } from '@fastify/otel';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { register } from 'import-in-the-middle/register-hooks.mjs';
 
-register('@opentelemetry/instrumentation/hook.mjs', import.meta.url);
+register(); // ESM hook, in-thread via module.registerHooks (module.register is deprecated in Node 26)
 
 const probes = new Set(['/livez', '/readyz']);
 
@@ -86,7 +86,7 @@ app.get(ShutdownCallbacks).add(() => telemetry.shutdown());   // small platform 
 await app.listen({ port: http.HTTP_PORT, host: '0.0.0.0' });
 ```
 
-  Tests never import `main.ts` or `instrumentation.ts`, so they run without telemetry. `@opentelemetry/instrumentation` is a direct dependency (the hook is imported by name). The auto-instrumentations package no longer contains a Fastify instrumentation (removed in March 2026); `@fastify/otel`, maintained by the Fastify team, adds route and handler spans with `http.route`. `@fastify/otel` 1.0 pulls its own copy of `@opentelemetry/instrumentation` (0.300.x next to the SDK's 0.301.x); check that the versions line up again on each update.
+  Tests never import `main.ts` or `instrumentation.ts`, so they run without telemetry. `import-in-the-middle` (the hook is imported by name) and `@opentelemetry/instrumentation` are direct dependencies. The auto-instrumentations package no longer contains a Fastify instrumentation (removed in March 2026); `@fastify/otel`, maintained by the Fastify team, adds route and handler spans with `http.route`. `@fastify/otel` 1.0 pulls its own copy of `@opentelemetry/instrumentation` (0.300.x next to the SDK's 0.301.x); check that the versions line up again on each update.
 - **NEST-OBS-06: Telemetry is configured per environment through `OTEL_*` variables** (CFG-03, OBS-13), listed in `configuration-keys.yaml`:
 
 | Variable | Value |
@@ -99,7 +99,7 @@ await app.listen({ port: http.HTTP_PORT, host: '0.0.0.0' });
 | `OTEL_TRACES_SAMPLER`, `OTEL_TRACES_SAMPLER_ARG` | `parentbased_traceidratio`, `0.1` (set explicitly per environment, OBS-13) |
 | `OTEL_METRIC_EXPORT_INTERVAL` | `60000` unless the platform asks otherwise |
 
-  Propagation keeps its default (W3C Trace Context and baggage); B3 only with an ADR.
+  In `configuration-keys.yaml` a variable is `required: true` where the SDK default is not the value above (`OTEL_SERVICE_NAME`, `OTEL_RESOURCE_ATTRIBUTES`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_LOGS_EXPORTER`, whose SDK default is `otlp`, and the two sampler variables, which OBS-13 wants explicit) and `required: false` where the default already is (`OTEL_TRACES_EXPORTER`, `OTEL_METRICS_EXPORTER`, `OTEL_METRIC_EXPORT_INTERVAL`). The key-list test skips `OTEL_*` entries, since no own schema parses them (NEST-CFG-05/10). Propagation keeps its default (W3C Trace Context and baggage); B3 only with an ADR.
 
 ### Metrics
 

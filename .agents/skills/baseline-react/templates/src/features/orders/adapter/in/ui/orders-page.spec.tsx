@@ -10,7 +10,7 @@ import { rootReducer } from '../../../../../platform';
 import { TechnicalError } from '../../../../../platform/domain';
 import type { Order, OrderPage } from '../../../domain/order';
 import { OrderAlreadyShipped } from '../../../domain/order-errors';
-import { CancelOrderContext, LoadOrdersContext } from '../../../orders.tokens';
+import { OrdersContext } from '../../../orders.tokens';
 import { CancelOrderCommand, type CancelOrderUseCase } from '../../../ports/in/cancel-order.use-case';
 import type { LoadOrdersUseCase } from '../../../ports/in/load-orders.use-case';
 import { ordersSlice } from './orders.slice';
@@ -32,13 +32,12 @@ const aPage = (items: readonly Order[], page = 0, totalPages = 1): OrderPage => 
   totalElements: items.length,
 });
 
+/** REACT-TEST-06: the feature's use-case object, with mocked contracts, in the feature's one context. */
 function renderPage(loadOrders = mock<LoadOrdersUseCase>(), cancelOrder = mock<CancelOrderUseCase>()) {
   const rendered = renderWithProviders(
-    <LoadOrdersContext value={loadOrders}>
-      <CancelOrderContext value={cancelOrder}>
-        <OrdersPage />
-      </CancelOrderContext>
-    </LoadOrdersContext>,
+    <OrdersContext value={{ loadOrders, cancelOrder }}>
+      <OrdersPage />
+    </OrdersContext>,
     { path: 'orders', validateSearch: z.object({ page: z.int().nonnegative().default(0).catch(0) }) },
   );
   return { ...rendered, loadOrders, cancelOrder, user: userEvent.setup() };
@@ -100,13 +99,10 @@ describe('OrdersPage', () => {
     await waitFor(() => {
       expect(announcer.announce).toHaveBeenCalledWith('Order A-1 cancelled.');
     });
-    expect(cancelOrder.cancel).toHaveBeenCalledWith(
+    expect(cancelOrder.cancel).toHaveBeenCalledExactlyOnceWith(
       CancelOrderCommand.of({ orderId: '1', reason: 'Ordered twice' }),
-      expect.any(AbortSignal),
     );
-    await waitFor(() => {
-      expect(loadOrders.load).toHaveBeenCalledTimes(2); // list invalidated after the command (REACT-TEST-13)
-    });
+    expect(loadOrders.load).toHaveBeenCalledTimes(2); // list invalidated in the mutation's onSuccess (REACT-TEST-13)
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });
@@ -134,19 +130,52 @@ describe('OrdersPage', () => {
     expect(cancelOrder.cancel).not.toHaveBeenCalled();
   });
 
-  it('shows a business error in the dialog', async () => {
-    const loadOrders = mock<LoadOrdersUseCase>();
-    const cancelOrder = mock<CancelOrderUseCase>();
-    loadOrders.load.mockResolvedValue(aPage([anOrder('1')]));
-    cancelOrder.cancel.mockRejectedValue(new OrderAlreadyShipped('1'));
-    const { user } = renderPage(loadOrders, cancelOrder);
-
+  async function submitCancel(user: ReturnType<typeof userEvent.setup>) {
     await user.click(await screen.findByRole('button', { name: 'Cancel order A-1' }));
     const dialog = await screen.findByRole('dialog');
     await user.type(within(dialog).getByRole('textbox', { name: 'Reason' }), 'Ordered twice');
     await user.click(within(dialog).getByRole('button', { name: 'Cancel order' }));
+    return dialog;
+  }
+
+  it('shows a business error in the dialog without reporting it', async () => {
+    const loadOrders = mock<LoadOrdersUseCase>();
+    const cancelOrder = mock<CancelOrderUseCase>();
+    loadOrders.load.mockResolvedValue(aPage([anOrder('1')]));
+    cancelOrder.cancel.mockRejectedValue(new OrderAlreadyShipped('1'));
+    const { user, reportError } = renderPage(loadOrders, cancelOrder);
+
+    const dialog = await submitCancel(user);
 
     expect(await within(dialog).findByRole('alert')).toHaveTextContent('already shipped');
+    expect(reportError.report).not.toHaveBeenCalled();
+  });
+
+  it('shows the generic message for a technical error and leaves reporting to where it was created', async () => {
+    const loadOrders = mock<LoadOrdersUseCase>();
+    const cancelOrder = mock<CancelOrderUseCase>();
+    loadOrders.load.mockResolvedValue(aPage([anOrder('1')]));
+    cancelOrder.cancel.mockRejectedValue(new TechnicalError('server'));
+    const { user, reportError } = renderPage(loadOrders, cancelOrder);
+
+    const dialog = await submitCancel(user);
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('could not be cancelled');
+    expect(reportError.report).not.toHaveBeenCalled();
+  });
+
+  it('reports an unexpected error once and shows the generic message (REACT-STATE-07)', async () => {
+    const loadOrders = mock<LoadOrdersUseCase>();
+    const cancelOrder = mock<CancelOrderUseCase>();
+    const bug = new TypeError('a bug');
+    loadOrders.load.mockResolvedValue(aPage([anOrder('1')]));
+    cancelOrder.cancel.mockRejectedValue(bug);
+    const { user, reportError } = renderPage(loadOrders, cancelOrder);
+
+    const dialog = await submitCancel(user);
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('could not be cancelled');
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(bug);
   });
 
   it('returns focus to the trigger when the dialog is dismissed', async () => {

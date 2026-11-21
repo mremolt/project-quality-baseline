@@ -1,34 +1,34 @@
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { Kysely, PostgresDialect, sql } from 'kysely';
-import pg from 'pg';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { type Kysely, sql } from 'kysely';
+import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest';
 
-import { UnavailableError } from '../../../domain/index.js';
+import { databaseConfig } from '../../../../../test/postgres.js';
+import { ConcurrentModificationError, UnavailableError } from '../../../domain/index.js';
+import { createDatabase, createMigrationDatabase } from './database.js';
 import { isInTransaction, KyselyTransactionAdapter } from './kysely-transaction.adapter.js';
-import { assertSchemaCurrent, migrateToLatest } from './migrator.js';
 
 interface Db {
   notes: { id: number; text: string };
 }
 
-describe('KyselyTransactionAdapter (NEST-ARCH-08)', () => {
-  let container: StartedPostgreSqlContainer;
+class NoteModifiedConcurrently extends ConcurrentModificationError {
+  constructor() {
+    super('NOTE_MODIFIED_CONCURRENTLY', 'Note modified concurrently');
+  }
+}
+
+describe('KyselyTransactionAdapter (NEST-ARCH-08, NEST-DB-08/09/22)', () => {
   let db: Kysely<Db>;
   let tx: KyselyTransactionAdapter;
 
   beforeAll(async () => {
-    container = await new PostgreSqlContainer('postgres:18-alpine').start();
-    db = new Kysely<Db>({
-      dialect: new PostgresDialect({ pool: new pg.Pool({ connectionString: container.getConnectionUri() }) }),
-    });
-    await migrateToLatest(db as Kysely<unknown>);
-    await assertSchemaCurrent(db as Kysely<unknown>);
-    await sql`create table notes (id int primary key, text text not null)`.execute(db);
+    const ddl = createMigrationDatabase(databaseConfig(inject('postgres')));
+    await sql`create table notes (id int primary key, text text not null)`.execute(ddl); // own table per test file
+    await ddl.destroy();
+    db = createDatabase<Db>(databaseConfig(inject('postgres'))); // the DML user, as in production
     tx = new KyselyTransactionAdapter(db as Kysely<unknown>);
   });
   afterAll(async () => {
     await db.destroy();
-    await container.stop();
   });
 
   const count = async (): Promise<number> =>
@@ -61,16 +61,48 @@ describe('KyselyTransactionAdapter (NEST-ARCH-08)', () => {
     expect(await count()).toBe(2);
   });
 
-  it('turns an exhausted pool into UnavailableError', async () => {
-    const tiny = new Kysely<Db>({
-      dialect: new PostgresDialect({
-        pool: new pg.Pool({ connectionString: container.getConnectionUri(), max: 1, connectionTimeoutMillis: 200 }),
-      }),
+  it('hides uncommitted rows from other connections', async () => {
+    await tx.runInTransaction(async () => {
+      await tx.executor<Db>().insertInto('notes').values({ id: 4, text: 'd' }).execute();
+      expect(await count()).toBe(2); // db is the pool, not the open transaction
     });
-    const blocking = new KyselyTransactionAdapter(tiny as Kysely<unknown>);
+    expect(await count()).toBe(3);
+  });
+
+  it('gives concurrent units of work their own transactions', async () => {
+    const txid = (): Promise<string> =>
+      tx.runInTransaction(async () => {
+        const { rows } = await sql<{ id: string }>`select txid_current()::text as id`.execute(tx.executor());
+        return rows[0]!.id;
+      });
+    const [a, b] = await Promise.all([txid(), txid()]);
+    expect(a).not.toBe(b);
+  });
+
+  it('re-runs the whole unit of work on a concurrent modification (NEST-DB-09)', async () => {
+    let attempts = 0;
+    await tx.runInTransaction(async () => {
+      attempts++;
+      await tx.executor<Db>().insertInto('notes').values({ id: 5, text: 'e' }).execute();
+      if (attempts === 1) throw new NoteModifiedConcurrently();
+    });
+    expect(attempts).toBe(2);
+    expect(await count()).toBe(4);
+  });
+
+  it('turns an exhausted pool into UnavailableError after DATABASE_CONNECTION_TIMEOUT_MS', async () => {
+    const tiny = createDatabase(
+      databaseConfig(inject('postgres'), { DATABASE_POOL_MAX: '1', DATABASE_CONNECTION_TIMEOUT_MS: '200' }),
+    );
+    const blocking = new KyselyTransactionAdapter(tiny);
     let release: () => void = () => undefined;
-    const held = blocking.runInTransaction(() => new Promise<void>((resolve) => (release = resolve)));
-    await new Promise((r) => setTimeout(r, 100));
+    let started: () => void = () => undefined;
+    const holding = new Promise<void>((resolve) => (started = resolve));
+    const held = blocking.runInTransaction(() => {
+      started(); // the only connection is taken now
+      return new Promise<void>((resolve) => (release = resolve));
+    });
+    await holding;
     await expect(blocking.runInTransaction(() => Promise.resolve())).rejects.toBeInstanceOf(UnavailableError);
     release();
     await held;

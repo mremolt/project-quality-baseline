@@ -15,15 +15,30 @@ module.exports = {
     {
       name: 'ports-only-domain',
       severity: 'error',
+      comment: 'NODE-ARCH-04: own domain and ports, the platform domain and ports entries, zod',
       from: { path: `${ring}/ports/`, pathNot: test },
-      to: { pathNot: ['^src/$1/(domain|ports)/', '^src/platform/domain/index\\.ts$', 'node_modules/zod/'] },
+      to: {
+        pathNot: [
+          '^src/$1/(domain|ports)/',
+          '^src/platform/domain/index\\.ts$',
+          '^src/platform/ports/index\\.ts$',
+          'node_modules/zod/',
+        ],
+      },
     },
     {
       name: 'application-only-core',
       severity: 'error',
-      comment: 'Allow-list for application (ARCH-DEP-03): own rings, platform domain, zod',
+      comment: 'Allow-list for application (ARCH-DEP-03): own rings, platform domain and ports entries, zod',
       from: { path: `${ring}/application/`, pathNot: test },
-      to: { pathNot: ['^src/$1/(domain|ports|application)/', '^src/platform/domain/index\\.ts$', 'node_modules/zod/'] },
+      to: {
+        pathNot: [
+          '^src/$1/(domain|ports|application)/',
+          '^src/platform/domain/index\\.ts$',
+          '^src/platform/ports/index\\.ts$',
+          'node_modules/zod/',
+        ],
+      },
     },
     {
       name: 'adapters-use-ports-not-services',
@@ -84,19 +99,18 @@ module.exports = {
       name: 'kysely-token-only-in-persistence',
       severity: 'error',
       comment:
-        'NEST-DB: the Kysely instance is injected only by persistence adapters, scheduling (cluster lock), the readiness check and the composition',
+        'NEST-DB-04: only platform persistence, scheduling adapters (cluster lock), the readiness check and the platform module inject the Kysely instance; context persistence adapters use KyselyTransactionAdapter.executor()',
       from: {
         path: '^src/',
         pathNot: [
-          '/adapter/out/persistence/',
+          '^src/platform/adapter/out/persistence/',
           '/adapter/in/scheduling/',
           '^src/platform/adapter/in/health/',
-          '\\.module\\.ts$',
-          '^src/(main|migrate)\\.ts$',
+          '^src/platform/platform\\.module\\.ts$',
           test,
         ],
       },
-      to: { path: '^src/platform/adapter/out/persistence/database\\.ts$' },
+      to: { path: '^src/platform/adapter/out/persistence/kysely\\.token\\.ts$' },
     },
     {
       name: 'kafka-client-only-in-messaging-adapter',

@@ -32,6 +32,10 @@ describe('architecture rules (TS-ARCH-13: the checker does not check nothing)', 
     expect(await violationsIn(fixture)).toContain('feature-routes-load-feature-lazily');
   });
 
+  it('rejects a published feature API that imports the UI adapter', async () => {
+    expect(await violationsIn(fixture)).toContain('feature-api-without-ui');
+  });
+
   it('passes on the real sources', async () => {
     expect(await violationsIn(project)).toEqual([]);
   });

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 import { z } from 'zod';
 
-import type { PublicConfig } from './public-config';
+import { CLIENT_ERROR_PATH, type PublicConfig } from './public-config';
 import { Secret } from './secret';
 
 const flag = z
@@ -25,14 +25,19 @@ export const ServerConfigSchema = z
     APP_ORIGIN: z
       .url({ protocol: /^https?$/ })
       .describe('Public origin of the app; base of the OIDC redirect URIs and the server-action origin check'),
-    API_BASE_URL: z.url({ protocol: /^https?$/ }).describe('Base URL of the resource server'),
+    API_BASE_URL: z
+      .url({ protocol: /^https?$/ })
+      .refine((v) => new URL(v).pathname === '/' && new URL(v).search === '') // a path would be dropped silently
+      .describe('Origin of the resource server, without a path: the spec paths start with /api/'),
     API_TIMEOUT_MS: z.coerce
       .number()
       .int()
       .min(100)
       .max(60_000)
       .default(12_000)
-      .describe('Deadline per backend call, ms (NEXT-RES-03)'),
+      .describe(
+        'Total deadline of one proxied call or server fetch: session lookup, token refresh, backend; ms (NEXT-RES-03)',
+      ),
     OIDC_ISSUER_URL: z.url({ protocol: /^https$/ }).describe('Issuer of the IdP'),
     OIDC_CLIENT_ID: z.string().min(1).describe('Client id of this BFF at the IdP'),
     OIDC_CLIENT_SECRET: secret().describe('Client secret (mounted file, CFG-05)'),
@@ -153,5 +158,6 @@ export function publicConfig(config: ServerConfig): PublicConfig {
     release: config.RELEASE_VERSION,
     commit: config.GIT_COMMIT,
     requestTimeoutMs: config.BROWSER_REQUEST_TIMEOUT_MS,
+    clientErrorPath: CLIENT_ERROR_PATH,
   };
 }

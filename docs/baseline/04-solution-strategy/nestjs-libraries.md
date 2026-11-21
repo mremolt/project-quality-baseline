@@ -26,13 +26,13 @@ Which libraries a NestJS service uses for which job, and which it does not. Usag
 | OpenAPI | `@nestjs/swagger`, `yaml` (spec file), Orval (outbound clients) | [api/nestjs-openapi.md](../08-crosscutting-concepts/api/nestjs-openapi.md) |
 | JWT validation | `jose` | [security/nestjs.md](../08-crosscutting-concepts/security/nestjs.md) |
 | Security headers, limits | `@fastify/helmet`, `@fastify/rate-limit`, `@fastify/cors` | [security/nestjs-hardening.md](../08-crosscutting-concepts/security/nestjs-hardening.md) |
-| BFF login and session | `openid-client`, `@fastify/session`, `@fastify/cookie`, `@fastify/csrf-protection`, `@fastify/static` | [security/nestjs-hardening.md](../08-crosscutting-concepts/security/nestjs-hardening.md) |
+| BFF login and session | `openid-client`, `@fastify/session`, `@fastify/cookie`, `@fastify/csrf-protection`, `@fastify/static` (added with the BFF; none of them is in the service skeleton) | [security/nestjs-hardening.md](../08-crosscutting-concepts/security/nestjs-hardening.md) |
 | Database, migrations | `kysely`, `pg` | [persistence/nestjs.md](../08-crosscutting-concepts/persistence/nestjs.md) |
 | Messaging | `@platformatic/kafka` | [messaging/nestjs.md](../08-crosscutting-concepts/messaging/nestjs.md) |
 | Resilience, CPU work, caching | `cockatiel`, `undici`, `piscina`, `lru-cache` | [resilience/nestjs.md](../08-crosscutting-concepts/resilience/nestjs.md) |
 | Scheduling | `@nestjs/schedule` | [resilience/nestjs.md](../08-crosscutting-concepts/resilience/nestjs.md) |
 | Health | `@nestjs/terminus` | [observability/nestjs.md](../08-crosscutting-concepts/observability/nestjs.md) |
-| Telemetry | `@opentelemetry/sdk-node`, `@opentelemetry/auto-instrumentations-node`, `@opentelemetry/instrumentation` (ESM hook), `@opentelemetry/api`, `@fastify/otel`; `@opentelemetry/sdk-metrics` in tests | [observability/nestjs.md](../08-crosscutting-concepts/observability/nestjs.md) |
+| Telemetry | `@opentelemetry/sdk-node`, `@opentelemetry/auto-instrumentations-node`, `@opentelemetry/instrumentation`, `import-in-the-middle` (ESM hook), `@opentelemetry/api`, `@fastify/otel`; `@opentelemetry/sdk-metrics` in tests | [observability/nestjs.md](../08-crosscutting-concepts/observability/nestjs.md) |
 | Logging | `nestjs-pino`, `pino`, `pino-http`; `pino-pretty` (dev, CLI only) | [logging/nestjs.md](../08-crosscutting-concepts/logging/nestjs.md) |
 | Tests | `vitest`, `vitest-mock-extended`, `unplugin-swc`, `@swc/core`, `@nestjs/testing`, `@testcontainers/*` | [testing/nestjs.md](../08-crosscutting-concepts/testing/nestjs.md) |
 | Architecture tests | `dependency-cruiser` | [05-building-block-view/nestjs.md](../05-building-block-view/nestjs.md) |
@@ -56,27 +56,27 @@ Which libraries a NestJS service uses for which job, and which it does not. Usag
 
 ## Versions of the reference build
 
-Read from a validated template build on 2026-11-20 (Node 26.13, npm 11.13); newer patch versions are expected:
+Pinned in the template `package.json` of `baseline-nestjs` (validated on 2026-11-20 with Node 26.13, npm 11.13), which is the source for this table; packages that are not in the skeleton (Kafka, piscina, lru-cache) come from the scratch builds of their topic docs. Newer patch versions are expected:
 
 | Component | Version |
 |---|---|
-| `@nestjs/core`, `common`, `platform-fastify`, `testing` | 12.6.0 |
-| `@nestjs/swagger` / `terminus` / `schedule` | 12.1.2 / 12.2.0 / 12.0.4 |
+| `@nestjs/core`, `common`, `platform-fastify`, `testing` | 12.5.0 |
+| `@nestjs/swagger` / `terminus` / `schedule` / `cli` (dev) | 12.1.2 / 12.1.0 / 12.0.4 / 12.0.15 |
 | TypeScript | 6.0.3 |
 | zod | 4.6.7 |
 | Kysely / pg | 0.29.9 / 8.23.1 |
-| nestjs-pino / pino | 5.3.2 / 10.4.0 |
-| jose | 6.2.18 |
+| nestjs-pino / pino | 5.3.1 / 10.4.0 |
+| jose | 6.2.17 |
 | `@fastify/helmet` | 13.2.0 |
 | cockatiel | 4.0.0 |
 | `@platformatic/kafka` | 2.15.0 |
-| undici | 8.13.0 |
+| undici | 8.12.4 |
 | `@fastify/otel` | 1.0.1 |
 | piscina / lru-cache | 5.3.2 / 11.5.3 |
 | pino-pretty / yaml (dev) | 13.2.0 / 2.9.1 |
-| Vitest / unplugin-swc / `@swc/core` | 5.1.1 / 2.0.0 / 1.16.22 |
-| `@testcontainers/postgresql` | 12.2.2 |
-| dependency-cruiser | 18.8.0 |
+| Vitest / unplugin-swc / `@swc/core` | 5.1.0 / 2.0.0 / 1.16.22 |
+| `@testcontainers/postgresql` | 12.2.1 |
+| dependency-cruiser | 18.7.2 |
 
 ## Agent checklist
 

@@ -1,0 +1,11 @@
+{
+  "app.title": { "description": "Product name in the app bar and the browser tab", "maxLength": 20 },
+  "app.environment": { "description": "Badge in the app bar outside production; {label} is the environment name" },
+  "orders.count": { "description": "Status line above the orders table; {count} is the number of orders" },
+  "orders.cancel.open": {
+    "description": "Button in a table row that opens the cancel dialog; {number} is the order number",
+    "maxLength": 30
+  },
+  "orders.cancel.submit": { "description": "Confirm button of the cancel dialog", "maxLength": 20 },
+  "orders.cancel.close": { "description": "Button that closes the cancel dialog without cancelling", "maxLength": 20 }
+}

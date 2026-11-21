@@ -16,10 +16,10 @@ Always: `docs/baseline/stacks/nextjs.md`, `docs/baseline/05-building-block-view/
 | Use case, port, command, domain type, error | `docs/baseline/05-building-block-view/use-cases.md`, `docs/baseline/08-crosscutting-concepts/mapping/mapping-between-boundaries.md` |
 | Route file, server component, client component, page, layout | NEXT-ARCH-01/02/06/10/14..17, `docs/baseline/08-crosscutting-concepts/ui/react-mui.md`, `ui/ui-patterns.md`, `docs/baseline/10-quality-requirements/accessibility.md` |
 | Server action | NEXT-ARCH-04, NEXT-SEC-04/05/07 in `docs/baseline/08-crosscutting-concepts/security/nextjs.md`, NEXT-RES-05, NEXT-REL-18 |
-| Route handler, `/api` proxy, probes | NEXT-ARCH-05, `docs/baseline/08-crosscutting-concepts/api/nextjs-openapi-clients.md` (NEXT-API-06), `observability/nextjs.md` |
+| Route handler, `/api` proxy, `/client-errors`, probes | NEXT-ARCH-05, `docs/baseline/08-crosscutting-concepts/api/nextjs-openapi-clients.md` (NEXT-API-06), `observability/nextjs.md` (NEXT-OBS-18) |
 | Login, session, logout, CSRF, cookies | `docs/baseline/08-crosscutting-concepts/security/node-bff.md`, `security/nextjs.md` (NEXT-SEC-01/02) |
 | `proxy.ts`, CSP, nonce, Trusted Types, headers | NEXT-ARCH-11, `security/nextjs.md` (NEXT-SEC-03/05/08/10/11), `security/react.md`, `security/typescript.md` |
-| Slice, thunk, query hook, query keys, optimistic update | `docs/baseline/08-crosscutting-concepts/ui/react-state-management.md`, NEXT-ARCH-15/16 |
+| Slice, query hook, mutation (command), query keys, optimistic update | `docs/baseline/08-crosscutting-concepts/ui/react-state-management.md`, NEXT-ARCH-15/16 |
 | HTTP adapter, API client, backend data | `docs/baseline/08-crosscutting-concepts/api/typescript-openapi-clients.md`, `api/react-openapi-clients.md`, `api/nextjs-openapi-clients.md`, `api/avoiding-n-plus-one.md`, NEXT-ARCH-09 |
 | Configuration, environment variables, secrets, public config | `docs/baseline/08-crosscutting-concepts/configuration/configuration.md`, `configuration/nextjs.md` |
 | Timeouts, retries, caching, `'use cache'` | `docs/baseline/08-crosscutting-concepts/resilience/resilience.md`, `resilience/nextjs.md` |
@@ -56,12 +56,12 @@ Full tables: the "Skill overrides" sections linked from `docs/baseline/stacks/ne
 |---|---|
 | `fetch`, a database or generated client in `page.tsx`, a server component or a server action | Incoming adapters call use cases; the server Orval client sits behind an outgoing port (NEXT-D4, NEXT-ARCH-02..05, NEXT-API-07) |
 | Logic, data loading or JSX trees in `src/app/**` | Route files re-export a feature page or bind a platform handler (NEXT-ARCH-01) |
-| `'use client'` or `'use server'` in any file | Only in `*.client.tsx`, `*.composition.tsx`, the root client files, and `adapter/in/next/*-actions.ts` (NEXT-ARCH-04/06, NEXT-TOOL-06) |
+| `'use client'` or `'use server'` in any file | Only in `*.client.tsx`, `*.composition.tsx`, `<feature>.api.tsx`, the root client files, and `adapter/in/next/*-actions.ts` (NEXT-ARCH-04/06, NEXT-TOOL-06) |
 | Server action trusting its arguments, closures or bound values | Public endpoint: session, zod `.strict()` parsing, authorization in the use case; origin gate in `proxy.ts` (NEXT-SEC-04/05/07) |
 | `'use cache'`, ISR, `force-static`, `fetch` with `next.revalidate` | Dynamic by default; caching only for public pages by ADR (NEXT-D3, NEXT-ARCH-10, NEXT-RES-07/08) |
 | `NEXT_PUBLIC_*`, `env` in `next.config`, `process.env` in a component | Server configuration parsed in `register()`, public subset through the root layout (NEXT-D7, NEXT-CFG-01..05) |
 | Auth.js / `next-auth`, `iron-session`, tokens in the browser | `openid-client` and the session store; tokens only on the server (NEXT-D8, NODE-BFF-03/05) |
-| `middleware.ts`, auth or redirects in the proxy | `src/proxy.ts`: nonce, CSP, headers, action origin gate only (NEXT-ARCH-11) |
+| `middleware.ts`, auth or redirects in the proxy | `src/proxy.ts`: nonce, CSP, headers, origin gate for page writes only (NEXT-ARCH-11, NEXT-SEC-05) |
 | Importing `@/platform/index.client` in a server file | Three entry points; server files use `index.server`, the core uses `index` (NEXT-ARCH-14) |
 | Server-rendered data copied into a slice, or refetched after hydration | `initialData` for TanStack Query (NEXT-ARCH-16) |
 | `<TextField {...field} />` in a `Controller` | `field: { ref, ...field }` and `inputRef={ref}` (REACT-ARCH-14) |
@@ -78,8 +78,8 @@ Full tables: the "Skill overrides" sections linked from `docs/baseline/stacks/ne
 2. **N+1 check** for anything that loads data, including server-side waterfalls (API-N1-01, NEXT-ARCH-09): fill in the template from `avoiding-n-plus-one.md`, recommend a strategy, and let the developer decide.
 3. **Test first** with `baseline-tdd`: test type per element from `testing/nextjs.md` and `testing/react.md` (route handlers and action handlers as adapter tests, NEXT-TEST-05/06; `proxy.ts` decisions as pure functions, NEXT-TEST-07; server components stay thin, NEXT-TEST-04).
 4. **Accessibility as you go**: REACT-UI-26..33; axe in component tests; the E2E axe fixture in light, dark and high-contrast for changed screens (NEXT-TEST-15, A11Y-05).
-5. **Security and data as you go**: nothing secret in client props or action results (NEXT-ARCH-07, NEXT-SEC-06); every action and route handler resolves the session; new entry points get a threat model (NEXT-SEC-09, SEC-TM-02); new personal data → inventory and deletion concept (DP-INV-03).
-6. **Contract**: changed spec → `npm run generate:api`; both server and browser outputs, adapters, mappers and problem `code`s updated (NEXT-API-01, TS-ARCH-18).
+5. **Security and data as you go**: nothing secret in client props or action results (NEXT-ARCH-07, NEXT-SEC-06); every action and route handler resolves the session (the public `/client-errors` intake checks origin, rate, size and schema instead, NEXT-OBS-18); new entry points get a threat model (NEXT-SEC-09, SEC-TM-02); new personal data → inventory and deletion concept (DP-INV-03).
+6. **Contract**: changed spec → `npm run generate:api` (it copies `../backend/openapi/*.yaml` in first, NEXT-REL-06); both server and browser outputs, adapters, mappers and problem `code`s updated (NEXT-API-01, TS-ARCH-18).
 7. **Configuration**: a new key goes into the schema with `.describe()`, into `configuration-keys.yaml` and, if local, into `.env.development` (NEXT-CFG-02/09, NEXT-DEV-03).
 8. **Shortcuts**: propose and draft an ADR; never take one silently (ARCH-SC-06).
 9. **Finish** with `npm run verify` and `npm run e2e` green, and no dependency-cruiser rule, lint rule, bundle budget, CSP, Trusted Types policy or a11y check loosened.

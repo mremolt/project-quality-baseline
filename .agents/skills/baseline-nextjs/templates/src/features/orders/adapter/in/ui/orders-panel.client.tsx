@@ -44,7 +44,7 @@ export function OrdersPanel({ initialOrders }: { readonly initialOrders: readonl
   return (
     <>
       <Typography role="status" sx={{ mb: 2 }}>
-        {view.cancelStatus === 'succeeded' ? t('cancel.succeeded') : t('count', { count: orders.length })}
+        {view.cancelledOrderId === null ? t('count', { count: orders.length }) : t('cancel.succeeded')}
       </Typography>
       <TableContainer component={Paper} variant="outlined">
         <Table aria-labelledby="orders-caption">

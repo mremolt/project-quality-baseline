@@ -5,9 +5,9 @@ import { configureHttp } from './adapter/out/http/custom-fetch';
 import { HttpErrorReporting } from './adapter/out/http/http-error-reporting';
 import { HttpRuntimeConfig } from './adapter/out/http/http-runtime-config';
 import { ReportErrorService } from './application/report-error.service';
+import type { RuntimeConfig } from './domain';
 import { ReportErrorContext, RuntimeConfigContext } from './platform.tokens';
 import type { ReportErrorUseCase } from './ports/in/report-error.use-case';
-import type { RuntimeConfig } from './ports/out/runtime-config.port';
 
 export interface Platform {
   readonly config: Readonly<RuntimeConfig>;

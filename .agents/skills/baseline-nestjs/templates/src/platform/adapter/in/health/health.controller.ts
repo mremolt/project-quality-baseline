@@ -3,7 +3,7 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { HealthCheck, type HealthCheckResult, HealthCheckService, HealthIndicatorService } from '@nestjs/terminus';
 import { type Kysely, sql } from 'kysely';
 
-import { KYSELY } from '../../out/persistence/database.js';
+import { KYSELY } from '../../out/persistence/kysely.token.js';
 import { Public } from '../rest/auth.decorators.js';
 
 /** Probes on the serving port, not routed from outside (NEST-OBS-02/03, NEST-SEC-10). */

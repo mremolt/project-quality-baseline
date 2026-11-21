@@ -53,6 +53,7 @@ Habits from the NestJS docs, `nest new` and generic skills that conflict with th
 | DTO classes with class-validator decorators, global `ValidationPipe` | zod schemas on `@Body({ schema })`, global `StandardSchemaValidationPipe` (NEST-D3, NEST-LIB-04) |
 | `HttpException`/`NotFoundException` thrown from services | Category errors from `platform/domain`, mapped by the global filter (NODE-ARCH-07, NEST-ARCH-12) |
 | TypeORM or Prisma entities as the model | Kysely in the persistence adapter, rows mapped two-way (NEST-LIB-09) |
+| `@Inject(KYSELY)` in a context repository | `KyselyTransactionAdapter.executor()`; the instance only in platform persistence, scheduling (cluster lock) and health (NEST-DB-04) |
 | `@nestjs/passport` with `JwtStrategy` | One `jose` guard building a `Caller`; authorization in the use case (NEST-D6) |
 | `@nestjs/config` `ConfigService.get('KEY')` | Typed config from zod schemas, injected by token; `process.env` only in `platform/config` (NODE-ARCH-12) |
 | `@nestjs/microservices` Kafka transport | Own adapters on `@platformatic/kafka` (NEST-D9) |

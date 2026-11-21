@@ -57,7 +57,8 @@ const noHtmlWrites = [
 // NEXT-TOOL-06: directives only in files whose name says so; dependency-cruiser decides client-ness by file name
 const noUseClient = {
   selector: 'Program > ExpressionStatement[directive="use client"]',
-  message: "'use client' only in *.client.tsx, *.composition.tsx and the root client files of src/app (NEXT-ARCH-06).",
+  message:
+    "'use client' only in *.client.tsx, *.composition.tsx, <feature>.api.tsx and the root client files of src/app (NEXT-ARCH-06).",
 };
 const noUseServer = {
   selector: 'Program > ExpressionStatement[directive="use server"]',
@@ -66,6 +67,7 @@ const noUseServer = {
 const CLIENT_FILES = [
   'src/**/*.client.tsx',
   'src/**/*.composition.tsx',
+  'src/features/*/*.api.tsx',
   'src/app/{providers,app-shell}.tsx',
   'src/app/theme.ts',
 ];
@@ -148,6 +150,12 @@ export default defineConfig(
   {
     files: SERVER_ACTION_FILES,
     rules: { 'no-restricted-syntax': ['error', ...noHtmlWrites, noUseClient] },
+  },
+  {
+    // NEXT-TOOL-05: server actions are .ts files, outside the .tsx block of @eslint-react; its RSC rule covers them too
+    files: SERVER_ACTION_FILES,
+    plugins: { '@eslint-react': eslintReact },
+    rules: { '@eslint-react/rsc-function-definition': 'error' },
   },
   {
     files: ['src/**/*.{ts,tsx}'],

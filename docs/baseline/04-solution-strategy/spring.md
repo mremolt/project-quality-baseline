@@ -13,7 +13,7 @@ These tighten the shared and Java defaults:
 
 | # | Topic | Default | Defined in |
 |---|---|---|---|
-| SPRING-D1 | Boot line | 4.1.x. Move to 4.2.x once the libraries in [04-solution-strategy/spring-libraries.md](../04-solution-strategy/spring-libraries.md) support it, as a reviewed change | [04-solution-strategy/spring-libraries.md](spring-libraries.md) |
+| SPRING-D1 | Boot line | 4.1.x. Move to 4.2.x once every pinned library in [spring-libraries.md](spring-libraries.md#versions-of-the-reference-build) supports it, as a reviewed change. Supported means an official release built against the new Boot minor (`resilience4j-spring-boot4` and ShedLock included); a passing smoke test alone is not enough. Boot 4.2 waits for the Springwolf release on swagger-core 3 | [04-solution-strategy/spring-libraries.md](spring-libraries.md) |
 | SPRING-D2 | Web stack | Spring MVC + virtual threads; WebFlux only with an ADR | [04-solution-strategy/spring-libraries.md](spring-libraries.md) |
 | SPRING-D3 | JSON | Jackson 3, records as DTOs, wire format from the shared REST conventions (API-REST-*: ISO-8601, decimals as strings through `ApiDecimal`) | [08-crosscutting-concepts/api/spring-rest.md](../08-crosscutting-concepts/api/spring-rest.md), [rest-conventions.md](../08-crosscutting-concepts/api/rest-conventions.md) |
 | SPRING-D4 | Database | PostgreSQL; Spring Data JPA for aggregates plus `JdbcClient` for reads and bulk work (SPRING-DB-15); Flyway forward-only migrations at start-up with a separate DDL user (SPRING-REL-01); `ddl-auto=validate`, `open-in-view=false` | [08-crosscutting-concepts/persistence/spring.md](../08-crosscutting-concepts/persistence/spring.md) |

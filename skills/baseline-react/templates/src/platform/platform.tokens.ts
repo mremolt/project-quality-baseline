@@ -1,7 +1,7 @@
 import { createContext, use } from 'react';
 
+import type { RuntimeConfig } from './domain';
 import type { ReportErrorUseCase } from './ports/in/report-error.use-case';
-import type { RuntimeConfig } from './ports/out/runtime-config.port';
 
 export const RuntimeConfigContext = createContext<Readonly<RuntimeConfig> | null>(null);
 export const ReportErrorContext = createContext<ReportErrorUseCase | null>(null);

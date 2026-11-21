@@ -12,9 +12,9 @@ Works on Linux, macOS and Windows. All scripts are Node.js; there is nothing els
 
 | Tool | Version | Needed for |
 |---|---|---|
-| [Node.js](https://nodejs.org/) (includes npm) | **22.20 or newer** (LTS recommended; `engines.node` in `package.json`) | all scripts, the `skills` CLI, the Claude Code hook. Products' frontend components additionally need npm 11.10 or newer (TS-TOOL-14); Node 22 bundles npm 10 |
+| [Node.js](https://nodejs.org/) (includes npm) | **22.20 or newer** (LTS recommended; `engines.node` in `package.json`) | all scripts, the `skills` CLI, the Claude Code hooks. Products' frontend components additionally need npm 11.10 or newer (TS-TOOL-14); Node 22 bundles npm 10 |
 | [Git](https://git-scm.com/) (Windows: Git for Windows) | any recent | cloning, `sync-baseline` (uncommitted-changes check), `skills:upstream-diff` |
-| [Claude Code](https://claude.com/claude-code) | optional | runs the hook in `.claude/settings.json`; other agents read `AGENTS.md` and `.agents/skills` |
+| [Claude Code](https://claude.com/claude-code) | optional | runs the stack reminder hooks in `.claude/settings.json`; other agents read `AGENTS.md` and `.agents/skills` |
 
 Check with `node --version` and `git --version`.
 
@@ -55,7 +55,7 @@ A repository without commits has nothing to diff against, so the sync skips the 
 | Windows CMD, PowerShell | `scripts\sync-baseline.cmd ..\my-project` |
 | any OS | `npm run baseline:sync -- ../my-project` |
 
-Options: `--force` runs it despite uncommitted changes (not needed in a repository without commits); `--host github|gitlab|azure|bitbucket` picks where the pull request template goes (default: detected from the `origin` remote). The sync replaces `docs/baseline/`, the managed block in `AGENTS.md`, the skills and the Claude Code hooks, and creates the project-owned files the rules require from `templates/` once, if they are missing. It never overwrites project-owned files. The complete list: [agent-skills.md](docs/baseline/08-crosscutting-concepts/development/agent-skills.md#distribution-to-consuming-projects).
+Options: `--force` runs it despite uncommitted changes (not needed in a repository without commits); `--host github|gitlab|azure|bitbucket` picks where the pull request template goes (default: detected from the `origin` remote). The sync replaces `docs/baseline/`, the managed block in `AGENTS.md`, the skills and the Claude Code hooks, and creates the project-owned files the rules require from `templates/` once, if they are missing. It never overwrites project-owned files. Only the skills, Claude Code hooks and `AGENTS.md` lines of the stacks in the project's `.baseline.json` are synced (e.g. `{ "stacks": ["nestjs", "nextjs"] }`); without the file the sync detects the stacks from the component folders and writes it, or, in a repository with nothing to detect, syncs every stack. The complete list: [agent-skills.md](docs/baseline/08-crosscutting-concepts/development/agent-skills.md#distribution-to-consuming-projects).
 
 Then, in the project:
 
@@ -81,7 +81,7 @@ templates/              project-owned files the sync creates once if missing:
 skills/                 our own agent skills (edit here)
 .agents/skills/         installed skills, the copy agents read (generated, committed)
 .claude/skills/         symlinks for Claude Code
-.claude/hooks/          Claude Code hooks shipped to projects (baseline-*)
+.claude/hooks/          Claude Code hooks shipped to projects (baseline-*, one reminder per entry stack)
 scripts/                maintenance and sync scripts (.mjs + .sh/.cmd launchers)
 prompts/                prompts for agent sessions in projects (kickoff); not synced
 skills-lock.json        pinned third-party skills
@@ -105,5 +105,5 @@ Every script must work on Linux and Windows (TOOL-SKL-08):
 
 - Logic goes into a `.mjs` file that uses Node.js built-in modules only.
 - Next to it, add two launchers that only call `node`: `<name>.sh` (`exec node "$(dirname "$0")/<name>.mjs" "$@"`) and `<name>.cmd` (`@echo off`, then `node "%~dp0<name>.mjs" %*`). Copy an existing pair from `scripts/`.
-- Claude Code hooks call `node "$CLAUDE_PROJECT_DIR/.claude/hooks/<hook>.mjs"` directly.
+- Claude Code hooks call `node "$CLAUDE_PROJECT_DIR/.claude/hooks/<hook>.mjs"` directly. A new `baseline-*` hook gets its entry in `.claude/settings.json` and, if it belongs to a stack, is listed under that stack's `hooks` in `baseline-stacks.json`; the sync ships it only to projects that declare the stack.
 - `.gitattributes` keeps `.sh` files LF and `.cmd` files CRLF on every machine; don't override it.

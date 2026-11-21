@@ -104,8 +104,8 @@ expect(listed.filter((k) => !libraryKey(k.key)).map(pick).sort(byKey)).toEqual(o
 
 | What | How |
 |---|---|
-| Binding and validation (TEST-CFG-01) | Unit test per schema with `parseConfig(schema, { … })`: valid values bind; each violated constraint and each missing required key throws with the key name and without the value; `KEY_FILE` is read; `KEY` plus `KEY_FILE` fails |
-| Secret masking (TEST-CFG-03) | Unit test of `Secret`: `String`, template literal, `JSON.stringify`, `util.inspect` and a pino line of an object that holds it do not contain the value; plus the secret-name test of NEST-CFG-08 |
+| Binding and validation (TEST-CFG-01) | Unit test per schema with `parseConfig(schema, { … })`: valid values bind; each violated constraint and each missing required key throws with the key name and without the value; `KEY_FILE` is read; `KEY` plus `KEY_FILE` fails (template: `load-config.test.ts` for the loader, `platform.config.test.ts` for the platform schemas) |
+| Secret masking (TEST-CFG-03) | Unit test of `Secret`: `String`, template literal, `JSON.stringify`, `util.inspect` and a pino line of an object that holds it do not contain the value (template: `secret.test.ts`); plus the secret-name test of NEST-CFG-08 (template: `configuration-keys.test.ts`, over the schemas and the YAML) |
 | Key list (TEST-CFG-04) | `configuration-keys.test.ts` (NEST-CFG-10), compares key, `required` and `secret` in both directions |
 | Use-case settings | Unit test passes the values to the constructor |
 | `/config.json` | Controller test: 200 without authentication, exact JSON keys, `Cache-Control: no-store` |
@@ -122,4 +122,4 @@ expect(listed.filter((k) => !libraryKey(k.key)).map(pick).sort(byKey)).toEqual(o
 
 ## Sources
 
-zod 4 documentation (`z.coerce`, `z.url`, `.meta`, `z.toJSONSchema` with `io: 'input'`), Node.js documentation (`util.inspect.custom`, `--env-file`), NestJS documentation (custom providers, `useFactory`), ESLint rules `no-restricted-properties` and `no-restricted-imports`, The Twelve-Factor App. Code above checked in a scratch build on 2026-11-20 (zod 4.6.7, Node 26, ESLint 10).
+zod 4 documentation (`z.coerce`, `z.url`, `.meta`, `z.toJSONSchema` with `io: 'input'`), Node.js documentation (`util.inspect.custom`, `--env-file`), NestJS documentation (custom providers, `useFactory`), ESLint rules `no-restricted-properties` and `no-restricted-imports`, The Twelve-Factor App. Code above checked in a scratch build on 2026-11-21 (zod 4.6.7, Node 26.13, ESLint 9.39, the version NODE-TOOL-04 and the template pin).

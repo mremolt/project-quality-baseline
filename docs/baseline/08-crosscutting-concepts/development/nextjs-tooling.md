@@ -63,11 +63,11 @@ import nextPlugin from '@next/eslint-plugin-next';
 },
 ```
 
-  `@eslint-react` runs with `strict-type-checked` (REACT-TOOL-01) on the Next.js code, async server components and server actions included, without exceptions (*verified* in the template); its `rsc-function-definition` rule reports a non-async export of a `'use server'` file.
+  `@eslint-react` runs with `strict-type-checked` (REACT-TOOL-01) on the `.tsx` code, async server components included, without exceptions (*verified* in the template). The server-action files are `.ts`, so a separate block turns on its `rsc-function-definition` rule for `src/**/adapter/in/next/*-actions.ts`: it reports a non-async export of a `'use server'` file (*verified* with a probe).
 
 - **NEXT-TOOL-06: ESLint carries the Next.js bans that dependency-cruiser cannot:**
   - `no-restricted-properties` forbids `process.env` everywhere except `src/platform/config/**`, `src/instrumentation.ts`, the root `*.config.ts` files and `e2e/**` (CFG-09). This replaces the `process` part of REACT-TOOL-05 for Next.js, because server code legitimately uses `process` (signals, `NEXT_RUNTIME`); a client component that reads `process.env` would get a value inlined at build time (NEXT-D7). The `fetch` ban of REACT-TOOL-05 applies unchanged;
-  - `no-restricted-syntax` with the selector `Program > ExpressionStatement[directive="use client"]` in every file except `**/*.client.tsx`, `**/*.composition.tsx`, `src/app/providers.tsx`, `src/app/app-shell.tsx` and `src/app/theme.ts`, and `Program > ExpressionStatement[directive="use server"]` in every file except `src/**/adapter/in/next/*-actions.ts`. This closes the blind spot of dependency-cruiser, which decides client-ness by file name (NEXT-ARCH-06, NEXT-ARCH-13). Because ESLint replaces a rule's options per block, each block repeats the HTML-writing selectors of REACT-TOOL-05. Both selectors fire with the typescript-eslint parser on `.ts` and `.tsx` files (*verified* with a probe file).
+  - `no-restricted-syntax` with the selector `Program > ExpressionStatement[directive="use client"]` in every file except `**/*.client.tsx`, `**/*.composition.tsx`, `src/features/*/*.api.tsx`, `src/app/providers.tsx`, `src/app/app-shell.tsx` and `src/app/theme.ts`, and `Program > ExpressionStatement[directive="use server"]` in every file except `src/**/adapter/in/next/*-actions.ts`. This closes the blind spot of dependency-cruiser, which decides client-ness by file name (NEXT-ARCH-06, NEXT-ARCH-13). Because ESLint replaces a rule's options per block, each block repeats the HTML-writing selectors of REACT-TOOL-05. Both selectors fire with the typescript-eslint parser on `.ts` and `.tsx` files (*verified* with a probe file).
 
 ## Scripts and bundle check
 
@@ -75,7 +75,8 @@ import nextPlugin from '@next/eslint-plugin-next';
 
 | Script | Command |
 |---|---|
-| `generate:api` | `orval` |
+| `copy:api-spec` | `node scripts/copy-api-spec.mjs`: the backend's `../backend/openapi/*.yaml` into `openapi/` (gitignored in a product repository); no-op without `../backend/openapi` ([NEXT-REL-06](../../07-deployment-view/nextjs-delivery.md)) |
+| `generate:api` | `npm run copy:api-spec && orval` |
 | `dev` | `npm run generate:api && next dev --hostname localhost` (loopback only, NEXT-DEV-08) |
 | `dev:debug` | `next dev --hostname localhost --inspect` (inspector on `127.0.0.1:9229`, NEXT-DEV-11) |
 | `build` | `npm run generate:api && next build` |
@@ -86,8 +87,8 @@ import nextPlugin from '@next/eslint-plugin-next';
 | `check:arch` | `depcruise src` |
 | `check:bundle` | `node scripts/check-bundle.mjs` (NEXT-TOOL-08) |
 | `test` | `npm run generate:api && vitest run` |
-| `e2e` | `playwright test` against the built standalone server in test mode ([testing/nextjs.md](../testing/nextjs.md)); `npm run build` runs before it |
-| `e2e:nightly`, `e2e:smoke` | `playwright test` with the projects of TS-TEST-18 and the smoke project |
+| `e2e` | `npm run build && playwright test`: against the built standalone server in test mode ([testing/nextjs.md](../testing/nextjs.md)) |
+| `e2e:nightly`, `e2e:smoke` | `playwright test` with the projects of TS-TEST-18 and the smoke project (not in the template yet: to verify before first use) |
 | `verify` | `generate:api`, `format:check`, `lint`, `typecheck`, `check:arch`, `test`, `build`, `check:bundle` |
 
   `typecheck` and `check:bundle` are the additions to `verify`; `check:bundle` runs after `build`. None relies on a `pre*` hook (TS-TOOL-11). `next build` takes 5–7 s for the template.

@@ -4,7 +4,7 @@ Framework-independent rules for code that runs in a browser, whatever the fronte
 
 ## Rules
 
-- **TS-SEC-01: No tokens, session ids or personal data in `localStorage`, `sessionStorage`, IndexedDB or URLs.** Any script on the page can read them. Browser apps authenticate through the BFF cookie (SPRING-SEC-08).
+- **TS-SEC-01: No tokens, session ids or personal data in `localStorage`, `sessionStorage`, IndexedDB or URLs.** Any script on the page can read them. Browser apps authenticate through the BFF cookie (SPRING-SEC-08, NEST-SEC-12, NODE-BFF-05).
 - **TS-SEC-02: No `eval`, `new Function`, string-argument `setTimeout`/`setInterval`, `document.write`.** `innerHTML`, `outerHTML` and `insertAdjacentHTML` only receive static literals. ESLint enforces it (`no-eval`, `no-implied-eval`, `no-new-func`, `no-restricted-syntax`).
 - **TS-SEC-03: Navigation targets and redirects that come from user input are checked against an allow-list of internal paths.** `target="_blank"` carries `rel="noopener noreferrer"`. `postMessage` checks `event.origin` and uses an explicit target origin, never `"*"`.
 - **TS-SEC-04: Nothing secret is in the bundle or in environment files.** Frontend configuration is public by definition: no API keys with write power, no credentials.

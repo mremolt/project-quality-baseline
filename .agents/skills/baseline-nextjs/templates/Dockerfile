@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 COPY tsconfig.json next.config.ts orval.config.ts ./
+COPY scripts/copy-api-spec.mjs ./scripts/
+# the backend's spec, copied into the build context by CI (`npm run copy:api-spec`) before `docker build`
 COPY openapi ./openapi
 COPY messages ./messages
 COPY src ./src

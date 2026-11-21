@@ -1,10 +1,11 @@
 import * as oidc from 'openid-client';
 
-import type {
-  AuthorizationRequest,
-  IdentityProvider,
-  LoginChecks,
-  Tokens,
+import {
+  type AuthorizationRequest,
+  type IdentityProvider,
+  type LoginChecks,
+  LoginRejectedError,
+  type Tokens,
 } from '../../../ports/out/identity-provider.port';
 
 export interface OidcSettings {
@@ -14,6 +15,22 @@ export interface OidcSettings {
 }
 
 type TokenResponse = oidc.TokenEndpointResponse & oidc.TokenEndpointResponseHelpers;
+
+/** openid-client codes for a response that failed validation; time-outs and network errors are not among them. */
+const REJECTION_CODES = new Set([
+  'OAUTH_INVALID_RESPONSE',
+  'OAUTH_JWT_CLAIM_COMPARISON_FAILED',
+  'OAUTH_JSON_ATTRIBUTE_COMPARISON_FAILED',
+  'OAUTH_JWT_TIMESTAMP_CHECK_FAILED',
+]);
+
+function isRejection(error: unknown): boolean {
+  return (
+    error instanceof oidc.AuthorizationResponseError ||
+    error instanceof oidc.ResponseBodyError ||
+    (error instanceof oidc.ClientError && error.code !== undefined && REJECTION_CODES.has(error.code))
+  );
+}
 
 function toTokens(response: TokenResponse, now: number, previous?: Tokens): Tokens {
   const claims = response.claims(); // a refresh response may come without an ID token
@@ -30,7 +47,7 @@ function toTokens(response: TokenResponse, now: number, previous?: Tokens): Toke
   };
 }
 
-/** openid-client 6: authorization code flow with PKCE (S256), state and nonce (NEST-SEC-45). */
+/** openid-client 6: authorization code flow with PKCE (S256), state and nonce (NODE-BFF-02). */
 export class OpenIdClientIdentityProvider implements IdentityProvider {
   constructor(
     private readonly configuration: () => Promise<oidc.Configuration>,
@@ -56,12 +73,16 @@ export class OpenIdClientIdentityProvider implements IdentityProvider {
 
   async exchangeCode(callbackUrl: URL, checks: LoginChecks): Promise<Tokens> {
     const config = await this.configuration();
-    const response = await oidc.authorizationCodeGrant(config, callbackUrl, {
-      pkceCodeVerifier: checks.codeVerifier,
-      expectedState: checks.state,
-      expectedNonce: checks.nonce,
-      idTokenExpected: true,
-    });
+    const response = await oidc
+      .authorizationCodeGrant(config, callbackUrl, {
+        pkceCodeVerifier: checks.codeVerifier,
+        expectedState: checks.state,
+        expectedNonce: checks.nonce,
+        idTokenExpected: true,
+      })
+      .catch((error: unknown) => {
+        throw isRejection(error) ? new LoginRejectedError('authorization response rejected', { cause: error }) : error;
+      });
     return toTokens(response, this.now());
   }
 

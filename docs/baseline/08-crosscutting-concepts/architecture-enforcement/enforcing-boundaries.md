@@ -39,6 +39,7 @@ Architecture erodes when nothing stops it. Code review and good intentions are n
 - Spring Boot: ArchUnit template for our layout: [05-building-block-view/spring.md](../../05-building-block-view/spring.md)
 - Node.js/NestJS: dependency-cruiser template: [05-building-block-view/nestjs.md](../../05-building-block-view/nestjs.md#architecture-test-template)
 - TypeScript frontend: dependency-cruiser / ESLint boundaries, `index.ts` public APIs: [05-building-block-view/typescript.md](../../05-building-block-view/typescript.md)
+- React and Next.js: the TypeScript template with their constants and additions: [05-building-block-view/react.md](../../05-building-block-view/react.md), [05-building-block-view/nextjs.md](../../05-building-block-view/nextjs.md)
 
 ## Sources
 

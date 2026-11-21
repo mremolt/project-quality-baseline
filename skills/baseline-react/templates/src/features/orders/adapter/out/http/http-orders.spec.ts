@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
@@ -25,7 +25,7 @@ const command = CancelOrderCommand.of({ orderId: 'o-1', reason: 'Ordered twice' 
 
 describe('HttpOrders', () => {
   const reportError = mock<ReportErrorUseCase>();
-  const adapter = new HttpOrders();
+  const adapter = new HttpOrders(reportError);
 
   beforeAll(() => {
     server.listen({ onUnhandledFrame: 'error' });
@@ -80,17 +80,32 @@ describe('HttpOrders', () => {
     expect(requested?.searchParams.toString()).toBe('page=2&size=10');
   });
 
-  it('rejects a malformed response with a technical error', async () => {
+  it('rejects a malformed response with a technical error and reports it, because the adapter created it', async () => {
     server.use(getListOrdersMockHandler({ items: [{ id: 42 }] } as never));
 
-    await expect(adapter.loadOrders({ page: 0, size: 20 })).rejects.toMatchObject({ failure: 'malformed-response' });
+    const failure: unknown = await adapter.loadOrders({ page: 0, size: 20 }).catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({ failure: 'malformed-response' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(failure);
   });
 
-  it('turns a server error into a reported technical error with the trace id', async () => {
+  it('turns a server error into a technical error reported once, by the mutator, with the trace id', async () => {
     server.use(http.get('*/api/v1/orders', () => problem(503)));
 
     await expect(adapter.loadOrders({ page: 0, size: 20 })).rejects.toBeInstanceOf(TechnicalError);
-    expect(reportError.report).toHaveBeenCalledWith(expect.any(TechnicalError), { status: 503, traceId: 'trace-1' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(expect.any(TechnicalError), {
+      status: 503,
+      traceId: 'trace-1',
+    });
+  });
+
+  it('turns a 4xx answer to the list into a reported technical error (TS-ARCH-18)', async () => {
+    server.use(http.get('*/api/v1/orders', () => problem(403)));
+
+    const failure: unknown = await adapter.loadOrders({ page: 0, size: 20 }).catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({ failure: 'unexpected' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(failure);
   });
 
   it('cancels an order and returns the cancelled order', async () => {
@@ -110,11 +125,31 @@ describe('HttpOrders', () => {
     server.use(http.post('*/api/v1/orders/:orderId/cancel', () => problem(404)));
 
     await expect(adapter.cancelOrder(command)).rejects.toEqual(new OrderNotFound('o-1'));
+    expect(reportError.report).not.toHaveBeenCalled();
   });
 
-  it('maps an unknown 4xx code to a technical error', async () => {
+  it('maps an unknown 4xx code to a technical error and reports it once', async () => {
     server.use(http.post('*/api/v1/orders/:orderId/cancel', () => problem(422, 'SOMETHING_NEW')));
 
-    await expect(adapter.cancelOrder(command)).rejects.toMatchObject({ failure: 'unexpected' });
+    const failure: unknown = await adapter.cancelOrder(command).catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({ failure: 'unexpected' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(failure);
+  });
+
+  it('passes a call the caller aborted on unchanged and does not report it', async () => {
+    server.use(
+      getListOrdersMockHandler(async () => {
+        await delay('infinite');
+        return getListOrdersResponseMock();
+      }),
+    );
+    const controller = new AbortController();
+
+    const call = adapter.loadOrders({ page: 0, size: 20 }, controller.signal);
+    controller.abort();
+
+    await expect(call).rejects.not.toBeInstanceOf(TechnicalError);
+    expect(reportError.report).not.toHaveBeenCalled();
   });
 });

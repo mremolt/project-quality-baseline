@@ -27,6 +27,8 @@ What the sync creates, replaces and never touches: [agent-skills.md](../08-cross
                                           (NestJS: package.json, package-lock.json, .nvmrc, compose.yaml, configuration-keys.yaml, src/)
     openapi/orders-v1.yaml              ← committed spec (API-CON-03)
   frontend/                             ← Angular: package.json, angular.json, orval.config.ts, src/; bundle ships in the BFF image (REL-FE-01)
+                                          (React SPA: package.json, vite.config.ts, orval.config.ts, src/, bundle in the BFF image;
+                                           Next.js: package.json, next.config.ts, orval.config.ts, Dockerfile, src/, its own image, NEXT-D2)
     public/.well-known/security.txt     ← served with the SPA (SEC-INC-02)
 ```
 
@@ -72,8 +74,8 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
   | Frontend E2E (stubbed) | `npm run e2e` in `frontend/` (TS-TEST-10) | frontend with UI affected | yes, when it runs |
   | Security | dependency scan, secret scan, SAST (SEC-CI-01) | every pull request and push to `main`, no path filter | yes |
   | Migration lint | REL-DB-06 | migrations changed | yes, when it runs |
-  | Image build | image with SBOM (REL-IMG-01/02), frontend bundle embedded in the BFF image (REL-FE-02) | push to `main` and release branches; pull requests that need `e2e:smoke` | via the jobs that use it |
-  | E2E smoke | `npm run e2e:smoke` against the image of this commit (REPO-CI-04, SPRING-DEV-10, NEST-DEV-12) | push to `main`, before a release, pull requests that touch the spec | yes, when it runs |
+  | Image build | image with SBOM (REL-IMG-01/02), frontend bundle embedded in the BFF image (REL-FE-02); a Next.js frontend builds its own image (NEXT-D2) | push to `main` and release branches; pull requests that need `e2e:smoke` | via the jobs that use it |
+  | E2E smoke | `npm run e2e:smoke` against the image of this commit (REPO-CI-04, SPRING-DEV-10, NEST-DEV-12, NEXT-REL-21) | push to `main`, before a release, pull requests that touch the spec | yes, when it runs |
   | Image scan | gate table in [secure-pipeline.md](../08-crosscutting-concepts/security/secure-pipeline.md) | after the image build (report); Release stage (gate) | release gate (REL-CD-02) |
   | Merge status | aggregates every job above (REPO-CI-03) | always | **the only required check** |
   | Deploy | REL-CD-02 stages | push to `main`, release tag, approval | — |
@@ -86,12 +88,12 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
   |---|---|
   | `backend/**` | backend |
   | `backend/openapi/**` | backend **and** every frontend generating from it |
-  | `frontend/**` | frontend, and the BFF image build on `main` |
+  | `frontend/**` | frontend, and the BFF image build on `main` (a Next.js frontend: its own image build) |
   | CI definition, `.editorconfig`, root tooling | all components |
   | `docs/**` only | nothing (or a docs lint job) |
 
 - **REPO-CI-03: The merge gate is one always-reported status.** A required check that a path filter skips either never reports and blocks the merge, or reports as skipped and lets a broken change through, depending on the platform. So: one pipeline with a change-detection step, component jobs that depend on it, and one final job that always runs, fails if any job it aggregates failed, and is the only required status. How each platform does this: [platform examples](#platform-examples).
-- **REPO-CI-04: The `e2e:smoke` tier runs against a backend built from the same commit** ([08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md), NG-TEST-08): the image, with the frontend bundle embedded, started with Docker Compose or Testcontainers in the pipeline (SPRING-DEV-10, NEST-DEV-12). It runs on the main branch and before releases, and on pull requests that touch the spec.
+- **REPO-CI-04: The `e2e:smoke` tier runs against a backend built from the same commit** ([08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md), NG-TEST-08): the image, with the frontend bundle embedded (a Next.js frontend: its own image next to the backend's, NEXT-REL-21), started with Docker Compose or Testcontainers in the pipeline (SPRING-DEV-10, NEST-DEV-12). It runs on the main branch and before releases, and on pull requests that touch the spec.
 - **REPO-CI-05: Each release unit is versioned separately**, with tags prefixed by its component folder (`backend/v1.4.0`, `backend-admin/v2.1.0`). A frontend embedded in the BFF image has no tag of its own; it is released with the BFF (REL-FE-05). A frontend that is its own image (Next.js) is its own release unit (`frontend/v…`). Components that always deploy together share one version tag.
 - **REPO-CI-06:** Security checks run as one job in the single pipeline; see [SEC-CI-01](../08-crosscutting-concepts/security/secure-pipeline.md).
 

@@ -9,7 +9,7 @@ export class ApiRelayService implements ApiRelayUseCase {
   ) {}
 
   async relay(sessionId: string | undefined, call: ApiCall): Promise<Response | undefined> {
-    const token = await this.sessions.accessToken(sessionId);
+    const token = await this.sessions.accessToken(sessionId, call.signal); // the call's deadline covers a refresh
     if (!token) return undefined;
     const headers = new Headers(call.headers);
     headers.set('authorization', `Bearer ${token}`);

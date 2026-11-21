@@ -7,7 +7,13 @@ const STORE_FILE = '\\.slice\\.tsx?$';
 const PAGES_FILE = '^src/features/[^/]+/[^/]+\\.pages\\.tsx?$';
 const SERVER_ACTIONS = '/adapter/in/next/[^/]+-actions\\.ts$';
 const HTTP_MUTATOR = '^src/platform/adapter/out/http/(browser|server)-fetch\\.ts$'; // imported by Orval output only
-const CLIENT_FILE = ['\\.client\\.tsx?$', '\\.composition\\.tsx$', '^src/app/(providers|app-shell|theme)\\.tsx?$'];
+const FEATURE_API_FILE = '^src/features/[^/]+/[^/]+\\.api\\.tsx$'; // the published feature API (REACT-ARCH-11)
+const CLIENT_FILE = [
+  '\\.client\\.tsx?$',
+  '\\.composition\\.tsx$',
+  FEATURE_API_FILE,
+  '^src/app/(providers|app-shell|theme)\\.tsx?$',
+];
 const SERVER_ONLY = ['\\.server\\.tsx?$', 'node_modules/server-only/', 'node_modules/next/dist/[^/]+/headers'];
 const ROUTE_NAMES = '(page|layout|route|loading|error|not-found|template|default)\\.tsx?$';
 const ROUTE_FILE = [`^src/app/${ROUTE_NAMES}`, `^src/app/.*/${ROUTE_NAMES}`]; // one pattern with (.+/)? is rejected as unsafe
@@ -129,7 +135,7 @@ module.exports = {
       comment: 'TS-ARCH-04; the root HTTP setup and feature composition files may configure the HTTP stack',
       from: {
         path: '^src/',
-        pathNot: ['/adapter/out/http/', '^src/platform/adapter/', COMPOSITION_FILE, ROOT_HTTP_SETUP],
+        pathNot: ['/adapter/out/http/', '^src/platform/adapter/', COMPOSITION_FILE, FEATURE_API_FILE, ROOT_HTTP_SETUP],
       },
       to: { path: HTTP_CLIENT_MODULES },
     },
@@ -155,6 +161,14 @@ module.exports = {
         ],
       },
       to: { path: COMPOSITION_FILE },
+    },
+    {
+      name: 'feature-api-without-ui',
+      severity: 'error',
+      comment:
+        'REACT-ARCH-11: the published API imports adapters, use cases and the context only; never UI components or the slice, which would load for every consumer',
+      from: { path: FEATURE_API_FILE },
+      to: { path: ['/adapter/in/ui/', STORE_FILE, COMPOSITION_FILE] },
     },
     {
       name: 'shared-ui-no-features',

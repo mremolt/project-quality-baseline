@@ -13,15 +13,21 @@ export default defineConfig({
     projects: [
       {
         extends: true,
-        test: { name: 'unit', include: ['src/**/*.test.ts', 'test/**/*.test.ts'], exclude: ['**/*.it.test.ts'] },
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.ts', 'test/**/*.test.ts', 'scripts/**/*.test.ts'],
+          exclude: ['**/*.it.test.ts'],
+        },
       },
       {
         extends: true,
         test: {
           name: 'it',
           include: ['src/**/*.it.test.ts', 'test/**/*.it.test.ts'],
+          globalSetup: ['test/postgres.global-setup.ts'], // one migrated PostgreSQL per run (NEST-TEST-07)
           testTimeout: 60_000,
           hookTimeout: 120_000,
+          env: { RESILIENCE_TRANSACTION_GUARD: 'fail' }, // a remote call inside a transaction fails the test (NEST-RES-03)
         },
       },
     ],

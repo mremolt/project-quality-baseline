@@ -14,7 +14,7 @@ How REST APIs between our systems look on the wire, independent of the stack: da
 
 ### Errors
 
-- **API-REST-05: Errors are RFC 9457 `application/problem+json`.** Members: `type`, `title`, `status`, `detail`, plus the extension members `code` (API-REST-07) and `traceId` (OBS-11). Validation failures add `errors`, a list of `{ field, code, message }`. Responses never contain stack traces, SQL, class names or exception messages (Spring: SPRING-SEC-18; NestJS: NEST-SEC-30). Clients branch on `status` and `code`, never on `title`, `detail` or `message`, which may be localized (I18N-03).
+- **API-REST-05: Errors are RFC 9457 `application/problem+json`.** Members: `type`, `title`, `status`, `detail`, plus the extension members `code` (API-REST-07) and `traceId` (OBS-11). Validation failures add `errors`, a list of items with the required members `field` and `code` and an optional `message`; clients never depend on `message`. Responses never contain stack traces, SQL, class names or exception messages (Spring: SPRING-SEC-18; NestJS: NEST-SEC-30). Clients branch on `status` and `code`, never on `title`, `detail` or `message`, which may be localized (I18N-03).
 - **API-REST-06: Status codes follow one table.** The category column is the error category of ARCH-UC-13 ([use-cases.md](../../05-building-block-view/use-cases.md#error-categories)); the adapter maps by category, never by concrete exception (ARCH-ADP-05).
 
 | Situation | Category | Status |

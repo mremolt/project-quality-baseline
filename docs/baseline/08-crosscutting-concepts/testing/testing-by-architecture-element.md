@@ -40,7 +40,7 @@ Follow the test pyramid: many cheap, fast, stable unit tests; fewer integration 
 
 ## Test type, style and doubles per element
 
-The one table for every stack. The TDD style (London or Chicago) is explained in [tdd.md](tdd.md#the-two-styles); stack docs only add the setup per element ([spring.md](spring.md), [typescript.md](typescript.md), [angular.md](angular.md)).
+The one table for every stack. The TDD style (London or Chicago) is explained in [tdd.md](tdd.md#the-two-styles); stack docs only add the setup per element ([spring.md](spring.md), [nestjs.md](nestjs.md), [typescript.md](typescript.md), [angular.md](angular.md), [react.md](react.md), [nextjs.md](nextjs.md)).
 
 | Element | Test type | Style | Doubles |
 |---|---|---|---|

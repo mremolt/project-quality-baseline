@@ -81,8 +81,8 @@ Products get the baseline by running the sync from the baseline repository again
 | `.baseline.json` | project | created once if missing, from the detected stacks ([declared stacks](#declared-stacks)); never changed afterwards |
 | `.agents/skills/<name>` for baseline skills | baseline | the shared skills and those of the declared stacks are replaced; skills the baseline dropped, or that belong only to stacks the project does not declare, are removed (tracked in `.agents/skills/.baseline-skills`); the project's own skills stay |
 | `.claude/skills/<name>` | baseline | symlinks recreated (on Windows without symlink rights: junctions, with a manual step) |
-| `skills-lock.json` | shared | baseline entries merged in (baseline wins for its own entries); entries of dropped baseline skills removed; the project's entries stay |
-| `.claude/hooks/baseline-*` and their entries in `.claude/settings.json` | baseline | replaced; the project's own hooks and settings stay |
+| `skills-lock.json` | shared | baseline entries of the copied skills merged in (baseline wins for its own entries); entries of dropped baseline skills, and of skills that belong only to undeclared stacks, removed; the project's entries stay |
+| `.claude/hooks/baseline-*` and their entries in `.claude/settings.json` | baseline | replaced by the hooks of the declared stacks (and hooks no stack claims); other `baseline-*` hooks and their entries removed; the project's own hooks and settings stay |
 
 Everything else in the project (component folders, other docs, the project's skills) is never touched. `docs/baseline/` is always copied whole, so links between docs keep working; agents read only the stacks the project declares. Projects don't update baseline skills on their own: they re-sync. That keeps all projects on the reviewed versions.
 
@@ -94,7 +94,9 @@ A product lists its stacks in `.baseline.json` at the repository root (project-o
 { "stacks": ["nestjs", "angular"] }
 ```
 
-Known stacks and what they bring are defined in the baseline's `baseline-stacks.json`: `java`, `spring` (requires `java`), `node`, `nestjs` (requires `node`), `typescript` (frontends), `angular` (requires `typescript`), `react` (requires `typescript`; React SPA and the base of Next.js), `nextjs` (requires `react`). Shared skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, `baseline-ide-setup`) are always copied. The sync copies only the skills of the declared stacks and the stacks they require, and keeps only the `AGENTS.md` lines tagged for them (`<!-- stack:<name> -->` in the baseline's `AGENTS.md`; the tag is removed in the product). Without `.baseline.json` the sync detects the stacks from the component folders and writes the file; if it detects nothing, it copies everything and prints a manual step. An unknown stack name stops the sync. Adding a stack later: edit `.baseline.json` and re-sync.
+Known stacks and what they bring are defined in the baseline's `baseline-stacks.json`: `java`, `spring` (requires `java`), `node`, `nestjs` (requires `node`), `typescript` (frontends), `angular` (requires `typescript`), `react` (requires `typescript`; React SPA and the base of Next.js), `nextjs` (requires `react`). Shared skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, `baseline-ide-setup`) are always copied. The sync copies only the skills and Claude Code hooks of the declared stacks and the stacks they require, and keeps only the `AGENTS.md` lines tagged for them (`<!-- stack:<name> -->` in the baseline's `AGENTS.md`; the tag is removed in the product). Without `.baseline.json` the sync detects the stacks from the component folders and writes the file; if it detects nothing, it copies everything and prints a manual step. An unknown stack name stops the sync. Adding a stack later: edit `.baseline.json` and re-sync.
+
+Each entry stack owns a reminder hook (`hooks` in `baseline-stacks.json`): `baseline-spring-reminder`, `baseline-nestjs-reminder`, `baseline-angular-reminder`, `baseline-react-reminder`, `baseline-nextjs-reminder`. Before an agent's first edit of a file inside a component of that stack (detected like the sync does: the stack's marker file in the root or in a first-level component folder), the hook reminds it once per session to load the stack's entry skill. A Next.js component gets only the Next.js reminder, even though `nextjs` requires `react`. The hooks never block.
 
 ## Skill catalogue
 
@@ -155,6 +157,7 @@ Known stacks and what they bring are defined in the baseline's `baseline-stacks.
 - [ ] Added or updated a skill? Lock file, installed files and catalogue updated in the same change, and the diff reviewed?
 - [ ] Never edited a file under `.agents/skills/` that belongs to a third-party skill?
 - [ ] Added or changed a script or hook? Logic in `.mjs`, `.sh` and `.cmd` launchers present, tested on Linux and Windows (TOOL-SKL-08)?
+- [ ] New `baseline-*` hook of a stack? Listed under that stack's `hooks` in `baseline-stacks.json` and registered in `.claude/settings.json` ([declared stacks](#declared-stacks))?
 - [ ] Changed what the sync creates or replaces? The distribution table above updated; nothing else lists it.
 - [ ] New skill or stack? Its entry in `baseline-stacks.json` and its `AGENTS.md` lines tagged (TOOL-SKL-09)?
 

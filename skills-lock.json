@@ -35,7 +35,7 @@
     "baseline-i18n": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "5febdabd3f522ce0537f8c5990a6f78f197e8be2abf41d8e3f50a913d067ebc8"
+      "computedHash": "8eca72d83bd195484a53494f00505d2833db981579f19f655e2246be5113e1e4"
     },
     "baseline-ide-setup": {
       "source": "./skills",
@@ -45,22 +45,22 @@
     "baseline-nestjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "26bc8ae2a761b886fe3c0775d4c2b4eae205a9e5d0f7c51fa7ba3177300b8e82"
+      "computedHash": "10c346d56ffa6c505854cd9aa891f3b1d921fdadf20adcdd78e81f361225c69b"
     },
     "baseline-nextjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "e09398f74998a541d883b98c2189457f61fe24a04a985bce8fb3911930fdc22e"
+      "computedHash": "db192a18b4a155b2456fc4e0576bc08d719f049337c33e9446bd1cf6f64c5470"
     },
     "baseline-react": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "fe7f0d75ff5bc8048e48694c18232d33336942c56540602e74b26094f9e695cb"
+      "computedHash": "8f04dab0c962a1179d9e53bf77827cd43b27b9afa4a9d0c96f605d2293e47a34"
     },
     "baseline-security": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "a502fd00f518df358274228b8f8138e9967e189894a0a3146d3b5bc7abd1ddf8"
+      "computedHash": "e15fee370ed396b1aecfffa19ee93a1a950cee2c7987e44fc7270ec3ae529bc2"
     },
     "baseline-spring": {
       "source": "./skills",
@@ -70,7 +70,7 @@
     "baseline-tdd": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "089167b47eaea66881e567cd145686db638e948574bffe8b39c96ae074c45595"
+      "computedHash": "613ca15e64b75f0126b01dfa6dbe6f7ee3f0cf64e04a74be5e3d80565e4e2170"
     },
     "java-hibernate-jpa": {
       "source": "github/awesome-copilot",

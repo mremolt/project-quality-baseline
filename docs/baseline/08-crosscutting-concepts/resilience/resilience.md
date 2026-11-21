@@ -1,6 +1,6 @@
 # Resilience and Idempotency
 
-How a service behaves when the things it depends on are slow, down or called twice: timeouts, transactions around remote calls, retries, concurrency limits, idempotency, scheduled jobs in a cluster, and caching. The rules are language-neutral; the Spring settings are in [resilience/spring.md](spring.md), the NestJS ones in [resilience/nestjs.md](nestjs.md). Messaging-specific rules (consumers, dead letters, outbox) are in [messaging/messaging.md](../messaging/messaging.md).
+How a service behaves when the things it depends on are slow, down or called twice: timeouts, transactions around remote calls, retries, concurrency limits, idempotency, scheduled jobs in a cluster, and caching. The rules are language-neutral; the Spring settings are in [resilience/spring.md](spring.md), the NestJS ones in [resilience/nestjs.md](nestjs.md), the Next.js server's in [resilience/nextjs.md](nextjs.md). Messaging-specific rules (consumers, dead letters, outbox) are in [messaging/messaging.md](../messaging/messaging.md).
 
 Placement follows the hexagon: timeouts, retries, circuit breakers, concurrency limits and caches are **adapter** concerns, because they depend on the technology. Whether an operation may run twice is a **use case** decision, so idempotency is decided in the application layer through ports (ARCH-ADP-01, ARCH-UC).
 
@@ -76,7 +76,7 @@ Placement follows the hexagon: timeouts, retries, circuit breakers, concurrency 
 - **RES-CCH-01: A cache is an adapter concern.** It wraps an outgoing port's implementation (or sits in the outgoing adapter), never in `domain`, `ports` or `application`. The core does not know whether an answer came from a cache.
 - **RES-CCH-02: What may be cached:** reference and configuration data, results of expensive reads from other systems, and anything whose staleness the business accepts. **Not cached** without an ADR: authorization decisions, data that depends on the caller unless the caller (and tenant) is part of the key, and anything whose staleness causes a wrong write.
 - **RES-CCH-03: Every cache has a maximum size and a time to live,** and its invalidation is written down: TTL only (staleness up to the TTL accepted), or explicit eviction on change (and how other instances learn of it). Unbounded caches are not allowed.
-- **RES-CCH-04: Local in-memory caches are the default.** A shared cache (Redis or similar) is new infrastructure and needs an ADR. HTTP response caching of authenticated API responses is off (`Cache-Control: no-store`, SPRING-SEC-13, NEST-SEC-20).
+- **RES-CCH-04: Local in-memory caches are the default.** A shared cache (Redis or similar) is new infrastructure and needs an ADR. A Node BFF's session store under NODE-BFF-03 is not a cache: it is covered by the decision to adopt the BFF (NODE-BFF-10, [node-bff.md](../security/node-bff.md)), not by a separate Redis ADR. HTTP response caching of authenticated API responses is off (`Cache-Control: no-store`, SPRING-SEC-13, NEST-SEC-20).
 - **RES-CCH-05: Cached adapters are tested** for a hit (the dependency is called once for two reads), expiry or eviction, and key separation per caller or tenant where RES-CCH-02 requires it.
 
 ## Anti-patterns

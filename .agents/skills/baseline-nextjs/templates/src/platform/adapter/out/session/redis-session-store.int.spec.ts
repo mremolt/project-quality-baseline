@@ -10,7 +10,6 @@ const data = (generation: number): SessionData => ({
   createdAt: 1,
   lastSeenAt: 2,
   xsrfToken: 'x',
-  pendingLogin: undefined,
   user: {
     subject: 'u',
     sid: undefined,
@@ -69,5 +68,31 @@ describe('RedisSessionStore (Redis in a container)', () => {
     ]);
 
     expect(results.filter(Boolean)).toHaveLength(1);
+  });
+
+  it('keeps a pending login under its own key with its TTL and hands it out once', async () => {
+    const login = { codeVerifier: 'v', state: 's', nonce: 'n', returnTo: '/orders' };
+    await store.savePendingLogin('l-1', login, 600);
+
+    expect(await redis.ttl('login:l-1')).toBeGreaterThan(595);
+    expect(await store.get('l-1')).toBeUndefined(); // never a session
+    const taken = await Promise.all([store.takePendingLogin('l-1'), store.takePendingLogin('l-1')]);
+    expect(taken.filter(Boolean)).toEqual([login]);
+  });
+
+  it('gives the refresh lock to one holder, releases it only for that holder and lets it expire', async () => {
+    const [first, second] = await Promise.all([
+      store.acquireRefreshLock('s-5', 60_000),
+      store.acquireRefreshLock('s-5', 60_000),
+    ]);
+    const holder = first ?? second;
+
+    expect([first, second].filter(Boolean)).toHaveLength(1);
+    await store.releaseRefreshLock('s-5', 'someone-else');
+    expect(await store.acquireRefreshLock('s-5', 60_000)).toBeUndefined();
+    await store.releaseRefreshLock('s-5', holder ?? '');
+    expect(await store.acquireRefreshLock('s-5', 50)).toBeDefined();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(await store.acquireRefreshLock('s-5', 50)).toBeDefined(); // PX expiry: a crashed holder blocks no one
   });
 });

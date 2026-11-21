@@ -12,10 +12,14 @@ export async function createApp(): Promise<NestFastifyApplication> {
   const http = loadConfig(HttpConfig);
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
+    // Request limits set explicitly (NEST-SEC-22)
     new FastifyAdapter({
       bodyLimit: http.HTTP_BODY_LIMIT_BYTES,
+      http: { maxHeaderSize: http.HTTP_MAX_HEADER_BYTES },
       requestTimeout: http.HTTP_REQUEST_TIMEOUT_MS,
       connectionTimeout: http.HTTP_REQUEST_TIMEOUT_MS,
+      handlerTimeout: http.HTTP_HANDLER_TIMEOUT_MS,
+      keepAliveTimeout: http.HTTP_KEEP_ALIVE_TIMEOUT_MS,
       trustProxy: http.HTTP_TRUSTED_PROXIES.length > 0 ? http.HTTP_TRUSTED_PROXIES : false,
     }),
     { bufferLogs: true },

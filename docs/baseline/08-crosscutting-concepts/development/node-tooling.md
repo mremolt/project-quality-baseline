@@ -37,12 +37,12 @@ Runtime, compiler, lint and build settings for Node.js backends. The TypeScript 
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src", "scripts", "vitest.config.ts", "eslint.config.ts"]
+  "include": ["src", "test", "scripts", "vitest.config.ts", "eslint.config.ts"]
 }
 ```
 
   `tsconfig.build.json` extends it with `"rootDir": "src"`, `"include": ["src"]` and excludes `src/**/*.test.ts`. `@types/node` matches the Node major. Relative imports carry the `.js` extension (ESM).
-- **NODE-TOOL-03: Production runs compiled JavaScript.** `npm run build` (`tsc -p tsconfig.build.json`) writes `dist/`; the image starts `node dist/main.js`. No `ts-node`, `tsx` or Node's type stripping in production (type stripping cannot run decorators).
+- **NODE-TOOL-03: Production runs compiled JavaScript.** `npm run build` (`tsc -p tsconfig.build.json`) writes `dist/`; the image starts `node --import ./dist/instrumentation.js dist/main.js` (NEST-OBS-05). No `ts-node`, `tsx` or Node's type stripping in production (type stripping cannot run decorators).
 
 ## Lint and format
 
@@ -74,7 +74,7 @@ Runtime, compiler, lint and build settings for Node.js backends. The TypeScript 
 | Script | Does |
 |---|---|
 | `build` | `tsc -p tsconfig.build.json` |
-| `start` | `node dist/main.js` (local check of the built app) |
+| `start` | `node --import ./dist/instrumentation.js dist/main.js` (local check of the built app, started as the image starts it) |
 | `start:dev` | Watch mode against local services ([nestjs-local-development.md](../../07-deployment-view/nestjs-local-development.md)) |
 | `typecheck` | `tsc -p tsconfig.json --noEmit` (includes tests and scripts) |
 | `lint` / `lint:fix` | ESLint with `--max-warnings 0` |
@@ -85,7 +85,8 @@ Runtime, compiler, lint and build settings for Node.js backends. The TypeScript 
 | `openapi` | Regenerates the committed spec: `OPENAPI_UPDATE=true vitest run --project unit openapi`; without the variable the same test fails on a difference ([api/nestjs-openapi.md](../api/nestjs-openapi.md)) |
 | `generate:api` | Generates outbound clients with Orval, only when the service has some; `build`, `typecheck` and `test` call it first |
 | `migrate` | `node dist/migrate.js`: migrate-only entrypoint ([nestjs-delivery.md](../../07-deployment-view/nestjs-delivery.md)) |
-| `verify` | The local gate from a clean checkout: `format:check`, `lint`, `typecheck`, `check:arch`, `test`, `test:it`, `build` |
+| `check:migrations` | `node scripts/check-migrations.mjs`: merged migrations unchanged (NEST-DB-19 in [persistence/nestjs.md](../persistence/nestjs.md)) |
+| `verify` | The local gate from a clean checkout: `format:check`, `lint`, `typecheck`, `check:arch`, `check:migrations`, `test`, `test:it`, `build` |
 
   Scripts never rely on `pre*`/`post*` hooks (`ignore-scripts=true`, TS-TOOL-11). `verify` is what the backend's CI job runs (REPO-CI-01).
 

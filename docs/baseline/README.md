@@ -11,7 +11,7 @@ Shared rules apply to **every project, regardless of language or framework**. St
 | 1 | [Introduction and goals](01-introduction-and-goals/README.md) | Purpose of the baseline, quality goals, stakeholders | — |
 | 2 | [Architecture constraints](02-architecture-constraints/README.md) | Technical and organisational constraints every project inherits | — |
 | 3 | [Context and scope](03-context-and-scope/README.md) | The baseline, consuming projects, agents, skill sources | — |
-| 4 | [Solution strategy](04-solution-strategy/README.md) | Hexagonal architecture, baseline defaults D1–D16, stack strategies, Spring and NestJS libraries | `ARCH-DEP-*`, `SPRING-LIB-*`, `NEST-LIB-*` |
+| 4 | [Solution strategy](04-solution-strategy/README.md) | Hexagonal architecture, baseline defaults D1–D17, stack strategies, Spring and NestJS libraries | `ARCH-DEP-*`, `SPRING-LIB-*`, `NEST-LIB-*` |
 | 5 | [Building block view](05-building-block-view/README.md) | Code organisation, use cases, adapters; per-stack package and folder structure | `ARCH-ORG/UC/ADP-*`, `JAVA-ARCH-*`, `SPRING-ARCH-*`, `NODE-ARCH-*`, `NEST-ARCH-*`, `TS-ARCH-*`, `NG-ARCH-*`, `REACT-ARCH-*`, `NEXT-ARCH-*` |
 | 6 | [Runtime view](06-runtime-view/README.md) | Typical request, message and login flows through the rings | — |
 | 7 | [Deployment view](07-deployment-view/README.md) | Repository and component layout, CI, local development environment, delivery and release | `REPO-*`, `SPRING-DEV-*`, `NEST-DEV-*`, `NEXT-DEV-*`, `REL-*`, `SPRING-REL-*`, `NEST-REL-*`, `NEXT-REL-*` |

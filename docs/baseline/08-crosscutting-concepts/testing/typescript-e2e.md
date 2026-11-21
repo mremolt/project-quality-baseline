@@ -44,7 +44,7 @@ const responsive = { grep: /@responsive/ };
 const themed = { grep: /@theme/ };
 
 export default defineConfig({
-  retries: process.env.CI ? 1 : 0, // TS-TEST-31
+  retries: process.env['CI'] ? 1 : 0, // TS-TEST-31 (bracket access: noPropertyAccessFromIndexSignature, TS-TOOL-01)
   use: { baseURL: 'http://localhost:4200', reducedMotion: 'reduce' },
   projects: [
     // T1: npm run e2e  (playwright test --project=stubbed-*)

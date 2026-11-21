@@ -15,7 +15,7 @@
 | Chicago / London style | TDD styles: real collaborators (Chicago) vs. mocked collaborators (London) ([tdd.md](../08-crosscutting-concepts/testing/tdd.md)) |
 | Command / Query / Result | Input (`…Command` changes state, `…Query` reads) and output (`…Result`) of one use case, validated on construction; the incoming port itself is the `…UseCase` ([use-cases.md](../05-building-block-view/use-cases.md)) |
 | Component folder | Top-level folder of a product repository holding one deployable (`backend/`, `frontend/`) (REPO-LAY-03) |
-| Composition root | The one place that wires adapters, ports and services (Spring: the `@SpringBootApplication` class; NestJS: the context module, NEST-ARCH-01) |
+| Composition root | The one place that wires adapters, ports and services (Spring: the `@SpringBootApplication` class; NestJS: the context module, NEST-ARCH-01; React: the feature's composition file, REACT-ARCH-10; Next.js: also the request-scoped server composition, NEXT-ARCH-03) |
 | Controller / processor (GDPR) | The controller decides purpose and means of processing personal data; a processor processes it on the controller's behalf under a data processing agreement (AVV). See [data-protection.md](../08-crosscutting-concepts/data-protection/data-protection.md) |
 | Conventional Commits | Commit message convention (`feat:`, `fix:`, `feat!:` …) used for squash-merge titles and generated changelogs (REL-BR-03) |
 | Core | Domain + ports + application: everything inside the adapters ([hexagonal-architecture.md](../04-solution-strategy/hexagonal-architecture.md)) |
@@ -44,7 +44,7 @@
 | Roll forward | Fixing a faulty release with a new release instead of reverting to the previous one; the default (REL-RB-01) |
 | Route handler | A Next.js `route.ts` file answering HTTP requests; an incoming adapter, used for the BFF endpoints, the API proxy and the probes, not for business APIs ([05-building-block-view/nextjs.md](../05-building-block-view/nextjs.md)) |
 | Rule ID | Stable identifier of a rule (`PREFIX-AREA-NN`), cited in reviews, commits and ADRs |
-| Runtime config | Per-environment frontend configuration loaded at startup from the serving origin (`/config.json`), not built in (CFG-11, NG-CFG) |
+| Runtime config | Per-environment frontend configuration loaded at startup from the serving origin (`/config.json`), not built in (CFG-11, NG-CFG, REACT-CFG); a Next.js app passes a public subset from the server instead (NEXT-CFG-05) |
 | SAST / DAST / SCA | Static and dynamic application security testing; software composition analysis (dependency scanning) ([secure-pipeline.md](../08-crosscutting-concepts/security/secure-pipeline.md)) |
 | SBOM | Software bill of materials (CycloneDX), published with releases (SEC-CI-03) |
 | Server action | A Next.js function marked `'use server'` that the browser calls over HTTP; a public endpoint and an incoming adapter that calls one use case ([security/nextjs.md](../08-crosscutting-concepts/security/nextjs.md)) |
@@ -54,10 +54,10 @@
 | Skill override | A documented conflict between a skill and these docs, resolved in favour of the docs |
 | SLI / SLO | Service level indicator (a measured ratio such as successful requests) and objective (its target over a window), defined per user journey (OBS-16) |
 | Slice | A Redux Toolkit unit of state, reducers and actions; in React frontends the view state of a feature's UI adapter, injected lazily into the one app store ([ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md)) |
-| Slice test | Spring test that starts only one layer of the context (`@WebMvcTest`, `@DataJpaTest`) |
+| Slice test | (Spring) test that starts only one layer of the context (`@WebMvcTest`, `@DataJpaTest`) |
 | Stereotype | Our component annotations (`@UseCase`, `@WebAdapter`, `@PersistenceAdapter`, `@MessagingAdapter`, `@SchedulingAdapter`, `@MetricsAdapter`) (SPRING-ARCH-04) |
 | Timeout | Upper bound on how long an outbound call may take; mandatory for every remote call (RES-TMO-01) |
 | Trace context | W3C `traceparent` header carrying trace and span id across hops; the trace id is the correlation id (OBS-10/11) |
 | Trunk-based development | Short-lived branches merged into `main` frequently; `main` is always releasable (REL-BR-01) |
 | Use case | One business operation, implemented in the application ring behind an incoming port |
-| View state | UI-only state of a screen, held in a Signal Store in the UI adapter (NG-STATE) |
+| View state | UI-only state of a screen, held in the UI adapter: a Signal Store in Angular (NG-STATE), a Redux Toolkit slice in React (REACT-STATE) |

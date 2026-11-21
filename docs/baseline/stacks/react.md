@@ -7,7 +7,7 @@ A React project reads the shared docs, [stacks/typescript.md](typescript.md) and
 | Doc | Covers | Rule IDs |
 |---|---|---|
 | [05-building-block-view/react.md](../05-building-block-view/react.md) | Layout, naming, tokens and composition, components and hooks, data loading, forms, error boundaries, (React SPA) Vite, router, lazy routes, chunk reload, bootstrap, new app, dependency-cruiser | `REACT-ARCH-*` |
-| [08-crosscutting-concepts/ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md) | Redux Toolkit view state (one store, lazy slices, thunks with use-case contracts), TanStack Query rules | `REACT-STATE-*` |
+| [08-crosscutting-concepts/ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md) | Redux Toolkit view state (one store, lazy slices, shared view state only), TanStack Query rules for queries and command mutations | `REACT-STATE-*` |
 | [08-crosscutting-concepts/ui/react-mui.md](../08-crosscutting-concepts/ui/react-mui.md) | MUI theme, tokens, the UI-* patterns in MUI, forms, dialogs, status messages, route title and focus | `REACT-UI-*` |
 | [08-crosscutting-concepts/api/react-openapi-clients.md](../08-crosscutting-concepts/api/react-openapi-clients.md) | Orval `fetch` client, platform mutator (XSRF, timeouts, 401, reporting), adapters, MSW handlers | `REACT-API-*` |
 | [08-crosscutting-concepts/security/react.md](../08-crosscutting-concepts/security/react.md) | JSX and DOM safety, URLs, (React SPA) CSP nonce and Trusted Types, zod jitless, XSRF, security E2E | `REACT-SEC-*` |
@@ -47,7 +47,7 @@ The most frequent ones:
 | `fetch` or a generated client in a component, `useEffect` to load data | TanStack Query whose `queryFn` calls a use case (REACT-ARCH-13, TS-ARCH-04) |
 | Orval `react-query` client, RTK Query | Orval `fetch` client in `adapter/out/http`; RTK only for view state (REACT-D8, REACT-STATE-09) |
 | One global slice holding backend data | Lazily injected feature slices with UI state only; backend data in the query cache (REACT-STATE-02/04) |
-| Thunk that fetches | Thunk receives the use-case contract as an argument (REACT-STATE-03) |
+| Thunk that fetches or runs a command | `useMutation` whose `mutationFn` calls the use case from the feature's selector hook (REACT-STATE-03) |
 | File-based routing, `.lazy()` route files, `React.lazy` routes | Code-based TanStack Router routes with `lazyRouteComponent` (REACT-ARCH-20/21) |
 | Manual `useMemo`/`useCallback`/`memo` everywhere | React Compiler; manual memoization only when measured (REACT-ARCH-05) |
 | Tailwind, shadcn/ui, hard-coded colours | MUI theme tokens (REACT-D5, REACT-UI-*) |

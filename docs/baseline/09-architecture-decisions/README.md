@@ -10,9 +10,9 @@ The baseline records its own decisions as defaults with a reason next to the rul
 
 | Decisions | Where |
 |---|---|
-| Baseline defaults D1–D16 | [04-solution-strategy/README.md](../04-solution-strategy/README.md#baseline-defaults) |
-| Stack defaults (`JAVA-D*`, `SPRING-D*`, `NODE-D*`, `NEST-D*`, `TS-D*`) | [04-solution-strategy/](../04-solution-strategy/README.md#stack-strategies) |
-| Libraries chosen and rejected | [spring-libraries.md](../04-solution-strategy/spring-libraries.md#not-used) |
+| Baseline defaults D1–D17 | [04-solution-strategy/README.md](../04-solution-strategy/README.md#baseline-defaults) |
+| Stack defaults (`JAVA-D*`, `SPRING-D*`, `NODE-D*`, `NEST-D*`, `TS-D*`, `REACT-D*`, `NEXT-D*`) | [04-solution-strategy/](../04-solution-strategy/README.md#stack-strategies) |
+| Libraries chosen and rejected | [spring-libraries.md](../04-solution-strategy/spring-libraries.md#not-used), [nestjs-libraries.md](../04-solution-strategy/nestjs-libraries.md#not-used) |
 | Skills installed, adapted and rejected | [agent-skills.md](../08-crosscutting-concepts/development/agent-skills.md#skill-catalogue) |
 
 Changing a baseline decision is a reviewed pull request in the baseline repository that updates the default, its reason and every rule that depends on it.

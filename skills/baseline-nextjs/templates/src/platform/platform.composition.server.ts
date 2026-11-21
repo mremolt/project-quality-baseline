@@ -7,13 +7,17 @@ import { createClient } from 'redis';
 import { createApiProxy } from './adapter/in/next/api-proxy';
 import type { AuthRouteHandlers, RouteHandler } from './adapter/in/next/auth-route-handlers';
 import { createAuthRouteHandlers } from './adapter/in/next/auth-route-handlers';
+import { createClientErrorRouteHandler } from './adapter/in/next/client-error-route-handler';
 import { SESSION_COOKIE } from './adapter/in/next/cookies';
 import { createReadinessHandler, livenessHandler } from './adapter/in/next/health-route-handlers';
 import { FetchBackendRelay } from './adapter/out/http/fetch-backend-relay';
 import { configureServerFetch } from './adapter/out/http/server-fetch';
+import { logger } from './adapter/out/logging/logger';
+import { PinoClientErrorLog } from './adapter/out/logging/pino-client-error-log';
 import { OpenIdClientIdentityProvider } from './adapter/out/oidc/openid-client-identity-provider';
 import { RedisSessionStore } from './adapter/out/session/redis-session-store';
 import { ApiRelayService } from './application/api-relay.service';
+import { ClientErrorIntakeService } from './application/client-error-intake.service';
 import { SessionService } from './application/session.service';
 import type { PublicConfig } from './config/public-config';
 import type { ServerConfig } from './config/server-config';
@@ -49,7 +53,13 @@ function createPlatform() {
     socket: { connectTimeout: 2_000 },
     commandOptions: { timeout: 1_000 }, // RES-TMO-01
   });
-  const connected = redis.connect();
+  // node-redis ends the process on an 'error' event without a listener; it reconnects by itself (NEXT-OBS-10)
+  redis.on('error', (error: unknown) => {
+    logger.warn({ err: error }, 'session store connection failed');
+  });
+  redis.connect().catch((error: unknown) => {
+    logger.error({ err: error }, 'session store connect failed'); // handled: readiness stays DOWN
+  });
   const sessions: SessionUseCase = new SessionService(
     new RedisSessionStore(redis),
     new OpenIdClientIdentityProvider(
@@ -65,6 +75,8 @@ function createPlatform() {
       idleMs: config.SESSION_IDLE_MINUTES * 60_000,
       absoluteMs: config.SESSION_ABSOLUTE_HOURS * 3_600_000,
       refreshSkewMs: 30_000,
+      refreshLockMs: config.OIDC_TIMEOUT_S * 1_000 + 1_000, // outlives one IdP refresh call
+      refreshPollMs: 100,
       returnToPattern: /^\/(?!\/)[\w\-/?=&.]{0,200}$/,
     },
     now,
@@ -79,12 +91,18 @@ function createPlatform() {
     auth: createAuthRouteHandlers(sessions, config.APP_ORIGIN),
     apiProxy: createApiProxy(
       sessions,
-      new ApiRelayService(sessions, new FetchBackendRelay(config.API_BASE_URL, config.API_TIMEOUT_MS)),
+      new ApiRelayService(sessions, new FetchBackendRelay(config.API_BASE_URL)),
+      config.API_TIMEOUT_MS, // one deadline for session lookup, refresh and backend call (NEXT-RES-03)
     ),
+    clientErrors: createClientErrorRouteHandler(new ClientErrorIntakeService(new PinoClientErrorLog()), {
+      appOrigin: config.APP_ORIGIN,
+      maxBodyBytes: 16_384,
+      maxReportsPerMinute: 120,
+      now,
+    }),
     readyz: createReadinessHandler({
       isReady: async () => {
-        if (shuttingDown) return false;
-        await connected;
+        if (shuttingDown || !redis.isReady) return false; // never waits for a connection that does not come
         return (await redis.ping()) === 'PONG';
       },
     }),
@@ -106,7 +124,7 @@ async function currentSessionId(): Promise<string | undefined> {
 configureServerFetch(() => ({
   apiBaseUrl: platform().config.API_BASE_URL,
   timeoutMs: platform().config.API_TIMEOUT_MS,
-  accessToken: async () => platform().sessions.accessToken(await currentSessionId()),
+  accessToken: async (deadline) => platform().sessions.accessToken(await currentSessionId(), deadline),
 }));
 
 export const authRouteHandlers: AuthRouteHandlers = {
@@ -116,6 +134,8 @@ export const authRouteHandlers: AuthRouteHandlers = {
 };
 
 export const apiProxy: RouteHandler = (request) => platform().apiProxy(request);
+
+export const clientErrorRouteHandler: RouteHandler = (request) => platform().clientErrors(request);
 
 export const healthRouteHandlers: { livez: RouteHandler; readyz: RouteHandler } = {
   livez: livenessHandler, // the process only, independent of configuration and dependencies (OBS-02)

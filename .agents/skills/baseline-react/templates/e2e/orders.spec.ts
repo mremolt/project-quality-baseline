@@ -11,7 +11,7 @@ const pageOf = (items: Order[], number = 0, totalPages = 1): OrderPage =>
   getListOrdersResponseMock({ items, page: { number, size: 20, totalElements: items.length, totalPages } });
 
 test.describe('orders', () => {
-  test('@theme lists the orders, accessible and within its request budget', async ({
+  test('@theme @responsive lists the orders, accessible and within its request budget', async ({
     page,
     stub,
     expectAccessible,

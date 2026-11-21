@@ -38,7 +38,7 @@ Hardening for NestJS backends on Node on top of authentication and authorization
   *Why:* unbounded input is a resource-exhaustion hole (ASVS V2, Top 10 A10), and on Node one slow request can hold the event loop.
 - **NEST-SEC-23: Untrusted JSON is parsed strictly and never merged into existing objects.**
   - Fastify's `onProtoPoisoning` and `onConstructorPoisoning` stay at their default `'error'`: a body with a `__proto__` or `constructor.prototype` key is rejected with 400.
-  - Request bodies, query strings, parameters, Kafka payloads and responses of outbound calls are parsed with zod schemas; request schemas are strict (`z.strictObject` or `.strict()`), so unknown keys fail with 400.
+  - Request bodies, query strings, parameters, Kafka payloads and responses of outbound calls are parsed with zod schemas; request schemas are `z.object(…)`, which strips unknown keys (tolerant reader, API-REST-04, NEST-REST-08), so only declared fields reach the handler (NEST-SEC-27).
   - Untrusted objects are never copied with `Object.assign`, spread or a deep-merge or path-setting helper (`lodash.merge`, `set`, `defaultsDeep` and similar) onto existing objects, configuration or prototypes. Maps keyed by user input are `Map` or `Object.create(null)`.
   - Polymorphic payloads are closed unions (`z.discriminatedUnion` with a fixed tag); no type names from the payload pick a class or a module.
   - Consider starting Node with `--disable-proto=delete` (removes `Object.prototype.__proto__`; the reference app runs unchanged with it); a product that adopts it runs its full test suite with the flag.
@@ -63,7 +63,7 @@ Hardening for NestJS backends on Node on top of authentication and authorization
 ## Abuse protection and audit
 
 - **NEST-SEC-32: Rate limiting answers 429 and sits at the gateway or reverse proxy by default.** In the service only for business limits (password-reset or invitation requests per account, exports, expensive searches): `@fastify/rate-limit` 11 registered with `global: false`, limits per route with `@RouteConfig({ rateLimit: { max, timeWindow } })` from `@nestjs/platform-fastify`, keyed by the `Caller` id on authenticated routes (`keyGenerator`). Shared counters across instances use its `redis` option. Login throttling belongs to the IdP. The client address is `request.ip`, which is only right with NEST-SEC-11.
-- **NEST-SEC-33: Security events are logged as structured audit events:** login, logout, denied access (401/403 by the guard), token validation failure, permission change, administrative action, key destruction (SEC-CRY-04). Each carries the pseudonymous user id and the trace id and no other personal or sensitive data (NEST-LOG rules), and a test asserts each event type. Storage, retention and alerting: SEC-AUD-01..03.
+- **NEST-SEC-33: Security events are logged as structured audit events:** login, logout, denied access (401/403 by the guard), token validation failure, key set unavailable (NEST-SEC-04; an outage, not an attack, but it explains a burst of 503), permission change, administrative action, key destruction (SEC-CRY-04). Each carries the pseudonymous user id and the trace id and no other personal or sensitive data (NEST-LOG rules), and a test asserts each event type. Storage, retention and alerting: SEC-AUD-01..03.
 
 ## Process and runtime
 
@@ -105,7 +105,7 @@ The framework-neutral BFF rules are NODE-BFF-01..10 in [node-bff.md](node-bff.md
 - **NEST-SEC-48: CSRF (NODE-BFF-06) uses `@fastify/csrf-protection` 8 with `sessionPlugin: '@fastify/session'`** and `getToken: (req) => req.headers['x-xsrf-token']` (the default also reads the body and other headers). The `XSRF-TOKEN` cookie value is `await reply.generateCsrf()`; `fastify.csrfProtection` runs as `onRequest` hook on every unsafe method, logout included.
 - **NEST-SEC-49: Lifetimes and refresh (NODE-BFF-07) run in an `onRequest` hook** that checks `lastSeenAt` and `createdAt` in the session; login calls `await request.session.regenerate()` before storing the user.
 - **NEST-SEC-50: Logout (NODE-BFF-08) calls `request.session.destroy()`** and clears the cookie as in NEST-SEC-47; the back-channel endpoint is a `@Public()` route with a body limit.
-- **NEST-SEC-51: The BFF serves the SPA (NODE-BFF-09, REL-FE-01..05 in [container-runtime.md](../../07-deployment-view/container-runtime.md)) with `@fastify/static` 10 and helmet's CSP directive functions:**
+- **NEST-SEC-51: The BFF serves the SPA (NODE-BFF-09, REL-FE-01..05 in [container-runtime.md](../../07-deployment-view/container-runtime.md)) with `@fastify/static` 10 (an exact-version dependency added together with this serving code; the service skeleton does not contain it) and helmet's CSP directive functions:**
   - hashed assets through `@fastify/static` with `index: false` and `dotfiles: 'ignore'` (the default `'allow'` serves dotfiles), the cache header via `setHeaders(reply, path)`;
   - `index.html` is never served by the static plugin (it would go out with the nonce placeholder and a cache header); keep the template outside the static root or route `/index.html` to the same handler as deep links;
   - the handler creates the nonce, helmet's CSP directives read it through directive functions, and the handler replaces the build's nonce placeholder where the frontend stack says (Angular: the `ngCspNonce` attribute and the `nonce` attribute of every `<script>`, `<style>` and stylesheet `<link>`, with `trusted-types angular angular#bundler angular#components`, NG-SEC-05/06);
@@ -116,7 +116,7 @@ The framework-neutral BFF rules are NODE-BFF-01..10 in [node-bff.md](node-bff.md
 
 - [ ] Header change: helmet still global, API CSP `useDefaults: false`, `no-store` hook intact, header test updated (NEST-SEC-20)?
 - [ ] Limits set on the adapter, schema lengths present, multipart limits explicit (NEST-SEC-22, NEST-SEC-37)?
-- [ ] Strict zod schemas, no merge or spread of untrusted objects, prototype-poisoning options at `'error'` (NEST-SEC-23)?
+- [ ] zod schemas that strip unknown keys, no merge or spread of untrusted objects, prototype-poisoning options at `'error'` (NEST-SEC-23)?
 - [ ] No user-controlled or backtracking regex; no `eval`-like code, `vm` or `child_process` outside the one adapter (NEST-SEC-24, NEST-SEC-26)?
 - [ ] New query: bind parameters only; `sql.raw`/`sql.ref`/`sql.id`/`sql.lit` only from an allow-list (NEST-SEC-25)?
 - [ ] New request schema: no owner, tenant, role or audit fields (NEST-SEC-27); tenant from the `Caller` (NEST-SEC-28); 404 for foreign objects (NEST-SEC-29)?

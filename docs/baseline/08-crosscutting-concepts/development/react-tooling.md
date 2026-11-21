@@ -125,8 +125,9 @@ export default defineConfig({
 | `check:arch` | `depcruise src` |
 | `check:bundle` | `node scripts/check-bundle.ts` (React SPA, REACT-TOOL-13) |
 | `test` | `npm run generate:api && vitest run` |
-| `e2e` | `playwright test` against the built `dist/` (REACT-TEST-18); `npm run build` runs before it |
-| `e2e:nightly`, `e2e:smoke` | `playwright test` with the projects of TS-TEST-18 and the smoke project |
+| `e2e` | `playwright test --project=stubbed-*` against the built `dist/` (REACT-TEST-18, T1 of TS-TEST-18); `npm run build` runs before it |
+| `e2e:nightly` | `playwright test --project=stubbed-* --project=nightly-*` (T2 of TS-TEST-18) |
+| `e2e:smoke` | `playwright test --project=smoke` against `SMOKE_BASE_URL`, a running BFF with the backend (TS-TEST-10); verify before first use |
 | `verify` | `generate:api`, `format:check`, `lint`, `check:arch`, `test`, `build`, `check:bundle` |
 
   `check:bundle` is the one addition to `verify` and runs after `build`. Extra scripts (`dev`, `typecheck`) are allowed; none relies on a `pre*` hook (TS-TOOL-11). From a clean tree `verify` took about 26 s in the reference project.

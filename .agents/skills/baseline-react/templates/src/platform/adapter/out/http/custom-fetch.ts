@@ -46,21 +46,24 @@ async function readProblem(response: Response) {
 
 async function readBody(response: Response): Promise<unknown> {
   if (response.status === 204) return undefined;
-  try {
-    return (await response.json()) as unknown;
-  } catch (error) {
-    throw new TechnicalError('malformed-response', { cause: error });
-  }
+  return (await response.json()) as unknown;
 }
 
 /**
- * Orval mutator (TS-API-03): same-origin URL, XSRF header, timeout, 401 handling and reporting of
- * server errors, network failures and time-outs. 4xx answers become `HttpProblem` for the feature's mapper.
+ * Orval mutator (TS-API-03): same-origin URL, XSRF header, timeout, 401 handling and reporting of the technical errors
+ * it creates (server errors, network failures, time-outs, a 2xx body that is not JSON). 4xx answers become
+ * `HttpProblem` for the feature's mapper; the feature adapter reports the technical errors it creates (TS-ARCH-18).
  */
 export async function customFetch<T>(url: string, init: RequestInit): Promise<T> {
   if (settings === undefined) throw new Error('customFetch called before configureHttp');
   const { timeoutMs, onUnauthorized, reportError } = settings;
   const target = new URL(url, globalThis.location.origin);
+  if (target.origin !== globalThis.location.origin) {
+    // REACT-API-05: same-origin paths only; an absolute URL from the spec or a parameter is a contract error
+    const failure = new TechnicalError('unexpected');
+    reportError.report(failure);
+    throw failure;
+  }
   const timeout = AbortSignal.timeout(timeoutMs);
   const signal = init.signal ? anySignal(init.signal, timeout) : timeout;
   const headers = withXsrfHeader(new Headers(init.headers), init.method ?? 'GET', target);
@@ -77,8 +80,14 @@ export async function customFetch<T>(url: string, init: RequestInit): Promise<T>
   }
 
   if (response.ok) {
-    // The generated signature names the expected type; the feature adapter parses it with the generated zod schema (TS-API-05).
-    return (await readBody(response)) as T;
+    try {
+      // The generated signature names the expected type; the feature adapter parses it with the generated zod schema (TS-API-05).
+      return (await readBody(response)) as T;
+    } catch (error) {
+      const failure = new TechnicalError('malformed-response', { cause: error });
+      reportError.report(failure, { status: response.status });
+      throw failure;
+    }
   }
   if (response.status === 401) {
     onUnauthorized();

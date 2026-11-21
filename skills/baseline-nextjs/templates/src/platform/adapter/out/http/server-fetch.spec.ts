@@ -11,6 +11,8 @@ import { configureServerFetch, customFetch } from './server-fetch';
 describe('server customFetch (NEXT-API-03/04, NEXT-API-08)', () => {
   const server = setupServer();
   let token: string | undefined = 'at-1';
+  let tokenDelayMs = 0;
+  let tokenDeadline: AbortSignal | undefined;
   let requests = 0;
   // stands in for Next.js's request scope, which cookies() reads in production (NEXT-API-04)
   const requestScope = new AsyncLocalStorage<string>();
@@ -20,12 +22,18 @@ describe('server customFetch (NEXT-API-03/04, NEXT-API-08)', () => {
     configureServerFetch(() => ({
       apiBaseUrl: 'http://backend.test',
       timeoutMs: 100,
-      accessToken: () => Promise.resolve(requestScope.getStore() ?? token),
+      accessToken: async (deadline) => {
+        tokenDeadline = deadline;
+        const scoped = requestScope.getStore();
+        await delay(tokenDelayMs);
+        return scoped ?? token;
+      },
     }));
   });
   afterEach(() => {
     server.resetHandlers();
     token = 'at-1';
+    tokenDelayMs = 0;
     requests = 0;
   });
   afterAll(() => {
@@ -83,6 +91,23 @@ describe('server customFetch (NEXT-API-03/04, NEXT-API-08)', () => {
     server.use(http.get('http://backend.test/api/v1/slow', () => new Promise<never>(() => undefined)));
 
     await expect(customFetch('/api/v1/slow', {})).rejects.toMatchObject({ failure: 'timeout' });
+  });
+
+  it('counts the session lookup and refresh against the same deadline (NEXT-RES-03)', async () => {
+    tokenDelayMs = 70; // a slow refresh
+    server.use(
+      http.get('http://backend.test/api/v1/orders', async () => {
+        await delay(60);
+        return HttpResponse.json({ items: [] });
+      }),
+    );
+
+    await expect(customFetch('/api/v1/orders', {})).rejects.toMatchObject({ failure: 'timeout' });
+    expect(tokenDeadline).toBeInstanceOf(AbortSignal);
+  });
+
+  it('refuses a path that would leave the API, before any request (path steering)', async () => {
+    await expect(customFetch('/api/v1/orders/../cancel', { method: 'POST' })).rejects.toBeInstanceOf(TechnicalError);
   });
 
   it('never follows a redirect with the token', async () => {

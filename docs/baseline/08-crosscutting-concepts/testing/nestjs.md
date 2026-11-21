@@ -34,17 +34,19 @@ const swcPlugin = swc.vite({ module: { type: 'es6' }, jsc: { target: 'es2024' } 
 export default defineConfig({
   plugins: [swcPlugin],
   test: {
-    setupFiles: ['reflect-metadata'],
+    setupFiles: ['reflect-metadata', './test/setup-env.ts'],      // test values for required configuration
+    tags: [{ name: 'cross-user', description: 'Object-level access across callers (NEST-SEC-08)' }],
     projects: [
-      { extends: true, test: { name: 'unit', include: ['src/**/*.test.ts'], exclude: ['src/**/*.it.test.ts'] } },
+      { extends: true, test: { name: 'unit', include: ['src/**/*.test.ts', 'test/**/*.test.ts', 'scripts/**/*.test.ts'], exclude: ['**/*.it.test.ts'] } },
       {
         extends: true,
         test: {
           name: 'it',
-          include: ['src/**/*.it.test.ts'],
+          include: ['src/**/*.it.test.ts', 'test/**/*.it.test.ts'],
           globalSetup: ['test/postgres.global-setup.ts'],   // NEST-TEST-07
           testTimeout: 60_000,
           hookTimeout: 120_000,
+          env: { RESILIENCE_TRANSACTION_GUARD: 'fail' },     // NEST-RES-03
         },
       },
     ],
@@ -88,8 +90,8 @@ describe('OrdersController', () => {
   });
   afterAll(() => app.close());
 
-  it('rejects unknown fields with a problem', async () => {
-    const res = await app.inject({ method: 'POST', url: '/v1/orders', payload: { customerId: 'c1', total: '3', admin: true } });
+  it('rejects an invalid body with a problem', async () => {
+    const res = await app.inject({ method: 'POST', url: '/v1/orders', payload: { total: '3' } }); // customerId missing
     expect(res.statusCode).toBe(400);
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(useCase.placeOrder).not.toHaveBeenCalled();
@@ -101,19 +103,22 @@ describe('OrdersController', () => {
 - **NEST-TEST-07: Containers are started once per test run and shared.** A Vitest `globalSetup` in the `it` project starts each container, runs the migrations once and passes the connection data with `project.provide()`; test files read it with `inject()`. Tests isolate their data with unique ids or by cleaning the tables they write; they never depend on the order of files.
 
 ```ts
-// test/postgres.global-setup.ts
+// test/postgres.global-setup.ts (template); startPostgres() and databaseConfig() live in test/postgres.ts
 declare module 'vitest' {
-  export interface ProvidedContext { postgresUri: string }
+  export interface ProvidedContext { postgres: PostgresServer }    // { host, port }
 }
 
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
-  const container = await new PostgreSqlContainer('postgres:18-alpine').start();
-  const db = new Kysely<unknown>({ dialect: new PostgresDialect({ pool: new pg.Pool({ connectionString: container.getConnectionUri() }) }) });
-  await migrateToLatest(db);
-  await db.destroy();
-  project.provide('postgresUri', container.getConnectionUri());
+  const container = await startPostgres();                          // postgres:18 with dev/postgres/init.sql (NEST-DB-22)
+  const server = { host: container.getHost(), port: container.getPort() };
+  const ddl = createMigrationDatabase(databaseConfig(server));       // migrations as the DDL user
+  try { await migrateToLatest(ddl); } finally { await ddl.destroy(); }
+  project.provide('postgres', server);
   return async () => { await container.stop(); };
 }
+
+// in a test file: the DML user with the production session timeouts
+const db = createDatabase<DB>(databaseConfig(inject('postgres')));
 ```
 
   `withReuse()` on a container keeps it across runs for a faster local loop; Testcontainers reuses it unless `TESTCONTAINERS_REUSE_ENABLE=false`, which CI sets.
@@ -125,17 +130,16 @@ export default async function setup(project: TestProject): Promise<() => Promise
 
 ### Architecture, contract and system tests
 
-- **NEST-TEST-10: The architecture check runs on every build and proves that it can fail** (ARCH-ENF-02). `npm run check:arch` runs dependency-cruiser on `src` with the template config ([05-building-block-view/nestjs.md](../../05-building-block-view/nestjs.md)). A canary under `test/arch-canary/src/` contains deliberate violations, at least a **type-only** import of an adapter type in `domain` (proves `tsPreCompilationDeps` is on) and a Nest import in `application`. A unit test runs dependency-cruiser on the canary with the same config and expects a failure naming those rules. Re-check the canary after renaming folders or rules.
+- **NEST-TEST-10: The architecture check runs on every build and proves that it can fail** (ARCH-ENF-02). `npm run check:arch` runs dependency-cruiser on `src` with the template config ([05-building-block-view/nestjs.md](../../05-building-block-view/nestjs.md)). A canary under `test/fixtures/arch-violation/src/` contains deliberate violations, at least a **type-only** import of an adapter type in `domain` (proves `tsPreCompilationDeps` is on), a Nest import in `application` and a context persistence adapter that imports the `KYSELY` token (NEST-DB-04). A unit test (`test/architecture.test.ts`) runs dependency-cruiser's `cruise()` on the canary with the same rules and an absolute `baseDir` (NODE-ARCH-14) and expects violations naming those rules. Re-check the canary after renaming folders or rules.
 
 ```ts
-it('rejects a type-only adapter import in domain and Nest in application', () => {
-  const run = spawnSync('npx', ['depcruise', 'src', '--config', '../../.dependency-cruiser.cjs', '--output-type', 'err'], {
-    cwd: 'test/arch-canary',
-    encoding: 'utf8',
-  });
-  expect(run.status).not.toBe(0);
-  expect(run.stdout).toContain('domain-is-pure');
-  expect(run.stdout).toContain('application-only-core');
+it('rejects a type-only adapter import in domain and Nest in application', async () => {
+  const fixture = fileURLToPath(new URL('fixtures/arch-violation', import.meta.url));
+  const result = await cruise(['src'], { ...options, ruleSet: { forbidden }, validate: true, baseDir: fixture } as never);
+  const rules = (result.output as { summary: { violations: { rule: { name: string } }[] } }).summary.violations.map((v) => v.rule.name);
+  expect(rules).toContain('domain-is-pure');
+  expect(rules).toContain('application-only-core');
+  expect(rules).toContain('kysely-token-only-in-persistence');
 });
 ```
 

@@ -32,6 +32,19 @@ export function buildOpenApiDocument(app: INestApplication, api: ApiDescription)
   return { ...doc, paths, components: { ...doc.components, schemas: onlyReferenced(paths, schemas) } };
 }
 // onlyReferenced(paths, schemas): walks every "$ref" from the paths (transitively) and keeps only those schemas
+
+// errors[]: field and code required, message optional (API-REST-05); clients branch on code, never on message.
+// VALIDATION_CODES: the generic codes of NEST-REST-07 (REQUIRED, TOO_LONG, INVALID_FORMAT, …)
+const problemDetailSchema = (errorCodes: readonly [string, ...string[]]) =>
+  z.object({
+    type: z.string().optional(),
+    title: z.string(),
+    status: z.int(),
+    detail: z.string().optional(),
+    code: z.enum(errorCodes).optional(),
+    errors: z.array(z.object({ field: z.string(), code: z.enum(VALIDATION_CODES), message: z.string().optional() })).optional(),
+    traceId: z.string().optional(),
+  });
 ```
 
 `@nestjs/swagger` writes OpenAPI 3.0 and converts the zod schemas with the `openapi-3.0` target; the builder keeps that version.

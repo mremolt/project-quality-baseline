@@ -34,7 +34,7 @@ Classes: **personal** (relates to an identifiable person), **confidential** (int
 |---|---|---|---|
 | | | | |
 
-## Session lifetimes (SPRING-SEC-32)
+## Session lifetimes (SPRING-SEC-32, NODE-BFF-07)
 
 | | Value | Reason if not the default |
 |---|---|---|

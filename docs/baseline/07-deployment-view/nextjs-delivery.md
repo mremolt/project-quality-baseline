@@ -17,7 +17,7 @@ Everything marked *verified* was checked in a scratch build on 2026-11-20 with N
 
 - **NEXT-REL-04: The build uses `output: 'standalone'` and the image starts `node server.js` directly** (*verified*). The standalone output (`.next/standalone/`) contains `server.js`, the traced server files and a reduced `node_modules`; it does not contain `.next/static/`, which the image build copies next to it. The process is never started through `next start`, `npm start` or a shell, so `node` is PID 1 and receives SIGTERM. `npm run start` (`node .next/standalone/server.js`) exists for scripts only and needs `.next/static` copied the same way (the E2E server script does this).
 - **NEXT-REL-05: Next.js images are built with the Dockerfile of NEXT-REL-06, not with Buildpacks.** This is a stack-level exception to REL-IMG-02, decided in the baseline: no product ADR is needed, and the product's chapter 7 names this rule as the reason. Reasons: the Paketo Node.js buildpack's Node 26 does not start on the Paketo run images (`libatomic.so.1` missing, found on 2026-11-20), and Paketo builds in place, so sources and tests end up in the image instead of only the standalone output (REL-IMG-01). Buildpacks for Next.js itself were not tried. Chapter 11 tracks the return to Buildpacks for the Node stacks.
-- **NEXT-REL-06: The Dockerfile is multi-stage, from the lockfile, on distroless, pinned by digest** (*verified*, including the `GIT_COMMIT` argument). Build stage `node:26-trixie-slim@sha256:…` runs `npm ci` and `npm run build` (which runs `generate:api` first); the final stage is `gcr.io/distroless/nodejs26-debian13:nonroot@sha256:…` (no shell, no npm) and copies only `.next/standalone` and `.next/static`. `USER 65532:65532`, command in exec form. Labels per REL-RUN-07 come from `--label` at build time. The update automation bumps both digests (REL-IMG-03, TS-TOOL-15).
+- **NEXT-REL-06: The Dockerfile is multi-stage, from the lockfile, on distroless, pinned by digest** (*verified*, including the `GIT_COMMIT` argument). Build stage `node:26-trixie-slim@sha256:…` runs `npm ci` and `npm run build` (which runs `generate:api` first); the final stage is `gcr.io/distroless/nodejs26-debian13:nonroot@sha256:…` (no shell, no npm) and copies only `.next/standalone` and `.next/static`. The template has no `public/` folder; a product that adds one (for example `public/.well-known/security.txt`, NODE-BFF-09) copies it into the build stage and adds `COPY --from=build /app/public ./public` to the final stage, because the standalone output does not contain it. `USER 65532:65532`, command in exec form. Labels per REL-RUN-07 come from `--label` at build time. The update automation bumps both digests (REL-IMG-03, TS-TOOL-15).
 
 ```dockerfile
 FROM node:26-trixie-slim@sha256:<digest> AS build
@@ -25,6 +25,8 @@ WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 COPY tsconfig.json next.config.ts orval.config.ts ./
+COPY scripts/copy-api-spec.mjs ./scripts/
+# the backend's spec, copied into the build context by CI (`npm run copy:api-spec`) before `docker build`
 COPY openapi ./openapi
 COPY messages ./messages
 COPY src ./src
@@ -45,8 +47,10 @@ EXPOSE 3000
 CMD ["server.js"]
 ```
 
+  **The OpenAPI spec is copied into the build context before `docker build`.** The backend owns the spec (`backend/openapi/*.yaml`, TS-API-01), but the image is built with `frontend/` as its context, which cannot reach `../backend`. `npm run copy:api-spec` (`scripts/copy-api-spec.mjs`, no dependencies) copies every `*.yaml` from `../backend/openapi` (or `API_SPEC_SOURCE`) into `frontend/openapi/` and removes specs the backend dropped; `frontend/openapi/` is gitignored in a product repository. `generate:api` runs it first, so `dev`, `test`, `build` and `verify` always generate from the backend's current spec; CI runs `npm run copy:api-spec` (or `verify`) in `frontend/` before `docker build`, and the Dockerfile keeps `COPY openapi ./openapi`. Inside the build stage, and in a separate frontend repository that commits its copy of the spec, `../backend/openapi` does not exist and the script leaves `openapi/` as it is. *Verified* in a copy of the template: `docker build` with the copied spec, and the script against a probe `backend/openapi` (copy, stale spec removed, empty source fails).
+
 - **NEXT-REL-07: `.dockerignore` keeps tests, secrets and build output out of the build context:** `node_modules`, `.next`, `.env*`, `coverage`, `playwright-report`, `test-results`, logs, `e2e`, `test`, `**/*.spec.ts`, `**/*.spec.tsx`, `src/testing`. The spec exclusion is required, not cosmetic: `next build` type-checks every file the `tsconfig.json` includes, and the image build failed on spec-only types until the specs were excluded (*verified*).
-- **NEXT-REL-08: Nothing environment-specific or secret enters the build** (REL-IMG-01, CFG-02/05, SEC-INC-01). No build argument or `ENV` carries a secret; no `.env*` file reaches the build (NEXT-REL-07); no `NEXT_PUBLIC_*` variable is set for a per-environment value, because Next.js inlines it into client and server chunks at build time (*verified*; NEXT-CFG). `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` is not set at build time: setting it embeds it in the image as well. The per-build key Next.js generates is stored in `.next/server/server-reference-manifest.json` inside the image and is treated as public (NEXT-SEC; NEXT-REL-13).
+- **NEXT-REL-08: Nothing environment-specific or secret enters the build** (REL-IMG-01, CFG-02/05, SEC-INC-01). No build argument or `ENV` carries a secret; no `.env*` file reaches the build (NEXT-REL-07); no `NEXT_PUBLIC_*` variable is set for a per-environment value, because Next.js inlines it into client and server chunks at build time (*verified*; NEXT-CFG). `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` is not set at build time: setting it embeds it in the image as well. The per-build key Next.js generates is stored in `.next/server/server-reference-manifest.json` inside the image and is treated as public (NEXT-SEC; NEXT-REL-18).
 - **NEXT-REL-09: The image's contents are known and measured.** The scratch image was 305 MB: 243 MB distroless base, 46 MB standalone output. Two things ship that the app does not use in production, both accepted:
   - `sharp` and `@img` (libvips, 19 MB) are traced into the standalone output although `images.unoptimized` is set. Excluding them with `outputFileTracingExcludes` is the preferred fix (*to verify before first use*: the build still starts and no route imports `sharp`).
   - msw and `@faker-js/faker` are bundled into the server chunks, because the test stubs are one build with the production code (NEXT-D5; started only under the guard of NEXT-DEV-05 and NEXT-CFG).
@@ -115,7 +119,7 @@ During a rolling deployment a browser that loaded a page from N-1 may reach an i
 ## Agent checklist
 
 - [ ] `output: 'standalone'`; image starts `node server.js` in exec form; `.next/static` copied next to it (NEXT-REL-04/06)?
-- [ ] Dockerfile multi-stage, distroless `nonroot`, both bases pinned by digest, user 65532; specs, e2e and `.env*` in `.dockerignore` (NEXT-REL-06/07)?
+- [ ] Dockerfile multi-stage, distroless `nonroot`, both bases pinned by digest, user 65532; specs, e2e and `.env*` in `.dockerignore`; CI copies the backend spec in with `npm run copy:api-spec` before `docker build` (NEXT-REL-06/07)?
 - [ ] No secret, `.env*` file, per-environment `NEXT_PUBLIC_*` or `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` in the build (NEXT-REL-08)?
 - [ ] Nothing writes to disk at run time: `images.unoptimized`, no ISR or revalidation; read-only root filesystem without tmpfs (NEXT-REL-11)?
 - [ ] Pre-stop delay, grace period above pre-stop + longest request; `HOSTNAME=0.0.0.0` (NEXT-REL-12/13)?

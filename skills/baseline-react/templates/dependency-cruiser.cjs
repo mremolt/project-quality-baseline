@@ -7,6 +7,7 @@ const ROUTES_FILE = '^src/features/[^/]+/[^/]+\\.routes\\.tsx?$';
 const HTTP_MUTATOR = '^src/platform/adapter/out/http/custom-fetch\\.ts$'; // imported by Orval output only
 const TEST_FILE = '\\.(spec|test)\\.tsx?$'; // colocated tests import vitest: excluded from the core allow-lists
 const ROUTES_STATIC_ALLOWED = 'node_modules/(@tanstack/react-router|zod|react)/';
+const FEATURE_API_FILE = '^src/features/[^/]+/[^/]+\\.api\\.tsx?$'; // the published feature API (REACT-ARCH-11)
 
 module.exports = {
   forbidden: [
@@ -132,7 +133,7 @@ module.exports = {
       comment: 'TS-ARCH-04; the root HTTP setup and feature composition files may configure the HTTP stack',
       from: {
         path: '^src/',
-        pathNot: ['/adapter/out/http/', '^src/platform/adapter/', COMPOSITION_FILE, ROOT_HTTP_SETUP],
+        pathNot: ['/adapter/out/http/', '^src/platform/adapter/', COMPOSITION_FILE, FEATURE_API_FILE, ROOT_HTTP_SETUP],
       },
       to: { path: HTTP_CLIENT_MODULES },
     },
@@ -147,9 +148,17 @@ module.exports = {
       name: 'composition-root-not-imported',
       severity: 'error',
       comment:
-        'TS-ARCH-17/19: only routes (dynamically), the root composition and the public index import the composition file',
-      from: { pathNot: ['\\.routes\\.tsx?$', '^src/app/', '^src/(features/[^/]+|platform)/index\\.ts$'] },
+        'TS-ARCH-17/19: only routes (dynamically), the root composition and the platform index import a composition file; a feature index re-exports its .api.tsx instead (REACT-ARCH-11)',
+      from: { pathNot: ['\\.routes\\.tsx?$', '^src/app/', '^src/platform/index\\.ts$'] },
       to: { path: COMPOSITION_FILE },
+    },
+    {
+      name: 'feature-api-without-ui',
+      severity: 'error',
+      comment:
+        'REACT-ARCH-11: the published API imports adapters, use cases and the context only; never the page, other UI or the slice, which would load for every consumer',
+      from: { path: FEATURE_API_FILE },
+      to: { path: ['/adapter/in/', STORE_FILE, COMPOSITION_FILE] },
     },
     {
       name: 'shared-ui-no-features',

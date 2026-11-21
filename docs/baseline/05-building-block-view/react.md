@@ -19,7 +19,7 @@ src/
     emotion-cache.ts        ← Emotion cache carrying the CSP nonce
   i18n/                     ← en.json (source catalog), de.json, messages.ts (locales, typed keys)
   platform/                 ← app-wide, cross-cutting; same rings and rules as a feature (REACT-ARCH-04)
-    domain/index.ts         ← framework-free entry: TechnicalError, shared value objects
+    domain/index.ts         ← framework-free entry: TechnicalError, the RuntimeConfig type, shared value objects
     ports/in/ ports/out/ application/   ← report-error use case; error-reporting and runtime-config ports
     adapter/in/ui/          ← app-store.ts (combineSlices), root-error-boundary.tsx, route-error.tsx,
                               route-change-handler.tsx, global-error-listeners.ts, error-message.tsx
@@ -34,12 +34,14 @@ src/
       application/          ← load-orders.service.ts, cancel-order.service.ts
       ports/in/             ← load-orders.use-case.ts, cancel-order.use-case.ts (command + zod schema)
       ports/out/            ← load-orders.port.ts, cancel-order.port.ts
-      adapter/in/ui/        ← orders-page.tsx, cancel-order-dialog.tsx, orders.slice.ts, orders.queries.ts, orders-error-keys.ts
+      adapter/in/ui/        ← orders-page.tsx, cancel-order-dialog.tsx, orders.slice.ts, orders.queries.ts (queries and
+                              mutations), orders-error-keys.ts
       adapter/out/http/     ← http-orders.ts, orders-mapper.ts, generated/ (Orval, gitignored)
-      orders.tokens.ts      ← React contexts + use<UseCase>() hooks; imports only ports and react
-      orders.composition.tsx ← composition root: adapters, use cases, slice injection, providers, the route component
+      orders.tokens.ts      ← OrdersUseCases type, the feature's one context, selector hooks; imports only ports and react
+      orders.api.tsx        ← published API: createOrdersUseCases(), <OrdersApiProvider>; adapters, use cases, context only
+      orders.composition.tsx ← route chunk entry: slice injection, the route component (page inside the API provider)
       orders.routes.ts      ← route options (path, search schema, title key, lazy component); imported only by src/app
-      index.ts              ← public API: published contracts, their hooks, <OrdersApiProvider> (TS-ARCH-19); no routes
+      index.ts              ← public API: published contracts, their selector hooks, <OrdersApiProvider> (TS-ARCH-19); no routes
   shared/ui/                ← theme.ts, a11y/announcer.ts, format/, states/ (loading, empty, error)
 test/                       ← render-with-providers.tsx, setup-dom.ts, axe.ts, architecture.spec.ts, fixtures/arch-violation/
 e2e/                        ← fixtures.ts, serve-dist.ts (CSP server for the built app), *.spec.ts
@@ -49,8 +51,8 @@ e2e/                        ← fixtures.ts, serve-dist.ts (CSP server for the b
 
 ### Structure and naming
 
-- **REACT-ARCH-01: New code follows the layout above.** A feature has the rings of TS-ARCH-01..08 and the four root files `<feature>.tokens.ts`, `<feature>.composition.tsx`, `<feature>.routes.ts` and `index.ts`.
-- **REACT-ARCH-02: File names are kebab-case; components are PascalCase functions; `.tsx` only for files that contain JSX.** Roles are dot-suffixes: `.use-case.ts` (incoming port), `.port.ts` (outgoing port), `.service.ts` (use-case implementation), `.slice.ts` (Redux Toolkit view state), `.queries.ts` (TanStack Query keys and hooks), `.tokens.ts`, `.composition.tsx`, `.routes.ts`, `.spec.ts(x)`. Components and hooks: `orders-page.tsx` exports `OrdersPage`; hooks start with `use`. The routes file holds no JSX and is `.ts`.
+- **REACT-ARCH-01: New code follows the layout above.** A feature has the rings of TS-ARCH-01..08 and the five root files `<feature>.tokens.ts`, `<feature>.api.tsx`, `<feature>.composition.tsx`, `<feature>.routes.ts` and `index.ts`.
+- **REACT-ARCH-02: File names are kebab-case; components are PascalCase functions; `.tsx` only for files that contain JSX.** Roles are dot-suffixes: `.use-case.ts` (incoming port), `.port.ts` (outgoing port), `.service.ts` (use-case implementation), `.slice.ts` (Redux Toolkit view state), `.queries.ts` (TanStack Query keys, query and mutation hooks), `.tokens.ts`, `.api.tsx` (published feature API), `.composition.tsx`, `.routes.ts`, `.spec.ts(x)`. Components and hooks: `orders-page.tsx` exports `OrdersPage`; hooks start with `use`. The routes file holds no JSX and is `.ts`.
 - **REACT-ARCH-03: Core files are named by business term** (`order.ts`, `order-errors.ts`, `cancel-order.use-case.ts`). Adapters are named technology + subject: `http-orders.ts` / `HttpOrders`. No `.model.ts`, `types.ts` or `utils.ts` collections.
 - **REACT-ARCH-04: `src/platform` is treated like a feature**: same rings, same dependency-cruiser rules (TS-ARCH-12), reachable only through `src/platform/index.ts`, never imports `features/`. A feature's `domain`, `ports` and `application` import only `src/platform/domain/index.ts`. The one exception is the Orval mutator `src/platform/adapter/out/http/custom-fetch.ts`, which generated code imports directly (REACT-ARCH-22, [api/react-openapi-clients.md](../08-crosscutting-concepts/api/react-openapi-clients.md)).
 
@@ -64,58 +66,63 @@ e2e/                        ← fixtures.ts, serve-dist.ts (CSP server for the b
 
 ### Wiring: tokens, composition, published API
 
-The React form of TS-ARCH-09 and TS-ARCH-17: the tokens are React contexts, the composition file renders their providers.
+The React form of TS-ARCH-09 and TS-ARCH-17: the token is one React context per feature, holding a typed object of the feature's use cases; the feature's API file creates that object and renders its provider.
 
-- **REACT-ARCH-09: `<feature>.tokens.ts` holds one context per contract and one `use<UseCase>()` hook per context that throws outside its provider.** It imports only the feature's `ports` and `react`. Components and pages call the hook, never `use(Context)` directly; tests provide mocked contracts through the same contexts ([testing/react.md](../08-crosscutting-concepts/testing/react.md)).
-- **REACT-ARCH-10: `<feature>.composition.tsx` creates the adapters and use cases once and renders the providers.** Instances are created once per page load at module level of the composition file, which runs when the route chunk loads, together with the lazy slice injection (REACT-STATE-02). An instance that depends on props or must exist per mount is created with a lazy initializer, `useState(() => new …)`, inside the provider; never in the render body. The composition file also exports the route component (`OrdersScreen`) that wraps the page in the feature's provider.
-- **REACT-ARCH-11: A feature whose use cases others may call publishes `<Feature>ApiProvider`** in its composition file, re-exported by `index.ts` together with the published contracts and their hooks (TS-ARCH-19). It provides exactly the published use cases. A consuming feature wraps its own screen in it in its own composition. Because `index.ts` re-exports the composition, only lazily loaded feature code imports another feature's `index.ts` at runtime; `src/app` and `src/shared` use it for types only (`import type`), and the bundle check fails when feature code reaches the initial chunk.
+- **REACT-ARCH-09: `<feature>.tokens.ts` holds the use-case object type, one context per feature and small selector hooks.** The type names each use case by its `ports/in` contract (`interface OrdersUseCases { loadOrders: LoadOrdersUseCase; cancelOrder: CancelOrderUseCase }`); the context holds that object (`createContext<OrdersUseCases | null>(null)`); `useOrdersUseCases()` reads it and throws outside the provider; one selector hook per use case returns its member (`useLoadOrders = () => useOrdersUseCases().loadOrders`). The file imports only the feature's `ports` and `react`. Components and query hooks call the selector hooks, never `use(Context)` directly; tests put an object of mocked contracts into the same context (`<OrdersContext value={{ loadOrders, cancelOrder }}>`, [testing/react.md](../08-crosscutting-concepts/testing/react.md)).
+  *Why:* one provider per feature instead of a nested provider per use case; a new use case is one member, one hook and one line in the factory, and the test override stays one object.
+- **REACT-ARCH-10: The adapters and use cases are created by a factory in `<feature>.api.tsx`, once per provider mount, from the platform values they need.** `createOrdersUseCases({ reportError })` creates the adapters and use cases and returns the use-case object (TS-ARCH-09). The provider calls it in a lazy `useState` initializer with the values it reads from the platform hooks: `const reportError = useReportError(); const [useCases] = useState(() => createOrdersUseCases({ reportError }));`. Configuration reaches use cases and adapters the same way: the provider reads `useRuntimeConfig()` and passes single values to the factory, which hands them to constructors (REACT-CFG-04). Instances are never created in the render body, and never at module level when they need platform values, which exist only in React context. Adapters and use cases are stateless, so a new set per mount costs nothing; a decorator whose cache must outlive one visit of the screen (REACT-API-11) keeps that cache in a module-level value of the API file, created on first use. `<feature>.composition.tsx` is the entry of the route chunk: it injects the slice at module level (REACT-STATE-02) and exports the route component (`OrdersScreen`), which renders the page inside the feature's provider.
+- **REACT-ARCH-11: `<feature>.api.tsx` is the feature's published API and imports only adapters, use cases, the tokens file and the platform's public entry.** It exports the factory and `<Feature>ApiProvider`; `index.ts` re-exports the provider together with the published contracts and their selector hooks, never the context, the unpublished hooks or the use-case object type (TS-ARCH-19). The API file never imports the page or other UI, the slice or the composition file (dependency-cruiser `feature-api-without-ui`), so a consuming feature that wraps its screen in `<OrdersApiProvider>` in its own composition does not load the owning feature's screens or inject its slice. The provider holds the whole use-case object, but a consumer reaches only the published selector hooks. Because `index.ts` re-exports the API file, only lazily loaded feature code imports another feature's `index.ts` at runtime; `src/app` uses it for types only (`import type`; `src/shared` never imports a feature, TS-ARCH-11), and the bundle check fails when feature code reaches the initial chunk.
 
 ```tsx
 // features/orders/orders.tokens.ts (imports only ports and react)
-export const LoadOrdersContext = createContext<LoadOrdersUseCase | null>(null);
-export const CancelOrderContext = createContext<CancelOrderUseCase | null>(null);
-
-function provided<T>(useCase: T | null, hook: string): T {
-  if (useCase === null) throw new Error(`${hook} used outside OrdersProvider or OrdersApiProvider`);
-  return useCase;
+export interface OrdersUseCases {
+  readonly loadOrders: LoadOrdersUseCase;
+  readonly cancelOrder: CancelOrderUseCase;
 }
-export function useLoadOrdersUseCase(): LoadOrdersUseCase {
-  return provided(use(LoadOrdersContext), 'useLoadOrdersUseCase');
+export const OrdersContext = createContext<OrdersUseCases | null>(null);
+
+export function useOrdersUseCases(): OrdersUseCases {
+  const useCases = use(OrdersContext);
+  if (useCases === null) throw new Error('useOrdersUseCases used outside OrdersApiProvider');
+  return useCases;
+}
+export function useLoadOrders(): LoadOrdersUseCase {
+  return useOrdersUseCases().loadOrders;
+}
+export function useCancelOrder(): CancelOrderUseCase {
+  return useOrdersUseCases().cancelOrder;
 }
 
-// features/orders/orders.composition.tsx (composition root)
-rootReducer.inject(ordersSlice); // runs once, when the route chunk loads
-const http = new HttpOrders();
-const loadOrders = new LoadOrdersService(http);
-const cancelOrder = new CancelOrderService(http);
-
-export function OrdersProvider({ children }: { readonly children: ReactNode }): ReactNode {
-  return (
-    <LoadOrdersContext value={loadOrders}>
-      <CancelOrderContext value={cancelOrder}>{children}</CancelOrderContext>
-    </LoadOrdersContext>
-  );
+// features/orders/orders.api.tsx (adapters, use cases, tokens, platform entry; no UI, no slice)
+export function createOrdersUseCases({ reportError }: OrdersPlatform): OrdersUseCases {
+  const http = new HttpOrders(reportError); // reports the technical errors it creates (REACT-OBS-04)
+  return { loadOrders: new LoadOrdersService(http), cancelOrder: new CancelOrderService(http) };
 }
-/** Exactly the published use cases (TS-ARCH-19). */
+
 export function OrdersApiProvider({ children }: { readonly children: ReactNode }): ReactNode {
-  return <LoadOrdersContext value={loadOrders}>{children}</LoadOrdersContext>;
+  const reportError = useReportError();
+  const [useCases] = useState(() => createOrdersUseCases({ reportError }));
+  return <OrdersContext value={useCases}>{children}</OrdersContext>;
 }
-/** The lazily loaded route component (orders.routes.ts). */
+
+// features/orders/orders.composition.tsx (entry of the route chunk)
+rootReducer.inject(ordersSlice); // runs once, when the route chunk loads
+
 export function OrdersScreen(): ReactNode {
-  return <OrdersProvider><OrdersPage /></OrdersProvider>;
+  return <OrdersApiProvider><OrdersPage /></OrdersApiProvider>;
 }
 
 // features/orders/index.ts
 export type { Order, OrderPage } from './domain/order';
-export { OrdersApiProvider } from './orders.composition';
-export { useLoadOrdersUseCase } from './orders.tokens';
+export { OrdersApiProvider } from './orders.api';
+export { useLoadOrders } from './orders.tokens';
 export type { LoadOrdersQuery, LoadOrdersUseCase } from './ports/in/load-orders.use-case';
 ```
 
 ### HTTP and data loading
 
 - **REACT-ARCH-12: The HTTP stack is configured once, in the platform.** `createPlatform()` in `platform.composition.tsx` calls `configureHttp()` (timeout, 401 handling, error reporting) before the first render; every generated client call passes the mutator in `src/platform/adapter/out/http` ([api/react-openapi-clients.md](../08-crosscutting-concepts/api/react-openapi-clients.md)). `fetch` is used only in `adapter/out/http` folders: ESLint `no-restricted-globals` forbids it everywhere else, because dependency-cruiser cannot see a global. Generated clients and `fetch` never appear in components, hooks, slices or use cases (TS-ARCH-04).
-- **REACT-ARCH-13: Server state is loaded with TanStack Query in the UI adapter, and `queryFn` calls the use case** (REACT-D4, TS-ARCH-08). Keys and query hooks live in `<feature>.queries.ts`; the hook gets the use case from the tokens hook and passes the query's `signal` (TS-API-06). Commands run through a thunk that receives the use-case contract (REACT-STATE-03) and invalidate the feature's keys afterwards. A small read-only screen uses the query hook without a slice (TS-ARCH-08). The `QueryClient` is created once in the root composition; its retry policy retries only transient technical failures (RES-RTY-01/02), because the mutator does not retry (RES-RTY-04). Keys, `staleTime`, invalidation and optimistic updates: [ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md).
+- **REACT-ARCH-13: Server state is loaded with TanStack Query in the UI adapter, and `queryFn` calls the use case** (REACT-D4, TS-ARCH-08). Keys, query hooks and mutation hooks live in `<feature>.queries.ts`; the hook gets the use case from the feature's selector hook (REACT-ARCH-09) and passes the query's `signal` (TS-API-06). Commands are TanStack `useMutation`s whose `mutationFn` calls the use case; `onSuccess` invalidates the feature's keys, and the component maps `mutation.error` with the feature's `toErrorKey` (REACT-STATE-03, REACT-STATE-07). Redux Toolkit holds only view state that several components share (REACT-STATE-04); a screen without such state has no slice (TS-ARCH-08). The `QueryClient` is created once in the root composition; its retry policy retries only transient technical failures (RES-RTY-01/02), because the mutator does not retry (RES-RTY-04). Keys, `staleTime`, invalidation and optimistic updates: [ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md).
 
 ```ts
 // features/orders/adapter/in/ui/orders.queries.ts
@@ -125,7 +132,7 @@ export const ordersKeys = {
 };
 
 export function useOrdersPage(page: number): UseQueryResult<OrderPage> {
-  const loadOrders = useLoadOrdersUseCase();
+  const loadOrders = useLoadOrders();
   return useQuery(
     queryOptions({
       queryKey: ordersKeys.page(page),
@@ -133,6 +140,19 @@ export function useOrdersPage(page: number): UseQueryResult<OrderPage> {
       placeholderData: keepPreviousData,
     }),
   );
+}
+
+export function useCancelOrderMutation(): UseMutationResult<Order, Error, CancelOrderCommand> {
+  const cancelOrder = useCancelOrder();
+  const queryClient = useQueryClient();
+  const reportError = useReportError();
+  return useMutation({
+    mutationFn: (command: CancelOrderCommand) => cancelOrder.cancel(command),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ordersKeys.all }),
+    onError: (error) => {
+      if (isUnexpected(error)) reportError.report(error); // a bug: neither a domain nor a technical error
+    },
+  });
 }
 
 // src/app/app.tsx: retry only what a second attempt can fix
@@ -211,7 +231,7 @@ export class RootErrorBoundary extends Component<Props, State> {
 
 ## New app (React SPA)
 
-- **REACT-ARCH-17: (React SPA) A new app starts from the template of the `baseline-react` skill, not from a scaffolder.** The template is the validated setup described in this section; `npm create vite` templates bring a different tsconfig, lint set and folder layout and are not used. Steps: copy the template into the component folder (`frontend/`, REPO-TOOL-03), rename the example feature, point `orval.config.ts` at the backend's spec (TS-API-01), run `npm ci` and `npm run verify`, then sync the baseline into the repository. The template contains:
+- **REACT-ARCH-17: (React SPA) A new app starts from the template of the `baseline-react` skill, not from a scaffolder.** The template is the validated setup described in this section; `npm create vite` templates bring a different tsconfig, lint set and folder layout and are not used. Steps: copy the template into the component folder (`frontend/`, REPO-TOOL-03), rename the example feature, point `orval.config.ts` at the backend's spec (TS-API-01), run `npm install` once to create the lockfile, then `npm ci` and `npm run verify`, then sync the baseline into the repository. The template contains:
   - `package.json` with exact pins, `engines` (`node >=26.0.0 <27`, `npm >=11.10.0`), the TS-TOOL-10 scripts (`verify` = `generate:api`, `format:check`, `lint`, `check:arch`, `test`, `build`, `check:bundle`), `.npmrc` (TS-TOOL-11), `.nvmrc` `26`;
   - `tsconfig.json`: the TS-TOOL-01 options plus `"jsx": "react-jsx"`, `"module": "preserve"`, `"moduleResolution": "bundler"`, `"types": ["vite/client", "node"]`, `"resolveJsonModule": true` (catalogs), `"allowImportingTsExtensions": true` with `"noEmit": true` (Vite 8 config import, see below); one tsconfig for `src`, `test`, `e2e`, `scripts` and the config files, so ESLint's `projectService` covers all of them;
   - `.gitignore` and `.prettierignore` with `src/**/generated/`, `dist/`, `coverage/`, `playwright-report/`, `test-results/`;
@@ -261,7 +281,7 @@ declare module '@tanstack/react-router' {
 
 ## Enforcement
 
-- **REACT-ARCH-22: (React SPA) dependency-cruiser runs the TS-ARCH-12 template with the React constants and additions below** (Next.js: NEXT-ARCH-13) (`npm run check:arch` = `depcruise src`). The canary test (TS-ARCH-13) runs dependency-cruiser's `cruise()` API on `test/fixtures/arch-violation/` and asserts two violations: a type-only import of generated code into `domain` (`domain-is-pure`) and a routes file that imports the composition statically (`feature-routes-load-feature-lazily`); a third test asserts the real sources are clean. The canary passes an **absolute** `baseDir`: with a relative one, bare imports such as `react` stay unresolved and match allow-list rules by accident. The fixtures folder is excluded from the normal run and from lint. `tsPreCompilationDeps: true` reports `.tsx`, `import type` and `import()` edges correctly.
+- **REACT-ARCH-22: (React SPA) dependency-cruiser runs the TS-ARCH-12 template with the React constants and additions below** (Next.js: NEXT-ARCH-13) (`npm run check:arch` = `depcruise src`). The canary test (TS-ARCH-13) runs dependency-cruiser's `cruise()` API on `test/fixtures/arch-violation/` and asserts three violations: a type-only import of generated code into `domain` (`domain-is-pure`), a routes file that imports the composition statically (`feature-routes-load-feature-lazily`) and a feature API file that imports the page (`feature-api-without-ui`); a fourth test asserts the real sources are clean. The canary passes an **absolute** `baseDir`: with a relative one, bare imports such as `react` stay unresolved and match allow-list rules by accident. The fixtures folder is excluded from the normal run and from lint. `tsPreCompilationDeps: true` reports `.tsx`, `import type` and `import()` edges correctly.
 
 ```js
 // React constants at the top of .dependency-cruiser.cjs (replace the template's constants block)
@@ -273,6 +293,7 @@ const ROUTES_FILE = '^src/features/[^/]+/[^/]+\\.routes\\.tsx?$';
 const HTTP_MUTATOR = '^src/platform/adapter/out/http/custom-fetch\\.ts$'; // imported by Orval output only
 const TEST_FILE = '\\.(spec|test)\\.tsx?$'; // colocated tests import vitest: excluded from the core allow-lists
 const ROUTES_STATIC_ALLOWED = 'node_modules/(@tanstack/react-router|zod|react)/';
+const FEATURE_API_FILE = '^src/features/[^/]+/[^/]+\\.api\\.tsx?$'; // the published feature API (REACT-ARCH-11)
 ```
 
 React changes to the template rules:
@@ -283,7 +304,8 @@ React changes to the template rules:
 | `platform-only-via-index` | `HTTP_MUTATOR` added to `to.pathNot` (generated code imports the mutator with a deep relative path) |
 | `feature-routes-only-from-app` | `to: { path: ROUTES_FILE }` (same pattern, named once) |
 | `feature-routes-only-lazy` | removed: the app imports routes files statically (REACT-ARCH-20); replaced by the two rules below |
-| `composition-root-not-imported` | `from.pathNot` allows `'^src/(features/[^/]+|platform)/index\\.ts$'`: the platform index exports `createPlatform` |
+| `composition-root-not-imported` | `from.pathNot` allows `'^src/platform/index\\.ts$'`: the platform index exports `createPlatform`; a feature index re-exports `<feature>.api.tsx`, never the composition |
+| `http-clients-only-in-http-adapter` | `FEATURE_API_FILE` added to `from.pathNot`: the feature API file creates the adapters like a composition file |
 | `options` | adds `enhancedResolveOptions: { exportsFields: ['exports'], conditionNames: ['import', 'types'] }` and `exclude: { path: '^test/fixtures/' }` |
 
 React additions:
@@ -308,9 +330,16 @@ React additions:
   from: { pathNot: ['/adapter/out/http/generated/', '^src/platform/'] },
   to: { path: HTTP_MUTATOR },
 },
+{
+  name: 'feature-api-without-ui', severity: 'error',
+  comment: 'REACT-ARCH-11: the published API imports adapters, use cases and the context only; ' +
+    'never the page, other UI or the slice, which would load for every consumer',
+  from: { path: FEATURE_API_FILE },
+  to: { path: ['/adapter/in/', STORE_FILE, COMPOSITION_FILE] },
+},
 ```
 
-With these constants, `http-clients-only-in-http-adapter` lets only `adapter/out/http`, `src/platform/adapter/`, composition files and the platform composition import `axios` or `ky` (neither is used); `fetch` is covered by ESLint (REACT-ARCH-12).
+With these constants, `http-clients-only-in-http-adapter` lets only `adapter/out/http`, `src/platform/adapter/`, composition files, feature API files and the platform composition import `axios` or `ky` (neither is used); `fetch` is covered by ESLint (REACT-ARCH-12).
 
 ## Bootstrap and shell (React SPA)
 
@@ -323,9 +352,9 @@ With these constants, `http-clients-only-in-http-adapter` lets only `adapter/out
 |---|---|
 | `rerender-memo`, `rerender-simple-expression-in-memo`, `rendering-hoist-jsx`: `memo()`, `useMemo`, hoisting by hand | The React Compiler is on; manual memoization only for a measured problem (REACT-ARCH-05) |
 | `client-swr-dedup`: SWR or `fetch('/api/…')` in components | Components never fetch; TanStack Query calls use cases; dedupe and caching of backend data are adapter decorators (REACT-ARCH-13, TS-ARCH-15) |
-| `queryFn` / `mutationFn` call `fetch`, axios or generated API functions | `queryFn` calls a use-case contract from the tokens hook; commands through thunks with the contract (REACT-ARCH-13, REACT-STATE-03) |
+| `queryFn` / `mutationFn` call `fetch`, axios or generated API functions | `queryFn` and `mutationFn` call a use-case contract from the feature's selector hook (REACT-ARCH-13, REACT-STATE-03) |
 | Load data in `useEffect` | TanStack Query (REACT-ARCH-13); effects only sync with outside systems (REACT-ARCH-06) |
-| `advanced-init-once`: module-level app initialization anywhere | App-wide init in `main.tsx` / `createPlatform()`; feature wiring in the composition file (REACT-ARCH-10, REACT-ARCH-23) |
+| `advanced-init-once`: module-level app initialization anywhere | App-wide init in `main.tsx` / `createPlatform()`; feature use cases from the factory in `<feature>.api.tsx`, once per provider mount (REACT-ARCH-10, REACT-ARCH-23) |
 | `bundle-barrel-imports`: avoid barrel files | Applies to third-party packages (`@mui/material/Button`); our feature and platform `index.ts` stay mandatory (TS-ARCH-10/19, REACT-ARCH-11) |
 | `bundle-dynamic-imports`: `next/dynamic` | React SPA: route components through `lazyRouteComponent` (REACT-ARCH-20) |
 | `async-dependencies`: add `better-all` | `Promise.all`; dependencies are added deliberately (TS-TOOL-13) |
@@ -342,7 +371,8 @@ With these constants, `http-clients-only-in-http-adapter` lets only `adapter/out
 - [ ] File in the right ring and folder; kebab-case file, role suffix, `.tsx` only with JSX?
 - [ ] Function components; no manual `useMemo`/`useCallback`/`memo()` without a measured reason?
 - [ ] No `useEffect` that loads data, derives state or handles an event?
-- [ ] Use cases plain; adapters and use cases created once in `<feature>.composition.tsx`; contexts and throwing hooks in `<feature>.tokens.ts`?
+- [ ] Use cases plain; adapters and use cases created by the factory in `<feature>.api.tsx` in a lazy `useState` initializer; one context, the use-case object type and selector hooks in `<feature>.tokens.ts`?
+- [ ] Commands as `useMutation` calling the use case, invalidation in `onSuccess`, errors through `toErrorKey`; no thunk for a command?
 - [ ] No `fetch` or generated client outside `adapter/out/http`; data loaded through a query hook calling a use case?
 - [ ] Form validated with the command's zod schema via `standardSchemaResolver`; submit builds the command through its factory; `Controller` passes `ref` as `inputRef`, not inside a spread `field`?
 - [ ] Routes file exports only route options with a lazy component; search params validated with zod?

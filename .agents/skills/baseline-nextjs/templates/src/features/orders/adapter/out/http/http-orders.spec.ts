@@ -20,14 +20,16 @@ const problem = (status: number, code?: string) =>
 
 describe('HttpOrders against the contract stubs', () => {
   const server = setupServer();
-  const adapter = createBrowserHttpOrders();
+  const reportError = mock<ReportErrorUseCase>();
+  const adapter = createBrowserHttpOrders(reportError);
 
   beforeAll(() => {
     server.listen({ onUnhandledFrame: 'error' });
-    configureHttp({ timeoutMs: 1_000, onUnauthorized: () => undefined, reportError: mock<ReportErrorUseCase>() });
+    configureHttp({ timeoutMs: 1_000, onUnauthorized: () => undefined, reportError });
   });
   afterEach(() => {
     server.resetHandlers();
+    reportError.report.mockReset();
   });
   afterAll(() => {
     server.close();
@@ -49,16 +51,20 @@ describe('HttpOrders against the contract stubs', () => {
     ]);
   });
 
-  it('rejects a malformed response with a technical error', async () => {
+  it('rejects a malformed response with a technical error and reports it, because the adapter created it', async () => {
     server.use(getListOrdersMockHandler({ items: [{ id: 42 }] } as never));
 
-    await expect(adapter.loadOrders()).rejects.toBeInstanceOf(TechnicalError);
+    const failure: unknown = await adapter.loadOrders().catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({ name: 'TechnicalError', failure: 'malformed-response' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(failure);
   });
 
   it('maps ORDER_ALREADY_SHIPPED to the domain error', async () => {
     server.use(http.post('*/api/v1/orders/:id/cancel', () => problem(409, 'ORDER_ALREADY_SHIPPED')));
 
     await expect(adapter.cancelOrder('o-2', 'too late')).rejects.toEqual(new OrderAlreadyShipped('o-2'));
+    expect(reportError.report).not.toHaveBeenCalled();
   });
 
   it('maps 404 to OrderNotFound', async () => {
@@ -67,10 +73,21 @@ describe('HttpOrders against the contract stubs', () => {
     await expect(adapter.cancelOrder('o-9', 'gone')).rejects.toBeInstanceOf(OrderNotFound);
   });
 
-  it('maps a server error to a technical error', async () => {
+  it('maps a server error to a technical error, reported once by the mutator only', async () => {
     server.use(http.post('*/api/v1/orders/:id/cancel', () => problem(500)));
 
-    await expect(adapter.cancelOrder('o-1', 'reason')).rejects.toBeInstanceOf(TechnicalError);
+    await expect(adapter.cancelOrder('o-1', 'reason')).rejects.toMatchObject({ failure: 'server' });
+    expect(reportError.report).toHaveBeenCalledOnce();
+  });
+
+  it('maps an unknown problem code to a technical error and reports it once', async () => {
+    server.use(http.post('*/api/v1/orders/:id/cancel', () => problem(422, 'SOMETHING_NEW')));
+
+    const failure: unknown = await adapter.cancelOrder('o-1', 'reason').catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(TechnicalError);
+    expect(failure).toMatchObject({ failure: 'unexpected' });
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(failure);
   });
 
   it('sends the cancel reason', async () => {

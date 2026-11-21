@@ -21,7 +21,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 
 ## 2. Skills to combine
 
-`baseline-angular`, `baseline-react`, `baseline-nextjs`, `baseline-spring` or `baseline-nestjs` (this skill is loaded from them), `angular-developer`, `baseline-tdd`, `playwright-best-practices` (locale and timezone emulation), `accessibility`.
+`baseline-angular`, `baseline-react`, `baseline-nextjs`, `baseline-spring` or `baseline-nestjs` (this skill is loaded from them; only the project's own stacks), `angular-developer` (Angular only), `baseline-tdd`, `playwright-best-practices` (locale and timezone emulation), `accessibility`.
 
 ## 3. Overrides you will hit
 
@@ -37,15 +37,17 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | Error mapper or store returning translated text | Store holds the error key; the component translates (NG-STATE-09, NG-I18N-04) |
 | `LocaleContextHolder` or `MessageSource` in a service | Language as data in the command (SPRING-I18N-04) |
 | `Intl`, `toLocale*`, `nestjs-i18n` or a catalog lookup in a NestJS use case | Language as data in the command; translation in the filter or outgoing adapter (NEST-I18N-04/05) |
+| `react-i18next`, source sentences as ids, `t()` in mutation hooks or slices | `use-intl` (React SPA) or `next-intl` (Next.js), semantic keys, keys in the core and slices (REACT-I18N-01/03/04, NEXT-I18N-01; overrides table in `react.md`) |
+| Translated text returned by a Next.js server action or passed from a server to a client component | Codes from actions, translation on each side (NEXT-I18N-07/09) |
 | Third-party i18n skills (React/i18next) or running their audit scripts | Not used (TOOL-SKL-03/05); use `npm run i18n:check` |
 | Editing non-source catalogs by hand | Weblate writes them (TOOL-I18N-02) |
 
 ## 4. Workflow
 
 1. **Check the ADR** (I18N-01): supported locales, source locale, release-blocking locales.
-2. **Add the text as a key** in the feature scope, source locale only, with context in `context.json` (NG-I18N-02/03, I18N-08). ICU for plurals and selects (NG-I18N-06). Never concatenate (I18N-07).
-3. **Keep the core language-free:** stores, mappers and use cases return codes or keys (NG-I18N-04); new business errors get a `code` in the enum, the OpenAPI spec and every bundle (SPRING-I18N-02/07 or NEST-I18N-02/04).
-4. **Format at the edge** with the shared pipes and the active locale (NG-I18N-08); no formatted values on the wire (I18N-03).
+2. **Add the text as a key** in the feature scope, source locale only, with context in `context.json` (I18N-08; Angular: NG-I18N-02/03; React: REACT-I18N-02/03; Next.js: NEXT-I18N-02). ICU for plurals and selects (NG-I18N-06, REACT-I18N-07). Never concatenate (I18N-07).
+3. **Keep the core language-free:** stores, slices, mappers, use cases and server actions return codes or keys (NG-I18N-04, REACT-I18N-04, NEXT-I18N-09); new business errors get a `code` in the enum, the OpenAPI spec and every bundle (SPRING-I18N-02/07 or NEST-I18N-02/04).
+4. **Format at the edge** with the active locale (Angular: shared pipes, NG-I18N-08; React and Next.js: `useFormatter()` and shared `Intl` helpers, REACT-I18N-10); no formatted values on the wire (I18N-03).
 5. **Test first** (`baseline-tdd`): real source catalog in component tests (TEST-I18N-01); formatting in two locales (TEST-I18N-07); a language switch re-formats what is on screen (TEST-I18N-08); per-locale contract and bundle parity tests in the backend (TEST-I18N-05/06).
 6. **Check the layout** in the pseudo-locale and with `lang`/`dir` asserted by axe (TEST-I18N-02..04).
 7. **Finish** with `npm run i18n:check` and the stack's verify command green, plus `npm run e2e` (locale projects) for changed screens; no gate, lint rule or parity test loosened.

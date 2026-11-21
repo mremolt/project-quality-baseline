@@ -20,5 +20,6 @@ Shared docs every TypeScript frontend also implements (the stack page lists its 
 | [07-deployment-view/container-runtime.md](../07-deployment-view/container-runtime.md) | Frontend delivery: the BFF image embeds and serves the bundle, caching, rolling deployments, one release tag | `REL-FE-*` |
 | [08-crosscutting-concepts/configuration/configuration.md](../08-crosscutting-concepts/configuration/configuration.md) | One build for all environments, runtime configuration, secrets | `CFG-*` |
 | [08-crosscutting-concepts/observability/observability.md](../08-crosscutting-concepts/observability/observability.md) | Frontend error reports, correlation, source maps | `OBS-*` |
+| [10-quality-requirements/accessibility.md](../10-quality-requirements/accessibility.md) | WCAG 2.2 AA target, adopted AAA set, test layers L1–L6, journey and screen inventory | `A11Y-*` |
 | [08-crosscutting-concepts/data-protection/data-protection.md](../08-crosscutting-concepts/data-protection/data-protection.md) | Personal data, no third-party browser resources (DP-PROC-03) | `DP-*` |
 

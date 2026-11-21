@@ -36,18 +36,35 @@ export function createNonce(): string {
   return Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('base64');
 }
 
-/** The request headers the server-action origin check reads. */
-export interface ActionRequest {
+/** Paths served by route handlers; each checks its own requests (XSRF token, origin, NEXT-SEC-02, NEXT-OBS-18). */
+const ROUTE_HANDLER_PATHS = /^\/(api|auth|client-errors|livez|readyz)(\/|$)/;
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+export function isRouteHandlerPath(pathname: string): boolean {
+  return ROUTE_HANDLER_PATHS.test(pathname);
+}
+
+/** What the page write gate reads from a request. */
+export interface PageRequest {
   readonly method: string;
-  readonly headers: Pick<Headers, 'get' | 'has'>;
+  readonly pathname: string;
+  readonly headers: Pick<Headers, 'get'>;
 }
 
 /**
- * NEXT-SEC-05: a server action (`POST` with `Next-Action`) runs only for same-origin requests. Next.js itself runs
- * an action that comes without `Origin`, so `proxy.ts` rejects it unless `Sec-Fetch-Site` or `Origin` proves the origin.
+ * NEXT-SEC-05: every non-GET/HEAD/OPTIONS request to a page path is a server action or something Next.js may treat as
+ * one (a no-JS form post carries the action id as a `$ACTION_ID_…` form field, without a `Next-Action` header). It
+ * passes only when `Sec-Fetch-Site: same-origin` or `Origin` equal to `APP_ORIGIN` proves the origin; Next.js itself
+ * runs an action that comes without `Origin`.
  */
-export function isCrossOriginAction(request: ActionRequest, appOrigin: string): boolean {
-  if (request.method !== 'POST' || !request.headers.has('next-action')) return false;
-  if (request.headers.get('sec-fetch-site') === 'same-origin') return false;
-  return request.headers.get('origin') !== new URL(appOrigin).origin;
+export function isCrossOriginPageWrite(request: PageRequest, appOrigin: string): boolean {
+  if (SAFE_METHODS.has(request.method.toUpperCase()) || isRouteHandlerPath(request.pathname)) return false;
+  return !isSameOriginRequest(request.headers, appOrigin);
+}
+
+/** `Sec-Fetch-Site: same-origin`, or an `Origin` equal to `APP_ORIGIN`; a missing or `null` Origin proves nothing. */
+export function isSameOriginRequest(headers: Pick<Headers, 'get'>, appOrigin: string): boolean {
+  if (headers.get('sec-fetch-site') === 'same-origin') return true;
+  return headers.get('origin') === new URL(appOrigin).origin;
 }

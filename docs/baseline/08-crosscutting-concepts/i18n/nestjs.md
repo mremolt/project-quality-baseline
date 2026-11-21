@@ -9,7 +9,7 @@ NestJS rules on top of [i18n.md](i18n.md) (`I18N-*`, `TOOL-I18N-*`, `TEST-I18N-*
 | Locale resolution | `Accept-Language` negotiated against the product's supported locales, default the source locale (NEST-I18N-03) | `src/platform/adapter/i18n`, called from `adapter/in/rest` |
 | Error `type`, `code` | Stable, not localized; `code` is `UPPER_SNAKE_CASE` from the API's catalogue (API-REST-07) | domain error carries the code, the problem filter maps it |
 | `title`, `detail` | Localized from the catalog with the error's parameters; a single-language product keeps the standard reason phrase as `title` (NEST-REST rules in [api/nestjs-rest.md](../api/nestjs-rest.md)) | `ProblemDetailsFilter` in `src/platform/adapter/in/rest` |
-| Validation messages | `errors[]` keeps `field` and `code`; `message` is localized | problem filter |
+| Validation messages | `errors[]` keeps the required `field` and `code`; the optional `message` (API-REST-05) is added localized | problem filter |
 | Emails, notifications, PDFs | The use case calls an outgoing port with data and the recipient's `Language`; the adapter renders templates and catalog texts | `adapter/out/*` |
 | Recipient language, time zone | Stored user attributes; asynchronous work never reads a request | domain data and persistence adapter |
 | Headers | `Content-Language` on localized bodies; `Vary: Accept-Language` on cacheable responses | REST adapter |
@@ -40,7 +40,7 @@ export function translate(locale: SupportedLocale, key: string, params: Record<s
 ```
 
   `CATALOGS` maps each locale to its catalog flattened to dotted keys. A fallback to the source locale logs a warning (I18N-09). No locale is stored in AsyncLocalStorage or a request-scoped provider: the REST adapter passes the negotiated locale to whatever it renders.
-- **NEST-I18N-04: In a multilingual product, `ProblemDetailsFilter` keeps the stable `code` and localizes `title` and `detail`.** Domain errors carry a `code` and parameters, never text (I18N-02; `DomainError.params`, NODE-ARCH-07); for a business error the filter looks up `error.<CODE>.title` and `error.<CODE>.detail` with those parameters, for other problems `status.<status>.title`, sets `Content-Language` to the negotiated locale, and keeps `type`, `status` and `code` unchanged. Validation failures keep `field` and the generic `code` per entry (`REQUIRED`, `TOO_LONG`, …) and get `message` from `validation.<CODE>`. A unit test asserts that every code of the API's catalogue has `title` and `detail` in the source catalog, because keys built from codes are not checked by the compiler.
+- **NEST-I18N-04: In a multilingual product, `ProblemDetailsFilter` keeps the stable `code` and localizes `title` and `detail`.** Domain errors carry a `code` and parameters, never text (I18N-02; `DomainError.params`, NODE-ARCH-07); for a business error the filter looks up `error.<CODE>.title` and `error.<CODE>.detail` with those parameters, for other problems `status.<status>.title`, sets `Content-Language` to the negotiated locale, and keeps `type`, `status` and `code` unchanged. Validation failures keep `field` and the generic `code` per entry (`REQUIRED`, `TOO_LONG`, …) and get the optional `message` (API-REST-05; clients never depend on it) from `validation.<CODE>`. A unit test asserts that every code of the API's catalogue has `title` and `detail` in the source catalog, because keys built from codes are not checked by the compiler.
 - **NEST-I18N-05: Locale code and locale-dependent calls never appear in `domain`, `ports` or `application`.** The allow-list rules of dependency-cruiser (`domain-is-pure`, `ports-only-domain`, `application-only-core`) already reject `intl-messageformat`, `negotiator` and `src/platform/adapter/i18n` in these rings. Built-in globals are not imports, so ESLint adds, for files in those rings:
 
 ```js
@@ -66,7 +66,7 @@ it.each([
   ['fr-FR', 'en', 'Order total too low'],
 ])('Accept-Language %s → %s, same code', async (header, locale, title) => {
   const res = await app.inject({ method: 'POST', url: '/v1/orders', headers: { 'accept-language': header }, payload: lowTotalOrder });
-  expect(res.statusCode).toBe(422);
+  expect(res.statusCode).toBe(409); // business rule (API-REST-06)
   expect(res.headers['content-language']).toBe(locale);
   expect(res.json()).toMatchObject({ code: 'ORDER_TOTAL_TOO_LOW', title });
 });

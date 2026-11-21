@@ -4,17 +4,20 @@ import 'server-only';
 export {
   API_CONTENT_SECURITY_POLICY,
   createNonce,
-  isCrossOriginAction,
+  isCrossOriginPageWrite,
+  isRouteHandlerPath,
   pageContentSecurityPolicy,
   SECURITY_HEADERS,
 } from './adapter/in/next/security-headers';
 export { logger } from './adapter/out/logging/logger';
+export { problemResponse } from './adapter/problem-response';
 export { serverConfig } from './config/server-config';
 export type { Caller } from './domain';
 export { TechnicalError, UnauthenticatedError } from './domain';
 export {
   apiProxy,
   authRouteHandlers,
+  clientErrorRouteHandler,
   currentCaller,
   healthRouteHandlers,
   publicRuntimeConfig,

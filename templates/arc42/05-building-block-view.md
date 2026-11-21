@@ -8,7 +8,7 @@ The structure inside each component follows the baseline: [../baseline/05-buildi
 
 ```mermaid
 flowchart LR
-  frontend[frontend/ Angular] --> backend[backend/ Spring Boot]
+  frontend[frontend/ Angular, React or Next.js] --> backend[backend/ Spring Boot or NestJS]
   backend --> db[(PostgreSQL)]
 ```
 

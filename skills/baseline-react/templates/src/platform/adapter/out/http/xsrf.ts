@@ -2,7 +2,12 @@ const MUTATING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 function readCookie(name: string): string | undefined {
   const entry = document.cookie.split('; ').find((cookie) => cookie.startsWith(`${name}=`));
-  return entry === undefined ? undefined : decodeURIComponent(entry.slice(name.length + 1));
+  if (entry === undefined) return undefined;
+  try {
+    return decodeURIComponent(entry.slice(name.length + 1));
+  } catch {
+    return undefined; // a malformed cookie counts as absent: no header, the BFF rejects the call with 403
+  }
 }
 
 /** Adds the BFF's XSRF header to same-origin mutating requests only (REACT-SEC-06). */

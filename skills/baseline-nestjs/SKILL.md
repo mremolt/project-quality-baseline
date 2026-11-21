@@ -54,6 +54,7 @@ Full table: `docs/baseline/stacks/nestjs.md#skill-overrides`.
 | DTO classes with class-validator | zod schema on `@Body({ schema })`, global `StandardSchemaValidationPipe` (NEST-D3) |
 | `throw new NotFoundException()` in a service | Category errors from `src/platform/domain` (NODE-ARCH-07), mapped by the global filter |
 | TypeORM/Prisma entity as model | Kysely in `adapter/out/persistence`, rows mapped two-way (NEST-LIB-09) |
+| `@Inject(KYSELY)` in a context repository | Inject `KyselyTransactionAdapter` and use `executor()`; `KYSELY` only in platform persistence, scheduling (cluster lock) and health (NEST-DB-04) |
 | `@nestjs/passport`, `@Roles` as the authorization | `jose` guard builds the `Caller`; the use case authorizes (ARCH-UC-15) |
 | `ConfigService.get('X')`, `process.env.X` | Typed config from `src/platform/config` (NODE-ARCH-12) |
 | `Scope.REQUEST`, `forwardRef` | Singletons, arguments, no cycles (NEST-ARCH-04/05) |
@@ -63,7 +64,7 @@ Full table: `docs/baseline/stacks/nestjs.md#skill-overrides`.
 
 ## 4. Workflow
 
-1. **Place it.** Ring and folder for every new file (NODE-ARCH-01); core files import only their rings, `src/platform/domain/index.ts` and zod (NODE-ARCH-04); wiring only in the context module (NEST-ARCH-01). The use case authorizes with the `Caller` (ARCH-UC-15) and raises errors by category (NODE-ARCH-07).
+1. **Place it.** Ring and folder for every new file (NODE-ARCH-01); core files import only their rings, `src/platform/domain/index.ts`, zod and (in `ports` and `application`) `src/platform/ports/index.ts` (NODE-ARCH-04); wiring only in the context module (NEST-ARCH-01). The use case authorizes with the `Caller` (ARCH-UC-15) and raises errors by category (NODE-ARCH-07).
 2. **N+1 check** for anything that loads data (API-N1-01): fill in the template from `avoiding-n-plus-one.md`, recommend a strategy, and let the developer decide.
 3. **Test first** with `baseline-tdd`: Chicago for domain, London for use cases and adapters; test type per element from `testing/nestjs.md`.
 4. **Security and data**: new endpoint → 401/403/success tests and a cross-user test if it takes an id; answer the security checklist (SEC-REV-01); new table or column → expand/contract migration; new personal-data field → inventory and deletion concept (DP-INV-03).

@@ -5,7 +5,7 @@ Authentication and authorization for NestJS backends (hardening and the NestJS B
 ## Model
 
 ```
-Browser (Angular) ──session cookie──▶ BFF ──access token──▶ API (resource server) ──▶ use case(caller, command)
+Browser (SPA)     ──session cookie──▶ BFF ──access token──▶ API (resource server) ──▶ use case(caller, command)
 Service / job     ────────────────access token───────────▶ API (resource server)
 Kafka listener    ───────────system Caller──────────────────────────────────────▶ use case(caller, command)
 ```
@@ -32,7 +32,15 @@ The API validates bearer JWTs. It does not issue tokens, store passwords or rend
   });
   ```
 
-  The token comes only from `Authorization: Bearer <token>`, never from a query parameter or (on the API) a cookie. Any `jose` error (`errors.JOSEError`) becomes 401; other errors propagate (fail closed). Validation failures are audit events (NEST-SEC-33). The guard test signs tokens locally and asserts 401 for: no token, wrong `aud`, wrong `iss`, expired, `alg: none`, an algorithm outside the list (an HS256 token), and a key not in the set.
+  The token comes only from `Authorization: Bearer <token>`, never from a query parameter or (on the API) a cookie. The guard tells two failures apart:
+
+  | Failure | Answer | Audit event (NEST-SEC-33) |
+  |---|---|---|
+  | No bearer token | 401, `WWW-Authenticate: Bearer` | `auth.token_missing` |
+  | Token rejected: any other `jose` error (`errors.JOSEError`), including a `kid` the key set does not contain (`JWKSNoMatchingKey`) | 401, `WWW-Authenticate: Bearer error="invalid_token"` (RFC 6750) | `auth.token_rejected` with the jose code |
+  | Key set unavailable: `JWKSTimeout`, a network error of the fetch (a non-jose error such as `TypeError: fetch failed`), `JWKSInvalid`, and the generic `JOSEError` (`ERR_JOSE_GENERIC`) jose throws for a non-200 or non-JSON key set answer | 503 + `Retry-After` through `UnavailableError` (NODE-ARCH-07) | `auth.key_set_unavailable` with the jose code or error name |
+
+  The distinction sits in a wrapper around the key set function that `jwtVerify` calls, so only errors of the key lookup can become 503; a token is never accepted because the key set failed (fail closed), and an identity-provider outage does not look like a wave of bad tokens to clients, which would drop their tokens and log users out. The problem filter adds `WWW-Authenticate: Bearer` to every other 401 (NEST-REST-14). The guard test signs tokens locally and asserts 401 with the challenge for: no token, wrong `aud`, wrong `iss`, expired, `alg: none`, an algorithm outside the list (an HS256 token), and a key not in the set; and, against a local `node:http` key set endpoint with `createRemoteJWKSet`, 503 with `Retry-After` for a key set timeout, an HTTP error, a non-JSON and an invalid key set, and an unreachable endpoint.
 - **NEST-SEC-05: No `passport` and no `@nestjs/passport`.** `@nestjs/passport` 12.0.2 supports Nest 12, but it adds a strategy layer around `passport` 0.7 (last release January 2025) and `passport-jwt` 4.0.1, which verifies with `jsonwebtoken` instead of `jose`. The guard of NEST-SEC-01..04 is a few dozen lines, has no Express assumptions and is tested directly.
 - **NEST-SEC-06: Stateless token APIs need no CSRF protection; a cookie-authenticated route always has it** (BFF, NEST-SEC-48). Never switch a protection off to make a test or a demo pass (SEC-REV-02).
 - **NEST-SEC-07: CORS is configured once with `app.enableCors({ origin: [...], credentials })`** (Nest's Fastify adapter registers `@fastify/cors` 11.4) in `createApp()`, with the origins from configuration. Never `origin: true`, `'*'` or a reflecting function together with credentials. A browser app served by its BFF is same-origin and needs no CORS at all. A test sends a preflight from a foreign origin and asserts that no `Access-Control-Allow-Origin` comes back, and one from an allowed origin that it does.
@@ -56,14 +64,14 @@ The API validates bearer JWTs. It does not issue tokens, store passwords or rend
 
 ### Tests
 
-- **NEST-SEC-14: Every endpoint has security tests for 401 (no or invalid token), 403 (insufficient role, where coarse roles apply) and the success case.** They are REST adapter tests: `Test.createTestingModule` with the controller, mocked use cases and the real `AuthGuard` as `APP_GUARD`, `createNestApplication(new FastifyAdapter())`, requests through `app.inject(...)`. Tokens are signed locally: `generateKeyPair('ES256')`, the public key exported with `exportJWK` into `createLocalJWKSet({ keys: [jwk] })`, which replaces the remote key set under its injection token, and `new SignJWT(claims).setProtectedHeader({ alg, kid }).setIssuer(...).setAudience(...).setSubject(...).setExpirationTime(...)`. No test switches the guard off.
+- **NEST-SEC-14: Every endpoint has security tests for 401 (no or invalid token), 403 (insufficient role, where coarse roles apply) and the success case.** They are REST adapter tests: `Test.createTestingModule` with the controller, mocked use cases and the real `AuthGuard` as `APP_GUARD`, `createNestApplication(new FastifyAdapter())`, requests through `app.inject(...)`. Tokens are signed locally with the algorithm the guard pins (NEST-SEC-04): `generateKeyPair('RS256')`, the public key exported with `exportJWK` into `createLocalJWKSet({ keys: [jwk] })`, which replaces the remote key set under its injection token, and `new SignJWT(claims).setProtectedHeader({ alg, kid }).setIssuer(...).setAudience(...).setSubject(...).setExpirationTime(...)`. No test switches the guard off.
 - **NEST-SEC-15: Authorization rules are unit-tested on `Caller`** in the use-case tests, without a Nest context (London style for the ports, [TEST-TDD](../testing/tdd.md); NEST-TEST rules in [../testing/nestjs.md](../testing/nestjs.md)).
 
 ## Agent checklist
 
 - [ ] New endpoint: protected by the global guard, or `@Public()` with a reason in the PR?
 - [ ] `Caller` passed into the command; no Nest, Fastify or jose import in `domain`/`ports`/`application`?
-- [ ] `jwtVerify` with issuer, audience, algorithms, clock tolerance; JWKS timeouts set; no hand-rolled token code, no passport?
+- [ ] `jwtVerify` with issuer, audience, algorithms, clock tolerance; JWKS timeouts set; key set outage 503, rejected token 401 with `WWW-Authenticate`; no hand-rolled token code, no passport?
 - [ ] 401/403/success tests per endpoint; `cross-user` test for every use case that takes an id?
 - [ ] CORS origins from configuration, no wildcard with credentials, preflight test?
 - [ ] Nothing sensitive logged; probes public but not routed externally; `trustProxy` explicit?

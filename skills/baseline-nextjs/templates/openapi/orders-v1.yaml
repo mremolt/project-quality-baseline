@@ -41,7 +41,7 @@ paths:
         - name: orderId
           in: path
           required: true
-          schema: { type: string, maxLength: 64 }
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
       requestBody:
         required: true
         content:

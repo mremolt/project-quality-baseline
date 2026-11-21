@@ -16,7 +16,7 @@ How a NestJS backend (Fastify adapter, zod 4 through Nest's Standard Schema supp
 ### Input validation
 
 - **NEST-REST-06: Every body, query and path parameter has a zod schema on its decorator:** `@Body({ schema })`, `@Query({ schema })`, `@Param({ schema: z.object({ id: z.uuid() }) })`. The object form of `@Param` is used so that errors name the field (the single-parameter form `@Param('id', { schema })` reports an empty path). The schemas check only mappability (types, formats, lengths, enum values); business rules stay in the command factory and the domain (ARCH-UC-05). No `ValidationPipe`, class-validator or `schema.parse()` in the handler. The decorators do nothing without the global pipe of NEST-REST-07.
-- **NEST-REST-07: One global `StandardSchemaValidationPipe` with an `exceptionFactory` turns zod issues into the 400 problem of API-REST-05.** It is registered in `AppModule` as `{ provide: APP_PIPE, useValue: requestValidationPipe }`, and tests register the same instance. Nest's default factory returns a message array, which is not our wire format. The factory maps each issue to `{ field, code }` with the generic codes of API-REST-07:
+- **NEST-REST-07: One global `StandardSchemaValidationPipe` with an `exceptionFactory` turns zod issues into the 400 problem of API-REST-05.** It is registered in `AppModule` as `{ provide: APP_PIPE, useValue: requestValidationPipe }`, and tests register the same instance. Nest's default factory returns a message array, which is not our wire format. The factory maps each issue to `{ field, code }` with the generic codes of API-REST-07 (no `message`: it is optional in API-REST-05, and only a multilingual product adds a localized one, NEST-I18N-04):
 
 ```ts
 // src/platform/adapter/in/rest/request-validation.ts
@@ -89,29 +89,37 @@ export const ApiDecimal = z
 | `NotFoundError` | 404 | `code` |
 | `BusinessRuleError` | 409 | the rule's `code` |
 | `ConflictError` | 409; 412 when the request carried `If-Match` (NEST-REST-18) | conflict `code` |
-| Temporarily unavailable (`UnavailableError` from `src/platform/domain` for an exhausted pool, open circuit or full bulkhead, NODE-ARCH-07; NEST-RES rules in [resilience/nestjs.md](../resilience/nestjs.md)) | 503 + `Retry-After` | none |
-| `HttpException` below 500: Fastify's own errors, unknown route (404), guards (401/403) | its status | none |
+| Temporarily unavailable (`UnavailableError` from `src/platform/domain` for an exhausted pool, open circuit, full bulkhead or the auth guard's key set outage, NODE-ARCH-07; NEST-RES rules in [resilience/nestjs.md](../resilience/nestjs.md), NEST-SEC-04) | 503 + `Retry-After` | none |
+| `HttpException` below 500: Fastify's own errors, unknown route (404), guards (401/403) | its status; every 401 with `WWW-Authenticate: Bearer`, a rejected token (`InvalidTokenException` of the guard) with `Bearer error="invalid_token"` (RFC 6750, NEST-SEC-04) | none |
 | Other error with a numeric `statusCode` from 400 to 499: Fastify plugins such as rate limit (429), CSRF (403), multipart (413) | that status; headers the plugin set (`Retry-After`) stay | none |
-| Anything else | 500, logged at error level | none |
+| `HttpException` 503 (Terminus readiness: database down or drain, NEST-OBS-03/04) or another error with `statusCode` 503 (Fastify `handlerTimeout`, NEST-SEC-22) | 503 + `Retry-After` | none (the health details never reach the body) |
+| Anything else | 500 | none |
+
+  Each error is logged once here (NEST-LOG-08 in [logging/nestjs.md](../logging/nestjs.md)): 4xx at `info` and 503 at `warn`, with status and `code` and without a stack; 500 at `error` with the error object as `err`.
 
 ```ts
-// src/platform/adapter/in/rest/problem-details.filter.ts (503 case omitted)
+// src/platform/adapter/in/rest/problem-details.filter.ts (excerpt; log levels: template)
+const unavailable = (retryAfterSeconds = 5): Problem => ({ status: 503, headers: { 'retry-after': String(retryAfterSeconds) } });
+
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
-  private readonly log = new Logger(ProblemDetailsFilter.name);
-
   catch(error: unknown, host: ArgumentsHost): void {
     const http = host.switchToHttp();
-    const problem = this.toProblem(error, http.getRequest<FastifyRequest>());
-    if (problem.status >= 500) this.log.error(error);
-    void http
-      .getResponse<FastifyReply>()
+    const { headers = {}, ...problem } = this.toProblem(error, http.getRequest<FastifyRequest>());
+    this.logOnce(error, problem);                                  // 4xx info, 503 warn, 500 error (NEST-LOG-08)
+    const reply = http.getResponse<FastifyReply>();
+    for (const [name, value] of Object.entries(headers)) void reply.header(name, value);
+    void reply
       .status(problem.status)
       .header('content-type', 'application/problem+json')
       .send({ ...problem, title: STATUS_CODES[problem.status], traceId: currentTraceId() });
   }
 
   private toProblem(error: unknown, request: FastifyRequest): Problem {
+    return this.categoryProblem(error, request) ?? this.transportProblem(error);
+  }
+
+  private categoryProblem(error: unknown, request: FastifyRequest): Problem | undefined {
     if (error instanceof RequestValidationError) return { status: 400, errors: error.errors };
     if (error instanceof DomainValidationError) {
       return { status: 400, code: error.code, errors: error.field ? [{ field: error.field, code: error.code }] : [] };
@@ -119,17 +127,23 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     if (error instanceof NotFoundError) return { status: 404, code: error.code };
     if (error instanceof ConflictError) return { status: request.headers['if-match'] ? 412 : 409, code: error.code };
     if (error instanceof BusinessRuleError) return { status: 409, code: error.code };
-    // Fastify's 4xx (invalid JSON, 413, 415), unknown routes, guards: status only, never the message
-    if (error instanceof HttpException && error.getStatus() < 500) return { status: error.getStatus() };
-    // Fastify plugins (rate limit, CSRF, multipart) throw errors with a statusCode that are no HttpException
-    const statusCode = (error as { statusCode?: unknown } | null)?.statusCode;
-    if (typeof statusCode === 'number' && statusCode >= 400 && statusCode < 500) return { status: statusCode };
-    return { status: 500 }; // a bug or technical failure: generic body
+    if (error instanceof UnavailableError) return unavailable(error.retryAfterSeconds);
+    return undefined;
+  }
+
+  // Fastify's 4xx, unknown routes, guards, plugin errors with a statusCode: status only, never the message
+  private transportProblem(error: unknown): Problem {
+    if (error instanceof InvalidTokenException) return { status: 401, headers: { 'www-authenticate': 'Bearer error="invalid_token"' } };
+    const status = error instanceof HttpException ? error.getStatus() : statusCodeOf(error);
+    if (status === 401) return { status, headers: { 'www-authenticate': 'Bearer' } };
+    if (status !== undefined && status >= 400 && status < 500) return { status };
+    if (status === 503) return unavailable();                     // Terminus readiness, Fastify handlerTimeout
+    return { status: 500 };                                       // a bug or technical failure: generic body
   }
 }
 ```
 
-- **NEST-REST-15: Fastify's errors and those of its plugins become problems too.** The Fastify adapter turns Fastify's own errors below 500 into an `HttpException` with the Fastify error as `cause` (`FST_ERR_CTP_INVALID_JSON_BODY` → 400, `FST_ERR_CTP_BODY_TOO_LARGE` → 413, `FST_ERR_CTP_INVALID_MEDIA_TYPE` → 415). Errors of plugins such as `@fastify/rate-limit` are passed on unchanged; the filter answers any error with a 4xx `statusCode` with that status, and a 5xx `statusCode` stays a generic 500. Without that case a rate-limit 429 becomes a 500 (rate limits: NEST-SEC-32). The body limit is set on the adapter from configuration (`new FastifyAdapter({ bodyLimit })`, NEST-SEC-22). Fastify accepts `application/json` and `text/plain`; a `text/plain` body fails the body schema with 400.
+- **NEST-REST-15: Fastify's errors and those of its plugins become problems too.** The Fastify adapter turns Fastify's own errors below 500 into an `HttpException` with the Fastify error as `cause` (`FST_ERR_CTP_INVALID_JSON_BODY` → 400, `FST_ERR_CTP_BODY_TOO_LARGE` → 413, `FST_ERR_CTP_INVALID_MEDIA_TYPE` → 415). Errors of plugins such as `@fastify/rate-limit` are passed on unchanged; the filter answers any error with a 4xx `statusCode` with that status, and a 5xx `statusCode` other than 503 stays a generic 500. Fastify's `handlerTimeout` error (`FST_ERR_HANDLER_TIMEOUT`, `statusCode` 503) reaches the filter through the adapter's error handler: the template's filter test runs a real `new FastifyAdapter({ handlerTimeout })` against a slow handler and gets the 503 problem with `Retry-After`. Without that case a rate-limit 429 becomes a 500 (rate limits: NEST-SEC-32). The body limit is set on the adapter from configuration (`new FastifyAdapter({ bodyLimit })`, NEST-SEC-22). Fastify accepts `application/json` and `text/plain`; a `text/plain` body fails the body schema with 400.
 - **NEST-REST-16: A raw `ZodError` never reaches the filter.** Command and query factories in `ports/in` throw `DomainValidationError` ([05-building-block-view/nestjs.md](../../05-building-block-view/nestjs.md)); a `ZodError` or `TypeError` that arrives at the filter is a bug and answers 500.
 
 ### Collections and updates

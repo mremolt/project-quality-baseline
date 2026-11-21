@@ -17,7 +17,12 @@ export interface Tokens {
   readonly idToken: string | undefined;
 }
 
-/** The OIDC provider, behind openid-client 6 (NEST-SEC-45). */
+/** The IdP rejected the authorization response (state, nonce, claims, error response); not an outage. */
+export class LoginRejectedError extends Error {
+  override readonly name = 'LoginRejectedError';
+}
+
+/** The OIDC provider, behind openid-client 6 (NODE-BFF-02). */
 export interface IdentityProvider {
   authorizationRequest(): Promise<AuthorizationRequest>;
   exchangeCode(callbackUrl: URL, checks: LoginChecks): Promise<Tokens>;

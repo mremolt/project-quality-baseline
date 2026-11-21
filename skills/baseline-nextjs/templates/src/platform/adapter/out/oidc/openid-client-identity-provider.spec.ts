@@ -3,6 +3,7 @@ import { setupServer } from 'msw/node';
 import * as oidc from 'openid-client';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
+import { LoginRejectedError } from '../../../ports/out/identity-provider.port';
 import { OpenIdClientIdentityProvider } from './openid-client-identity-provider';
 
 const ISSUER = 'https://idp.test';
@@ -98,7 +99,20 @@ describe('OpenIdClientIdentityProvider (IdP stubbed with MSW)', () => {
         state: 's-1',
         nonce: 'n-1',
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(LoginRejectedError);
+  });
+
+  it('reports an IdP outage as an error, not as a rejected login', async () => {
+    server.use(http.post(`${ISSUER}/token`, () => new HttpResponse('unavailable', { status: 503 })));
+
+    const exchange = idp.exchangeCode(new URL('https://shop.test/auth/callback?code=c-1&state=s-1'), {
+      codeVerifier: 'v'.repeat(43),
+      state: 's-1',
+      nonce: 'n-1',
+    });
+
+    await expect(exchange).rejects.toThrow(oidc.ClientError);
+    await expect(exchange).rejects.not.toThrow(LoginRejectedError);
   });
 
   it('keeps subject and refresh token when the refresh response has neither', async () => {

@@ -24,12 +24,16 @@ const res = await fetch(url, { dispatcher: agent, signal: AbortSignal.any([polic
 ```
 
 ```ts
-// platform persistence: pg pool on the default ladder (statement 3 s < transaction 5 s < request budget 10 s)
+// platform persistence (database.ts): pg pool on the default ladder (statement 3 s < transaction 5 s < request budget 10 s)
 const pool = new pg.Pool({
-  ...connection,                                   // from the database config schema
-  max: db.DATABASE_POOL_MAX,                       // RES-CAP-02, NEST-RES-04
-  connectionTimeoutMillis: 2000,
-  options: '-c statement_timeout=3000 -c transaction_timeout=5000',
+  ...connection,                                              // from the database config schema
+  max: db.DATABASE_POOL_MAX,                                  // RES-CAP-02, NEST-RES-04
+  connectionTimeoutMillis: db.DATABASE_CONNECTION_TIMEOUT_MS, // default 2000
+  options: [
+    `-c statement_timeout=${db.DATABASE_STATEMENT_TIMEOUT_MS}`,                       // default 3000
+    `-c transaction_timeout=${db.DATABASE_TRANSACTION_TIMEOUT_MS}`,                   // default 5000
+    `-c idle_in_transaction_session_timeout=${db.DATABASE_TRANSACTION_TIMEOUT_MS}`,   // NEST-DB-04
+  ].join(' '),
 });
 pool.on('error', (err) => log.error({ err }, 'Idle database connection failed'));
 pool.on('connect', (client) => client.on('error', (err) => log.error({ err }, 'Database connection failed')));
@@ -40,13 +44,22 @@ pool.on('connect', (client) => client.on('error', (err) => log.error({ err }, 'D
 
 ### Transactions and remote calls (RES-TX)
 
-- **NEST-RES-03: Remote calls run before or after the transaction, never inside it** (RES-TX-01). The use case calls remote ports first and then runs its database work through the transaction port ([../persistence/nestjs.md](../persistence/nestjs.md)); remote side effects after the commit go through the outbox. Tests catch violations: every HTTP `Agent` is composed with a guard interceptor that asks the persistence adapter whether a transaction is open in the current async context and then throws (`fail`) or logs a `warn` (`warn`). The mode is `RESILIENCE_TRANSACTION_GUARD` (`z.enum(['fail', 'warn'])`, default `warn`); the shared integration test setup sets `fail`, so every `*.it.test.ts` fails on a violation. The outbox relay's send path uses the same check.
+- **NEST-RES-03: Remote calls run before or after the transaction, never inside it** (RES-TX-01). The use case calls remote ports first and then runs its database work through the transaction port ([../persistence/nestjs.md](../persistence/nestjs.md)); remote side effects after the commit go through the outbox. Tests catch violations: every HTTP `Agent` is composed with a guard interceptor that asks the persistence adapter whether a transaction is open in the current async context and then throws (`fail`) or logs a `warn` (`warn`). The mode is `RESILIENCE_TRANSACTION_GUARD` (`z.enum(['fail', 'warn'])`, default `warn`) in the platform's `ResilienceConfig`, provided as `RESILIENCE_CONFIG` by the platform module; the `it` project of `vitest.config.ts` sets `fail` (`test.env`), so every `*.it.test.ts` fails on a violation. The interceptor is the template's `transactionGuard` in `src/platform/adapter/out/http/transaction-guard.ts` (unit-tested against a `node:http` server in both modes). The outbox relay's send path uses the same check.
 
 ```ts
-const guarded = new Agent({ … }).compose((dispatch) => (opts, handler) => {
-  if (isInTransaction()) onViolation(`remote call inside a transaction: ${opts.method} ${opts.origin}`); // throws in fail mode
-  return dispatch(opts, handler);
-});
+// src/platform/adapter/out/http/transaction-guard.ts (excerpt)
+export const transactionGuard = (mode: 'fail' | 'warn', inTransaction = isInTransaction): Dispatcher.DispatcherComposeInterceptor =>
+  (dispatch) => (opts, handler) => {
+    if (inTransaction()) {
+      const message = `remote call inside a transaction: ${opts.method} ${String(opts.origin)}`;
+      if (mode === 'fail') throw new Error(message);
+      log.warn(message);
+    }
+    return dispatch(opts, handler);
+  };
+
+// in an outgoing HTTP adapter's module
+const agent = new Agent({ connectTimeout: 1000, … }).compose(transactionGuard(resilience.RESILIENCE_TRANSACTION_GUARD));
 ```
 
   An optimistic-lock or serialization conflict (RES-RTY-02) is retried by re-running the whole unit of work: the transaction adapter re-runs the callback in a new transaction on the port's conflict error, bounded like NEST-RES-07. It is never retried inside the callback, and remote calls made before the transaction are not repeated. In a flow started by a message consumer the consumer's error handling retries instead (NEST-RES-08).
@@ -119,6 +132,13 @@ export async function withClusterLock<T>(
 }
 
 // features/orders/adapter/in/scheduling/purge-idempotency-keys.job.ts
+// Scheduling adapters may inject KYSELY (from src/platform/adapter/out/persistence/kysely.token.ts) for the lock only;
+// the job's database work runs in the use case through the transaction port (NEST-DB-04)
+constructor(
+  @Inject(PURGE_EXPIRED_KEYS) private readonly purgeExpired: PurgeExpiredKeysUseCase,
+  @Inject(KYSELY) private readonly db: Kysely<unknown>,
+) {}
+
 @Cron('0 15 * * * *', { name: 'purgeIdempotencyKeys', waitForCompletion: true })
 async purge(): Promise<void> {
   try {

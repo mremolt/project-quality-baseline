@@ -6,10 +6,17 @@ import { NextIntlClientProvider } from 'next-intl';
 import type { ReactNode } from 'react';
 import { Provider } from 'react-redux';
 import { expect } from 'vitest';
+import { mock, type MockProxy } from 'vitest-mock-extended';
 
 import { theme } from '@/app/theme';
 import type { PublicConfig } from '@/platform';
-import { type AppStore, makeStore, PublicConfigProvider } from '@/platform/index.client';
+import {
+  type AppStore,
+  makeStore,
+  PublicConfigProvider,
+  ReportErrorProvider,
+  type ReportErrorUseCase,
+} from '@/platform/index.client';
 
 import messages from '../../messages/en.json';
 
@@ -19,6 +26,7 @@ const TEST_PUBLIC_CONFIG: PublicConfig = {
   release: 'unreleased',
   commit: 'unknown',
   requestTimeoutMs: 20_000,
+  clientErrorPath: '/client-errors',
 };
 
 interface Options {
@@ -27,23 +35,32 @@ interface Options {
   readonly store?: AppStore;
 }
 
-/** Renders like the app: theme, i18n, runtime config, a fresh store and query client, mocked use cases. */
-export function renderWithProviders(ui: ReactNode, options: Options = {}): RenderResult & { store: AppStore } {
+interface Rendered extends RenderResult {
+  readonly store: AppStore;
+  /** The mocked report-error use case behind `useReportError()` (REACT-STATE-07). */
+  readonly reportError: MockProxy<ReportErrorUseCase>;
+}
+
+/** Renders like the app: theme, i18n, runtime config, error reporting, a fresh store and query client, mocked use cases. */
+export function renderWithProviders(ui: ReactNode, options: Options = {}): Rendered {
   const store = options.store ?? makeStore();
+  const reportError = mock<ReportErrorUseCase>();
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const withUseCases = options.useCases ?? ((children: ReactNode) => children);
   const result = render(
     <NextIntlClientProvider locale="en" messages={messages} timeZone="Europe/Berlin">
       <ThemeProvider theme={theme}>
         <PublicConfigProvider value={TEST_PUBLIC_CONFIG}>
-          <Provider store={store}>
-            <QueryClientProvider client={queryClient}>{withUseCases(ui)}</QueryClientProvider>
-          </Provider>
+          <ReportErrorProvider value={reportError}>
+            <Provider store={store}>
+              <QueryClientProvider client={queryClient}>{withUseCases(ui)}</QueryClientProvider>
+            </Provider>
+          </ReportErrorProvider>
         </PublicConfigProvider>
       </ThemeProvider>
     </NextIntlClientProvider>,
   );
-  return { ...result, store };
+  return { ...result, store, reportError };
 }
 
 /** axe in jsdom (TS-TEST-09); contrast and target size need layout and are checked in E2E. */

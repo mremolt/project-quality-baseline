@@ -13,7 +13,7 @@ const { forbidden, options } = require('../.dependency-cruiser.cjs') as {
 const fixture = fileURLToPath(new URL('fixtures/arch-violation', import.meta.url));
 
 describe('architecture rules', () => {
-  it('reject a type-only import of an adapter into the domain (NODE-ARCH-14)', async () => {
+  it('reject a type-only adapter import in domain, a Nest import in application and the Kysely token in a context adapter (NODE-ARCH-14, NEST-TEST-10, NEST-DB-04)', async () => {
     const result = await cruise(['src'], {
       ...options,
       ruleSet: { forbidden },
@@ -21,6 +21,9 @@ describe('architecture rules', () => {
       baseDir: fixture,
     } as never);
     const output = result.output as { summary: { violations: { rule: { name: string } }[] } };
-    expect(output.summary.violations.map((v) => v.rule.name)).toContain('domain-is-pure');
+    const rules = output.summary.violations.map((v) => v.rule.name);
+    expect(rules).toContain('domain-is-pure');
+    expect(rules).toContain('application-only-core');
+    expect(rules).toContain('kysely-token-only-in-persistence');
   });
 });

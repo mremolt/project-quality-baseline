@@ -47,7 +47,7 @@ createServer((request, response) => {
         response.end(body);
       })
       .catch(() => {
-        response.writeHead(404).end(); // never index.html for a missing chunk (REL-FE-04)
+        response.writeHead(404).end(); // never index.html for a missing chunk (REL-FE-03)
       });
     return;
   }

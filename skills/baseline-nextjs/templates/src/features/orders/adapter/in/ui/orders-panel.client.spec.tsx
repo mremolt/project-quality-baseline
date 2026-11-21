@@ -4,12 +4,13 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { mock } from 'vitest-mock-extended';
 
+import { TechnicalError } from '@/platform';
 import { rootReducer } from '@/platform/index.client';
 import { expectNoAxeViolations, renderWithProviders } from '@/testing/render-with-providers';
 
 import type { Order } from '../../../domain/order';
 import { OrderAlreadyShipped } from '../../../domain/order-errors';
-import { CancelOrderContext, ListOrdersContext } from '../../../orders.tokens';
+import { OrdersContext } from '../../../orders.tokens';
 import { CancelOrderCommand, type CancelOrderUseCase } from '../../../ports/in/cancel-order.use-case';
 import type { ListOrdersUseCase } from '../../../ports/in/list-orders.use-case';
 import { OrdersPanel } from './orders-panel.client';
@@ -38,13 +39,12 @@ function setup() {
   const listOrders = mock<ListOrdersUseCase>();
   const cancelOrder = mock<CancelOrderUseCase>();
   listOrders.listOrders.mockResolvedValue(orders);
+  // REACT-TEST-06: an object of mocked use cases in the feature's one context
   const withUseCases = (children: ReactNode) => (
-    <ListOrdersContext value={listOrders}>
-      <CancelOrderContext value={cancelOrder}>{children}</CancelOrderContext>
-    </ListOrdersContext>
+    <OrdersContext value={{ listOrders, cancelOrder }}>{children}</OrdersContext>
   );
   const view = renderWithProviders(<OrdersPanel initialOrders={orders} />, { useCases: withUseCases });
-  return { ...view, cancelOrder };
+  return { ...view, listOrders, cancelOrder };
 }
 
 describe('OrdersPanel', () => {
@@ -62,7 +62,7 @@ describe('OrdersPanel', () => {
 
   it('cancels an order with a reason', async () => {
     const user = userEvent.setup();
-    const { cancelOrder } = setup();
+    const { cancelOrder, listOrders } = setup();
     cancelOrder.cancelOrder.mockResolvedValue();
 
     await user.click(screen.getByRole('button', { name: 'Cancel order 2026-0001' }));
@@ -75,6 +75,7 @@ describe('OrdersPanel', () => {
     expect(cancelOrder.cancelOrder).toHaveBeenCalledExactlyOnceWith(
       CancelOrderCommand.of({ orderId: 'o-1', reason: 'changed my mind' }),
     );
+    expect(listOrders.listOrders).toHaveBeenCalled(); // the list was invalidated in the mutation's onSuccess
   });
 
   it('rejects a too short reason without calling the use case', async () => {
@@ -90,17 +91,45 @@ describe('OrdersPanel', () => {
     expect(cancelOrder.cancelOrder).not.toHaveBeenCalled();
   });
 
-  it('shows the business error when the order already shipped', async () => {
-    const user = userEvent.setup();
-    const { cancelOrder } = setup();
-    cancelOrder.cancelOrder.mockRejectedValue(new OrderAlreadyShipped('o-1'));
-
+  async function submitCancel(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole('button', { name: 'Cancel order 2026-0001' }));
     await user.type(await screen.findByRole('textbox', { name: 'Reason' }), 'changed my mind');
     await user.click(screen.getByRole('button', { name: 'Cancel order' }));
+  }
+
+  it('shows the business error when the order already shipped, without reporting it', async () => {
+    const user = userEvent.setup();
+    const { cancelOrder, reportError } = setup();
+    cancelOrder.cancelOrder.mockRejectedValue(new OrderAlreadyShipped('o-1'));
+
+    await submitCancel(user);
 
     expect(
       await screen.findByText('This order has already shipped and can no longer be cancelled.'),
     ).toBeInTheDocument();
+    expect(reportError.report).not.toHaveBeenCalled();
+  });
+
+  it('shows the generic message for a technical error and leaves reporting to where it was created', async () => {
+    const user = userEvent.setup();
+    const { cancelOrder, reportError } = setup();
+    cancelOrder.cancelOrder.mockRejectedValue(new TechnicalError('cancel order action failed'));
+
+    await submitCancel(user);
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(reportError.report).not.toHaveBeenCalled();
+  });
+
+  it('reports an unexpected error once (REACT-STATE-07)', async () => {
+    const user = userEvent.setup();
+    const { cancelOrder, reportError } = setup();
+    const bug = new TypeError('a bug');
+    cancelOrder.cancelOrder.mockRejectedValue(bug);
+
+    await submitCancel(user);
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(reportError.report).toHaveBeenCalledExactlyOnceWith(bug);
   });
 });

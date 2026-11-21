@@ -6,7 +6,7 @@ import type { Kysely, Transaction } from 'kysely';
 
 import { ConcurrentModificationError, UnavailableError } from '../../../domain/index.js';
 import type { TransactionPort } from '../../../ports/index.js';
-import { KYSELY } from './database.js';
+import { KYSELY } from './kysely.token.js';
 
 const current = new AsyncLocalStorage<Transaction<unknown>>();
 

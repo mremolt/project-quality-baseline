@@ -1,47 +1,40 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { mock } from 'vitest-mock-extended';
+import { describe, expect, it } from 'vitest';
 
 import { makeStore, rootReducer } from '@/platform/index.client';
 
-import { OrderAlreadyShipped } from '../../../domain/order-errors';
-import { CancelOrderCommand, type CancelOrderUseCase } from '../../../ports/in/cancel-order.use-case';
-import { cancelOrder, orderSelected, ordersViewSlice, selectOrdersView } from './orders-view.slice';
+import {
+  orderCancelled,
+  orderSelected,
+  ordersViewSlice,
+  selectionCleared,
+  selectOrdersView,
+} from './orders-view.slice';
 
 rootReducer.inject(ordersViewSlice);
 
 describe('orders view slice', () => {
-  const useCase = mock<CancelOrderUseCase>();
-  const command = CancelOrderCommand.of({ orderId: 'o-1', reason: 'changed my mind' });
-  const consoleError = vi.spyOn(console, 'error');
-
-  afterEach(() => {
-    expect(consoleError).not.toHaveBeenCalled(); // no serializability or immutability warnings from RTK's checks
+  it('starts with nothing selected', () => {
+    expect(selectOrdersView(makeStore().getState())).toEqual({ selectedOrderId: null, cancelledOrderId: null });
   });
 
-  it('selects an order and cancels it through the use case', async () => {
+  it('selects an order and clears the selection', () => {
     const store = makeStore();
-    useCase.cancelOrder.mockResolvedValue();
+
+    store.dispatch(orderSelected('o-1'));
+    expect(selectOrdersView(store.getState()).selectedOrderId).toBe('o-1');
+
+    store.dispatch(selectionCleared());
+    expect(selectOrdersView(store.getState()).selectedOrderId).toBeNull();
+  });
+
+  it('remembers the cancelled order until the next selection', () => {
+    const store = makeStore();
     store.dispatch(orderSelected('o-1'));
 
-    await store.dispatch(cancelOrder({ useCase, command }));
+    store.dispatch(orderCancelled('o-1'));
+    expect(selectOrdersView(store.getState())).toEqual({ selectedOrderId: null, cancelledOrderId: 'o-1' });
 
-    expect(useCase.cancelOrder).toHaveBeenCalledExactlyOnceWith(command);
-    expect(selectOrdersView(store.getState())).toEqual({
-      selectedOrderId: null,
-      cancelStatus: 'succeeded',
-      errorKey: null,
-    });
-  });
-
-  it('maps a domain error to its translation key', async () => {
-    const store = makeStore();
-    useCase.cancelOrder.mockRejectedValue(new OrderAlreadyShipped('o-1'));
-
-    await store.dispatch(cancelOrder({ useCase, command }));
-
-    expect(selectOrdersView(store.getState())).toMatchObject({
-      cancelStatus: 'failed',
-      errorKey: 'errors.alreadyShipped',
-    });
+    store.dispatch(orderSelected('o-3'));
+    expect(selectOrdersView(store.getState())).toEqual({ selectedOrderId: 'o-3', cancelledOrderId: null });
   });
 });

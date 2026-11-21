@@ -3,7 +3,8 @@ import { TechnicalError, UnauthenticatedError } from '@/platform/domain';
 import { HttpProblem, readProblem } from './http-problem';
 
 export interface SendOptions {
-  readonly timeoutMs: number;
+  /** The call's total deadline (`AbortSignal.timeout(API_TIMEOUT_MS)`), started before the session lookup (NEXT-RES-03). */
+  readonly deadline: AbortSignal;
   readonly headers: Readonly<Record<string, string>>;
 }
 
@@ -13,8 +14,8 @@ export interface SendOptions {
  * `AbortSignal.any` is outside the browser set (the browser mutator uses `anySignal`).
  */
 export async function sendRequest<T>(url: string, init: RequestInit, options: SendOptions): Promise<T> {
-  const timeout = AbortSignal.timeout(options.timeoutMs);
-  const signal = init.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
+  const { deadline } = options;
+  const signal = init.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
   const headers = new Headers(init.headers);
   headers.set('accept', 'application/json, application/problem+json');
   for (const [name, value] of Object.entries(options.headers)) headers.set(name, value);
@@ -26,7 +27,7 @@ export async function sendRequest<T>(url: string, init: RequestInit, options: Se
     if (init.signal?.aborted) throw error; // the caller cancelled: no technical error
     throw new TechnicalError(`request to ${url.split('?')[0] ?? ''} failed`, {
       cause: error,
-      failure: timeout.aborted ? 'timeout' : 'network',
+      failure: deadline.aborted ? 'timeout' : 'network',
     });
   }
   if (response.status === 401) throw new UnauthenticatedError('session missing or expired');

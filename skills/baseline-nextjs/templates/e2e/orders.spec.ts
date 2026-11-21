@@ -1,3 +1,4 @@
+import { E2E_PORT } from './e2e-constants';
 import { expect, test } from './fixtures';
 
 test.describe('orders', () => {
@@ -5,7 +6,10 @@ test.describe('orders', () => {
     expect(cspViolations).toEqual([]); // starts collecting before the first navigation
   });
 
-  test('server-renders the orders with a nonce CSP and security headers @theme', async ({ page, expectAccessible }) => {
+  test('server-renders the orders with a nonce CSP and security headers @theme @responsive', async ({
+    page,
+    expectAccessible,
+  }) => {
     const response = await page.goto('/orders');
 
     const csp = response?.headers()['content-security-policy'] ?? '';
@@ -94,8 +98,55 @@ test.describe('orders', () => {
       data: original.postData() ?? '',
     });
 
+    const sameOrigin = await page.request.post('/orders', {
+      headers: { ...headers, origin: new URL(page.url()).origin },
+      data: original.postData() ?? '',
+    });
+
     expect(withoutOrigin.status()).toBe(403);
     expect(foreignOrigin.status()).toBe(403);
+    expect(sameOrigin.status()).toBe(200);
+  });
+
+  test('rejects a no-JS form post to a page (multipart, $ACTION_ID_ field, Origin null) (NEXT-SEC-05)', async ({
+    page,
+  }) => {
+    const response = await page.request.post('/orders', {
+      headers: { origin: 'null' },
+      multipart: { $ACTION_ID_0000000000000000000000000000000000000000: '', reason: 'changed my mind' },
+    });
+
+    expect(response.status()).toBe(403);
+    expect(response.headers()['content-type']).toBe('application/problem+json');
+  });
+
+  test('a started login leaves the live session alone until its callback (NODE-BFF-07)', async ({ page, context }) => {
+    const login = await context.request.get('/auth/login?returnTo=/orders', { maxRedirects: 0 });
+
+    expect(login.status()).toBe(302);
+    expect(login.headers()['set-cookie']).toMatch(/^__Host-login=/);
+    expect(login.headers()['set-cookie']).not.toContain('__Host-session');
+    await page.goto('/orders');
+    await expect(page.getByRole('table', { name: 'Your orders' })).toBeVisible();
+  });
+
+  test('takes same-origin error reports without a session and refuses foreign ones (NEXT-OBS-15)', async ({
+    page,
+    playwright,
+  }) => {
+    const appOrigin = `http://localhost:${String(E2E_PORT)}`;
+    const report = { type: 'Error', message: 'boom', release: 'e2e', environment: 'e2e', route: '/orders' };
+    const anonymous = await playwright.request.newContext({ baseURL: appOrigin });
+
+    const sameOrigin = await anonymous.post('/client-errors', { headers: { origin: appOrigin }, data: report });
+    const foreign = await page.request.post('/client-errors', {
+      headers: { origin: 'https://evil.example' },
+      data: report,
+    });
+
+    expect(sameOrigin.status()).toBe(204);
+    expect(foreign.status()).toBe(403);
+    await anonymous.dispose();
   });
 
   test('loads the screen within its request budget', async ({ page }) => {

@@ -1,31 +1,17 @@
-import { createAsyncThunk, createSlice, type PayloadAction, type WithSlice } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction, type WithSlice } from '@reduxjs/toolkit';
 
 import type { RootState } from '../../../../../platform';
-import type { CancelOrderCommand, CancelOrderUseCase } from '../../../ports/in/cancel-order.use-case';
-import { type OrdersErrorKey, toErrorKey } from './orders-error-keys';
 
-/** View state only: which order the dialog is for, command status, mapped error key. Orders live in TanStack Query. */
+/**
+ * Cross-component view state only (REACT-STATE-04): which order the cancel dialog is for, set by the table's button
+ * and read by the page and the dialog. Orders live in the TanStack Query cache; the cancel command's status and error
+ * live in its mutation (REACT-STATE-03).
+ */
 export interface OrdersViewState {
   readonly cancelOrderId: string | null;
-  readonly cancelStatus: 'idle' | 'pending' | 'succeeded' | 'failed';
-  readonly cancelError: OrdersErrorKey | null;
 }
 
-const initialState: OrdersViewState = { cancelOrderId: null, cancelStatus: 'idle', cancelError: null };
-
-/** The component passes the use case it got from the context hook; the thunk never imports adapters or composition. */
-export const cancelOrder = createAsyncThunk<
-  undefined,
-  { readonly useCase: CancelOrderUseCase; readonly command: CancelOrderCommand },
-  { rejectValue: OrdersErrorKey }
->('orders/cancelOrder', async ({ useCase, command }, { rejectWithValue, signal }) => {
-  try {
-    await useCase.cancel(command, signal);
-    return undefined;
-  } catch (error) {
-    return rejectWithValue(toErrorKey(error));
-  }
-});
+const initialState: OrdersViewState = { cancelOrderId: null };
 
 export const ordersSlice = createSlice({
   name: 'orders',
@@ -33,35 +19,17 @@ export const ordersSlice = createSlice({
   reducers: {
     cancelRequested(state, action: PayloadAction<string>) {
       state.cancelOrderId = action.payload;
-      state.cancelStatus = 'idle';
-      state.cancelError = null;
     },
-    cancelDismissed(state) {
+    cancelClosed(state) {
       state.cancelOrderId = null;
-      state.cancelStatus = 'idle';
-      state.cancelError = null;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(cancelOrder.pending, (state) => {
-        state.cancelStatus = 'pending';
-        state.cancelError = null;
-      })
-      .addCase(cancelOrder.fulfilled, (state) => {
-        state.cancelOrderId = null;
-        state.cancelStatus = 'succeeded';
-      })
-      .addCase(cancelOrder.rejected, (state, action) => {
-        state.cancelStatus = 'failed';
-        state.cancelError = action.payload ?? 'technical';
-      });
   },
 });
 
-export const { cancelRequested, cancelDismissed } = ordersSlice.actions;
+export const { cancelRequested, cancelClosed } = ordersSlice.actions;
 
-declare module '../../../../../platform/adapter/in/ui/app-store' {
+// Typed through the platform's public API (REACT-STATE-02): `src/platform/index.ts` re-exports `LazyLoadedSlices`.
+declare module '../../../../../platform' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- RTK lazy-slice typing by declaration merging
   interface LazyLoadedSlices extends WithSlice<typeof ordersSlice> {}
 }
