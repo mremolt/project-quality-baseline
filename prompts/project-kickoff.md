@@ -12,7 +12,7 @@ Before using it:
 - Remove or adjust the "Working mode: unattended" section if someone will review each step.
 
 ```
-We're building the product described in <PLANNING_DOCS>. Read all of it before starting. The implementation order is <PLAN>.
+We're building the product described in <PLANNING_DOCS>. Don't load all of it at once: follow its own reading guide (AGENTS.md or README) if it has one; otherwise read the overview and <PLAN> first, and for each step only the parts that step needs. The implementation order is <PLAN>.
 
 The technical specification for this product is our quality baseline: docs/baseline/ (synced; AGENTS.md is your entry point). It is binding. On anything technical it wins over the planning docs, over skills and over your own habits. If the planning docs expect a separate technical specification or architecture from another team, the baseline is that specification.
 
@@ -26,7 +26,7 @@ I'm away most of the time, and one goal of this project is to test whether the b
 
 ## Rules
 
-1. Before any work: read AGENTS.md and everything under "Always read". Load the entry skills from AGENTS.md "Read by stack" before writing code for that stack, and the task skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, …) whenever a task touches their area.
+1. Before any work: read AGENTS.md and follow its "How to read" steps (rule indexes first, full docs only for the topics a task touches; TOOL-SKL-10). Load the entry skills from AGENTS.md "Read by stack" before writing code for that stack, and the task skills (`baseline-tdd`, `baseline-security`, `baseline-i18n`, …) whenever a task touches their area.
 2. Don't write a separate technical specification. Document only what is specific to this product, as the baseline requires:
    - docs/architecture/ (arc42): this product's context, building blocks, domain model and its product-specific technical concepts (whatever the planning docs flag as hard or special), linking to docs/baseline/ instead of repeating it,
    - an ADR in docs/adr/ for every choice the baseline leaves open, and for any deviation from it,
@@ -34,7 +34,7 @@ I'm away most of the time, and one goal of this project is to test whether the b
    - the repository layout per the decision guide (REPO-LAY-02); decide it and record the decision.
 3. Where the planning docs describe a technical solution that differs from the baseline, the baseline applies. Example: a plan describing its own password login, lockout and reset emails becomes login through the external OIDC identity provider via the BFF, with those policies as identity-provider configuration. Map the plan's business intent onto the baseline's solution and record each mapping in docs/architecture/.
 4. Open business questions and preparation tasks in the planning docs: don't wait for them. Use the planning docs' stated assumptions where they exist, otherwise a conservative default. Log each in docs/architecture/open-questions.md. Create any demo or test data the plan needs yourself, fictitious only (DP-ENV-01).
-5. Implement step by step, following <PLAN>. For each step:
+5. Implement step by step, following <PLAN>. Finish a step's screens before you start the next step's backend; never let the backend run ahead of the UI. For each step:
    - work test-first with the test type each architecture element requires (testing-by-architecture-element.md),
    - meet both the plan's own completion criteria and the baseline's rules (hexagonal boundaries and architecture tests, generated OpenAPI clients, WCAG 2.2 AA asserted by tests, timeouts, i18n where the product is multilingual, audit trail where required),
    - check every data-loading change for N+1, choose a strategy, and note it in the commit message (API-N1-01),
