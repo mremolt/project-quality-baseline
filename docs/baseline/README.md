@@ -38,7 +38,7 @@ Each stack page lists its files across the chapters, the skills to load and the 
 
 ## Conventions for these docs
 
-- Rules have stable IDs (`PREFIX-AREA-NN`). Reference them in reviews, commits and ADRs. Never renumber existing IDs; deprecate instead. Moving a file to another chapter never changes its IDs.
+- Rules have stable IDs (`PREFIX-AREA-NN`). Reference them in reviews, commits and ADRs. Never renumber or reuse an ID. A rule that is deprecated, or only repeats another rule, is removed; its ID goes to [retired-rule-ids.md](retired-rule-ids.md) with its replacement, and references point to the replacement. Moving a file to another chapter never changes its IDs.
 - **MUST** = mandatory; deviations need an ADR. **SHOULD** = default; deviate with a stated reason.
 - A rule without a keyword is a **MUST**, unless its wording says *prefer*, *default* or *consider*; then it is a SHOULD.
 - Every rule starts with a bold headline that states it on its own as one sentence (`- **ID: Headline.** Details …`); the rule index shows only that headline (TOOL-SKL-12). After changing rules, run `npm run docs:rule-index` in the baseline repository (TOOL-SKL-11).

@@ -10,7 +10,7 @@ The quality baseline is our shared answer to "how do we build web software here?
 
 Each product then documents only what is specific to it: its own arc42 chapters in `docs/architecture/` and its decisions as ADRs in `docs/adr/`.
 
-Rules have stable IDs (for example `ARCH-UC-01`). **MUST** rules can only be deviated from with an ADR; **SHOULD** rules are defaults that a team may leave with a stated reason. A rule without a keyword is a MUST unless it says *prefer*, *default* or *consider*. Coding agents (Claude Code, Codex, Copilot) read the same rules through `AGENTS.md` and the skills, and the docs win over any skill.
+Rules have stable IDs (for example `ARCH-UC-01`); a deprecated or duplicate rule is removed, and its ID is retired, never reused. **MUST** rules can only be deviated from with an ADR; **SHOULD** rules are defaults that a team may leave with a stated reason. A rule without a keyword is a MUST unless it says *prefer*, *default* or *consider*. Coding agents (Claude Code, Codex, Copilot) read the same rules through `AGENTS.md` and the skills, and the docs win over any skill.
 
 ## Quality goals, in priority order
 

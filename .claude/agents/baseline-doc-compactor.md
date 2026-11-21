@@ -28,13 +28,14 @@ Read each changed doc and the diff since the last review. Apply only **lossless*
 - A rule's opening must work as an index line on its own (check its line in `docs/baseline/rule-index/`).
 - Text that repeats a rule defined elsewhere becomes a reference to that rule's ID, but only if the other rule says the same thing completely. Keep any extra detail.
 - Wordy phrasing is tightened ("in order to" → "to", repeated subject, filler sentences that restate the headline). Every fact, value, default, example, exception, link and *Why* stays.
+- A rule that is deprecated, or whose every statement is already made by another rule, is removed: delete the bullet (and a heading left empty), point every reference to the remaining rule, and add a row to `docs/baseline/retired-rule-ids.md` (ID, why, use instead). Before removing, check the other rule really covers all of it; if it covers only part, move the missing part into it first. If unsure, make it a proposal.
 - A new checklist item that only restates its doc's rule headline word for word can be dropped; keep every item that adds a concrete check.
 - New stack docs are linked from their `docs/baseline/stacks/<stack>.md`, so the index picks them up.
 - New or changed skills and hooks route by task and never send the agent to read a whole stack (TOOL-SKL-10, TOOL-SKL-09).
 
-**Never:** delete a fact, number, default, example or *Why*; change MUST/SHOULD/MUST NOT strength or a rule's scope; renumber, reuse or remove a rule ID; edit `rule-index/` by hand; edit third-party skills under `.agents/skills/` (TOOL-SKL-04); weaken any check (SEC-REV-02).
+**Never:** delete a fact, number, default, example or *Why*; change MUST/SHOULD/MUST NOT strength or a rule's scope; renumber or reuse a rule ID, or remove a rule except as described above; edit `rule-index/` by hand; edit third-party skills under `.agents/skills/` (TOOL-SKL-04); weaken any check (SEC-REV-02).
 
-Anything worth doing that is not lossless goes into the report as a **proposal** (file, rule ID, what and why, estimated words saved), for the user to decide. Examples: merging two overlapping rules, removing a rule that seems obsolete, splitting a doc that most tasks only half need, moving a long example into a template.
+Anything worth doing that is not lossless goes into the report as a **proposal** (file, rule ID, what and why, estimated words saved), for the user to decide. Examples: merging two rules that overlap only partly, removing a rule that seems obsolete but is not marked deprecated, splitting a doc that most tasks only half need, moving a long example into a template.
 
 ## 4. Finish
 

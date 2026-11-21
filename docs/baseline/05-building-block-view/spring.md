@@ -81,25 +81,13 @@ Below the application's base package (where the `@SpringBootApplication` class l
 - **SPRING-ARCH-09: JPA entities and Spring Data repositories are package-private inside `adapter.out.jpa`** and never appear in a port signature.
 - **SPRING-ARCH-10: The JPA entity is never the domain model; persistence always uses two-way mapping** (tightens D3 and ARCH-MAP-02/03 of [08-crosscutting-concepts/mapping/mapping-between-boundaries.md](../08-crosscutting-concepts/mapping/mapping-between-boundaries.md)). The *no mapping* strategy is not available in Spring services, for CRUD contexts neither. For simple CRUD keep the domain type a small record and the mapper trivial; read-only queries may project straight into port result records in the adapter (JPQL constructor expressions, `JdbcClient` row mappers), so no entity crosses the port.
   *Why:* JPA's needs (no-arg constructor, mutable fields, proxies, lazy loading) are exactly the persistence concerns that trigger the switch in ARCH-MAP-02, and they are present from the first entity. The architecture test forbids `jakarta.persistence` in `domain`/`ports` and keeps entities in the adapter (SPRING-ARCH-09), so a shared entity model could not pass it anyway.
-- **SPRING-ARCH-11: Keep JPA simple.** (Database rules: [08-crosscutting-concepts/persistence/spring.md](../08-crosscutting-concepts/persistence/spring.md).) Avoid bidirectional associations and cascades that the domain doesn't need. Use one persistence adapter per aggregate. Use plain SQL (`JdbcClient`) for ports where JPA adds nothing (ARCH-ADP-13, SPRING-DB-15). Bounded data loading: SPRING-ARCH-16 below.
+- **SPRING-ARCH-11: Keep JPA simple.** (Database rules: [08-crosscutting-concepts/persistence/spring.md](../08-crosscutting-concepts/persistence/spring.md).) Avoid bidirectional associations and cascades that the domain doesn't need. Use one persistence adapter per aggregate. Use plain SQL (`JdbcClient`) for ports where JPA adds nothing (ARCH-ADP-13, SPRING-DB-15). Bounded data loading: API-N1-05, SPRING-TEST-06.
 
 ### Messaging & storage
 
 - **SPRING-ARCH-12: Kafka listeners are incoming adapters and producers are outgoing adapters.** Neither contains business logic. Event payload classes (Avro/JSON) stay in their adapter package; the core publishes domain-level events through a port.
 - **SPRING-ARCH-13: If an event must be consistent with a database write, don't publish it to Kafka directly inside the use case.** The default is a transactional outbox (MSG-PUB-02); the Spring implementation is SPRING-MSG-07 ([08-crosscutting-concepts/messaging/spring.md](../08-crosscutting-concepts/messaging/spring.md)). Change-data capture instead needs an ADR (SPRING-LIB-11).
 - **SPRING-ARCH-14: Third-party SDK types (AWS S3, HTTP clients) never leave their adapter package.**
-
-### Test database
-
-- **SPRING-ARCH-15: Tests use no in-memory stand-in for the production database** (see [TEST-ARCH-04](../08-crosscutting-concepts/testing/testing-by-architecture-element.md)).
-
-### Data loading
-
-- **SPRING-ARCH-16: Every query or batch port runs a bounded number of queries, asserted by statement-count tests** (see [API-N1-05](../08-crosscutting-concepts/api/avoiding-n-plus-one.md), SPRING-TEST-06).
-
-### REST contract
-
-- **SPRING-ARCH-17: The OpenAPI spec is generated, committed and checked in CI, and URLs, JSON and errors follow the Spring REST conventions.** See [spring-openapi.md](../08-crosscutting-concepts/api/spring-openapi.md) (spec) and [spring-rest.md](../08-crosscutting-concepts/api/spring-rest.md) (URLs, JSON, errors).
 
 ### Validation errors
 

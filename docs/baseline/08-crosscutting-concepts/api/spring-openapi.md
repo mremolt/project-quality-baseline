@@ -83,7 +83,7 @@ oasdiff breaking /tmp/base.yaml openapi/orders-v1.yaml --fail-on ERR
 
 ### Endpoint design
 
-- **SPRING-API-11: The N+1 check (API-CON-06, API-N1-01) is done for every new read endpoint;** in Spring, view endpoints are a query use case plus controller (API-N1 S1), batch lookups a batch endpoint (S2), both loading related data without persistence N+1 (SPRING-ARCH-16).
+- **SPRING-API-11: The N+1 check (API-CON-06, API-N1-01) is done for every new read endpoint;** in Spring, view endpoints are a query use case plus controller (API-N1 S1), batch lookups a batch endpoint (S2), both loading related data without persistence N+1 (API-N1-05).
 - **SPRING-API-12: `LocalDateTime` and `LocalTime` never appear as `format: date-time` in the spec** (API-REST-02). springdoc maps `LocalDateTime` to `date-time`, which requires an offset, so generated validators (Orval zod: `iso.datetime({ offset: true })`) reject what the server sends and clients send values Jackson misreads. `OpenApiConfiguration` registers one type mapping for the whole spec: `LocalDateTime` as `type: string` with `pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$`, `LocalTime` with `^\d{2}:\d{2}(:\d{2})?$`, each with a description saying which zone field it belongs to. `OpenApiSpecIT` asserts that no property of these types is `date-time`.
 
 ## ArchUnit

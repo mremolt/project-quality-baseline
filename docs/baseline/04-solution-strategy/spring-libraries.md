@@ -45,7 +45,7 @@ Which libraries a service uses for which job, and which it does not. Version pol
 |---|---|
 | MapStruct, ModelMapper, Dozer | Hand-written mapping is explicit and debuggable (SPRING-LIB-08, ARCH-MAP-08); MapStruct only with an ADR |
 | Lombok | Records, no setters, no builders (JAVA-ARCH-03/04/06); banned by the enforcer (JAVA-TOOL-06) |
-| H2, HSQLDB, embedded Postgres | SPRING-ARCH-15, TEST-ARCH-04 |
+| H2, HSQLDB, embedded Postgres | TEST-ARCH-04 |
 | springfox | Dead; springdoc replaces it |
 | OpenAPI Generator for our own server stubs | Contract-first conflicts with D8 |
 | Spring HATEOAS | No requirement; adds media-type complexity |

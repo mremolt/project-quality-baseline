@@ -21,7 +21,7 @@ We support two IDEs for frontend and backend work: **Visual Studio Code** and **
 - **TOOL-IDE-04: Recommended extensions/plugins follow the stack**, detected from the project (Angular, React and Next.js, NestJS, Vitest, Playwright, Java/Spring, OpenAPI, Docker). No personal-taste extensions in the shared list.
 - **TOOL-IDE-05: Use the workspace TypeScript version** (`node_modules/typescript` of the frontend component) in both IDEs, so editor errors match the build.
 - **TOOL-IDE-06: Settings IntelliJ only stores per user** (e.g. "Reformat code" for Java under Actions on Save) are listed in the project README as a one-time step; the skill prints them.
-- **TOOL-IDE-07: In a product repository with component folders (D12), the IDE opens the repository root and the shared settings live there** (REPO-TOOL-01). They point into the components: VS Code `typescript.tsdk` → `frontend/node_modules/typescript/lib`, ESLint working directories detected per component (`"eslint.workingDirectories": [{ "mode": "auto" }]`). IntelliJ imports `backend/pom.xml` as a Maven module and finds Prettier and ESLint through the nearest `package.json`. Component folders have no `.vscode/` or `.idea/` of their own.
+- **TOOL-IDE-07: In a product repository with component folders (D12), the IDE opens the repository root and the shared settings live there.** They point into the components: VS Code `typescript.tsdk` → `frontend/node_modules/typescript/lib`, ESLint working directories detected per component (`"eslint.workingDirectories": [{ "mode": "auto" }]`). IntelliJ imports `backend/pom.xml` as a Maven module and finds Prettier and ESLint through the nearest `package.json`. Component folders have no `.vscode/` or `.idea/` of their own.
 
 ## `.gitignore` entries
 

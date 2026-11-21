@@ -51,7 +51,7 @@ Input validation is deliberately **not** a step of the use case. It happens befo
 - **ARCH-UC-09: Use the question above to decide where a rule goes.** It makes rules easy to place now and easy to find later.
 - **ARCH-UC-10: Business errors are exceptions; a result type is only for an expected alternative outcome** (default, decision D7). An expected alternative outcome is one the caller handles as normal flow, such as "no match" for a search or "already done" for a repeated request. A rule violation, a missing object or a conflict is not: it raises a business exception of one category of ARCH-UC-13. Placement: ARCH-ORG-05; translation: ARCH-ADP-05.
   *Why:* exceptions keep the happy path readable and cannot be ignored by accident; one rule for all use cases means adapters translate errors in one place instead of inspecting every result.
-- **ARCH-UC-11: The use case owns the transaction.** The boundary is set per use case on the application service, never in adapters (ARCH-ADP-11). Remote calls stay outside it: remote reads before, remote side effects after the commit through the outbox (RES-TX-01, MSG-PUB-02). Spring: SPRING-ARCH-07, SPRING-RES-03; NestJS: NEST-ARCH-08, NEST-RES-03.
+- **ARCH-UC-11: The use case owns the transaction.** The boundary is set per use case on the application service, never in adapters. Remote calls stay outside it: remote reads before, remote side effects after the commit through the outbox (RES-TX-01, MSG-PUB-02). Spring: SPRING-ARCH-07, SPRING-RES-03; NestJS: NEST-ARCH-08, NEST-RES-03.
 
 ### Error categories
 

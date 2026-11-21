@@ -14,7 +14,7 @@ The quality goals of chapter 1 as a tree with testable scenarios. Each scenario 
 | Test strength | If the product adopts mutation testing, the nightly mutation score of `domain` and `application` is reported and its trend reviewed, never gated | TEST-ARCH-12 |
 | Confidence to ship | Every production bug gets a test that would have caught it | TEST-ARCH-11 |
 | Contract safety | A breaking API change fails CI before merge | API-CON-04, SPRING-API-09, NEST-API-10 |
-| Performance | A screen loads its data in a bounded number of requests and statements | API-N1, SPRING-ARCH-16, NEST-DB-12 |
+| Performance | A screen loads its data in a bounded number of requests and statements | API-N1, SPRING-TEST-06, NEST-DB-12 |
 | Accessibility | Every changed main path passes axe and a keyboard-only journey | A11Y-05, [accessibility.md](accessibility.md) |
 | Accessibility | Every release has a recorded L6 checklist run for every screen reader pair, with no open task-blocking failure | A11Y-24 |
 | Responsiveness | Every main screen works at every viewport of the matrix and reflows at 320 px without horizontal scrolling | A11Y-13, A11Y-17, TS-TEST-17..21 |
@@ -38,7 +38,7 @@ The baseline fixes the scenario; each product states the target in its own chapt
 | Recoverability | Data is restored after loss or corruption | recovery point (RPO) ≤ `<24 h>`, recovery time (RTO) ≤ `<4 h>`, restore tested `<yearly>` | product infrastructure (chapter 7), incident runbook (SEC-INC-02) |
 | Recoverability | A faulty release is rolled back | previous version running again within `<15 min>`, without a database rollback | SPRING-DB-05/NEST-DB-20 (expand/contract), REL-RB-01..03 |
 | Performance | A main screen is usable quickly on the reference device and network | LCP ≤ `<2.5 s>`, INP ≤ `<200 ms>`, CLS ≤ `<0.1>` at the 75th percentile | **Not yet secured** by a baseline rule: bundle budgets (NG-TOOL-05, REACT-TOOL-13, NEXT-TOOL-08) and request budgets (TS-TEST-14) limit causes but don't measure it. The product states its lab or field measurement ([chapter 11](../11-risks-and-technical-debt/README.md)) |
-| Performance | An API call answers within its budget under expected load | p95 ≤ `<300 ms>` at `<N>` requests/s with `<data volume>` | API-N1, SPRING-ARCH-16, NEST-DB-12, load test before release |
+| Performance | An API call answers within its budget under expected load | p95 ≤ `<300 ms>` at `<N>` requests/s with `<data volume>` | API-N1, SPRING-TEST-06, NEST-DB-12, load test before release |
 
 ## Documents in this chapter
 

@@ -35,7 +35,7 @@
     "baseline-codebase-review": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "541a4bdf84966e1db6c24e97ddcdafbbd488cae073cfe4fd86c848278c1bb3e8"
+      "computedHash": "9a8a6062efaf4ae272cc04382efea5542f7d90dac6dbf248d7349e45db23b163"
     },
     "baseline-i18n": {
       "source": "./skills",

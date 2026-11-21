@@ -28,7 +28,7 @@ Rules: SPRING-REST-01/07, SPRING-SEC-01/02, SPRING-ARCH-07/09/18, ARCH-UC-11/13/
 
 ## Query with related data (backend)
 
-The query port loads everything the screen needs in a bounded number of statements (SPRING-ARCH-16, NEST-DB-12, API-N1-05); the controller maps the result to one response, paged (SPRING-REST-11, NEST-REST-17).
+The query port loads everything the screen needs in a bounded number of statements (SPRING-TEST-06, NEST-DB-12, API-N1-05); the controller maps the result to one response, paged (SPRING-REST-11, NEST-REST-17).
 
 ## Frontend interaction
 

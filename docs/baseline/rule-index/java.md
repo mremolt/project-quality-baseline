@@ -44,4 +44,3 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-TOOL-19: Unit tests are `*Test` (Surefire), integration tests `*IT` (Failsafe).
 - JAVA-TOOL-20: Every Java component offers the same commands, run from the component folder (REPO-TOOL-03), so humans, agents and CI don't have to guess:
 - JAVA-TOOL-21: A SAST tool runs in CI next to FindSecBugs with an agreed rule set (SEC-CI-01, secure-pipeline.md;
-- JAVA-TOOL-22: Deprecated; versions come from the BOM and new dependencies are reviewed (see JAVA-TOOL-05).

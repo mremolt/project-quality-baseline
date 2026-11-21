@@ -27,7 +27,7 @@ function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) return ['stacks', 'rule-index', 'checklists'].includes(e.name) && dir === docs ? [] : walk(p);
-    return e.name.endsWith('.md') && !(dir === docs && e.name === 'sources.md') ? [p] : [];
+    return e.name.endsWith('.md') && !(dir === docs && ['sources.md', 'retired-rule-ids.md'].includes(e.name)) ? [p] : [];
   });
 }
 
@@ -196,6 +196,25 @@ if (lint) {
   }
   for (const [scope, secs] of checklistSections) for (const [t, r] of secs) if (!pointed.checklists.has(r)) errors.push(`checklists/${scope}.md: section "${t}" links to ${r}, which has no pointer line to it`);
   for (const [t, r] of sourceSections) if (!pointed.sources.has(r)) errors.push(`sources.md: section "${t}" links to ${r}, which has no pointer line to it`);
+
+  // Retired IDs (README "Conventions") are never defined again and no longer cited; references go to the replacement.
+  const retiredFile = path.join(docs, 'retired-rule-ids.md');
+  const retired = fs.existsSync(retiredFile) ? [...read(retiredFile).matchAll(/^\| ([A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+[a-z]?) \|/gm)].map((m) => m[1]) : [];
+  if (retired.length) {
+    const cited = new RegExp(`\\b(${retired.join('|')})\\b`, 'g');
+    const listFiles = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { recursive: true }).filter((n) => n.endsWith('.md')).map((n) => path.join(d, n)) : []);
+    const files = [
+      ...listFiles(docs).filter((f) => f !== retiredFile && !f.includes(`${path.sep}rule-index${path.sep}`)),
+      ...listFiles(path.join(root, 'skills')),
+      ...listFiles(path.join(root, 'templates')),
+      path.join(root, 'AGENTS.md'),
+      path.join(root, 'ARCHITECTURE.md'),
+    ].filter((f) => fs.existsSync(f));
+    for (const f of files) {
+      const hits = [...new Set([...read(f).matchAll(cited)].map((m) => m[1]))];
+      if (hits.length) errors.push(`${path.relative(root, f)}: cites retired rule ID(s) ${hits.join(', ')}; use the replacement in retired-rule-ids.md`);
+    }
+  }
 
   // Reading instructions follow the steps of TOOL-SKL-10.
   const instructionFiles = [

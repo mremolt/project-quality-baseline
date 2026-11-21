@@ -59,7 +59,6 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
 
 ### Tooling in component folders
 
-- **REPO-TOOL-01: The IDE opens the repository root** (see [TOOL-IDE-07](../08-crosscutting-concepts/development/ide-setup.md)).
 - **REPO-TOOL-02: Git hooks, if used, are installed from the component that owns the tooling and work from the git root.** Hooks run with the repo root as working directory. With husky in the frontend: `"prepare": "cd .. && husky frontend/.husky"` in `frontend/package.json`, and every hook starts with `cd frontend`. Hooks only speed up feedback; CI runs the same checks (TS-TOOL-09). With `ignore-scripts=true` (TS-TOOL-11) npm does not run `prepare` on install, so developers run `npm run prepare` once.
 - **REPO-TOOL-03: Agents run stack commands from the component folder** (`cd backend && ./mvnw …` or `npm run …`, `cd frontend && npm run …`). Stack rules apply only to their component.
 
@@ -97,8 +96,6 @@ Stack docs show paths relative to the component folder: `src/features/…` in th
 - **REPO-CI-03: The merge gate is one always-reported status.** A required check that a path filter skips either never reports and blocks the merge, or reports as skipped and lets a broken change through, depending on the platform. So: one pipeline with a change-detection step, component jobs that depend on it, and one final job that always runs, fails if any job it aggregates failed, and is the only required status. How each platform does this: [platform examples](#platform-examples).
 - **REPO-CI-04: The `e2e:smoke` tier runs against a backend built from the same commit** ([08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md), NG-TEST-08): the image, with the frontend bundle embedded (a Next.js frontend: its own image next to the backend's, NEXT-REL-21), started with Docker Compose or Testcontainers in the pipeline (SPRING-DEV-10, NEST-DEV-12). It runs on the main branch and before releases, and on pull requests that touch the spec.
 - **REPO-CI-05: Each release unit is versioned separately**, with tags prefixed by its component folder (`backend/v1.4.0`, `backend-admin/v2.1.0`). A frontend embedded in the BFF image has no tag of its own; it is released with the BFF (REL-FE-05). A frontend that is its own image (Next.js) is its own release unit (`frontend/v…`). Components that always deploy together share one version tag.
-- **REPO-CI-06: Security checks run as one job in the single pipeline** (see [SEC-CI-01](../08-crosscutting-concepts/security/secure-pipeline.md)).
-
 ### Platform examples
 
 Examples, not requirements (REL-CD-06). The product records what it uses in the delivery platform mapping of its chapter 7.
