@@ -39,7 +39,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-ARCH-13: If an event must be consistent with a database write, don't publish it to Kafka directly inside the use case.
 - SPRING-ARCH-14: Third-party SDK types (AWS S3, HTTP clients) never leave their adapter package.
 - SPRING-ARCH-18: Every incoming adapter maps the error categories of ARCH-UC-13 explicitly, by their base types in `domain`.
-- SPRING-ARCH-19: New use cases start from the generator, `templates/scripts/new-use-case.mjs` of `baseline-spring` (copied to `tools/` with the product's base package):
+- SPRING-ARCH-19: New use cases start from the `baseline-spring` generator.
 
 ## [Spring Boot: Delivery](../07-deployment-view/spring-delivery.md)
 
@@ -277,4 +277,4 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-TEST-11: `@Autowired` fields are allowed in test classes;
 - SPRING-TEST-12: An architecture test fails when a `@RestController` in `adapter.in.rest` is not covered by a web slice test.
 - SPRING-TEST-13: Integration tests control background work and reset state in one place.
-- SPRING-TEST-14: Use case tests share three fakes from `src/test/java/<base>/support` (templates in `baseline-spring/templates/test/support/`):
+- SPRING-TEST-14: Use case tests share three fakes.
