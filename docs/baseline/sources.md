@@ -346,7 +346,7 @@ Per stack: Angular ([stacks/angular.md](stacks/angular.md)), React ([stacks/reac
 
 [08-crosscutting-concepts/i18n/angular.md](08-crosscutting-concepts/i18n/angular.md)
 
-Angular i18n and `LOCALE_ID` guides (angular.dev/guide/i18n), Angular Material `DateAdapter`, angular-eslint `template/i18n` rule options, Angular pipes guide (pure and impure pipes, angular.dev/guide/templates/pipes), MDN `Intl`, Transloco docs (jsverse.gitbook.io/transloco), `@jsverse/transloco-messageformat`, `@jsverse/transloco-keys-manager`, WCAG 3.1.1, 3.1.2, 3.2.3, 3.2.6.
+Angular i18n and `LOCALE_ID` guides (angular.dev/guide/i18n), Angular Material `DateAdapter`, angular-eslint `template/i18n` rule options, Angular pipes guide (pure and impure pipes, angular.dev/guide/templates/pipes), MDN `Intl`, Transloco docs (jsverse.gitbook.io/transloco), `TranslocoTranspiler` and `provideTranslocoTranspiler` (Transloco 8 API), `intl-messageformat` 12 (FormatJS; parses to an AST and interprets, no code generation), `@messageformat/core` 3 (compiles with `new Function`, the reason it is not used), `@jsverse/transloco-keys-manager`, WCAG 3.1.1, 3.1.2, 3.2.3, 3.2.6.
 
 ## Internationalization (i18n)
 

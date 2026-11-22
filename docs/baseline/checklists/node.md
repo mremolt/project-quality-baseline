@@ -12,6 +12,7 @@ The agent checklists of the node docs, one section per doc, titled like the doc.
 - [ ] New business error extends one category base class (NODE-ARCH-07)?
 - [ ] No blocking call on the request path; no floating promise (NODE-ARCH-10/11)?
 - [ ] dependency-cruiser green and its rules not loosened?
+- [ ] Authorization refusals throw `AccessDeniedError` (403), objects the caller may not know `NotFoundError` (NODE-ARCH-07)?
 
 ## Node.js Tooling
 

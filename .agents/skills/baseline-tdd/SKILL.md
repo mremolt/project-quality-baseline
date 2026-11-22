@@ -36,7 +36,7 @@ Show each step to the user (TEST-TDD-14):
 
 ## Doubles
 
-- Mock only contracts we own: ports and use-case interfaces (TEST-TDD-07). TypeScript: `mock<Port>()` from `vitest-mock-extended`; Java: Mockito on the port interface.
+- Mock only contracts we own: ports and use-case interfaces (TEST-TDD-07). TypeScript: `mock<Port>()` from `vitest-mock-extended` (Angular: typed `vi.fn()` fakes where a method is asserted, NG-TOOL-11); Java: Mockito on the port interface. In-memory fakes for collection ports, fictitious `People` and an immediate `TransactionTemplate` come from the Spring templates (SPRING-TEST-14).
 - Never mock entities, value objects, concrete classes, or third-party types; wrap third-party code in a port (TEST-TDD-08).
 - Stub queries (`calledWith(...).mockResolvedValue(...)`, `when(...).thenReturn(...)`), verify only commands (TEST-TDD-09).
 - Too many doubles, or unclear what to mock? That's a design signal: the port or service is too broad (TEST-ARCH-07). Say so.

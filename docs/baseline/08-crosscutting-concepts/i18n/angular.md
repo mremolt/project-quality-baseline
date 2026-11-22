@@ -8,8 +8,8 @@ Angular rules on top of [i18n.md](i18n.md) (`I18N-*`, `TOOL-I18N-*`, `TEST-I18N-
 
 The frontend-mechanism decision of [i18n.md](i18n.md#decisions) in Angular: runtime translation with Transloco; `@angular/localize` (build time) only through an ADR, for single-language deployments. The rendering decision that a public SEO path prefix needs is NG-ARCH-18.
 
-- **NG-I18N-01: Runtime translation with Transloco (`@jsverse/transloco` plus `@jsverse/transloco-messageformat` for ICU) is the default;** `@angular/localize` needs an ADR (I18N-01). Use the stable 8.x line until 9.x is stable (see [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)).
-  *Why:* runtime switching and one artifact.
+- **NG-I18N-01: Runtime translation with Transloco (`@jsverse/transloco`) is the default, with ICU interpreted by `intl-messageformat` through the baseline's eval-free transpiler;** `@angular/localize` needs an ADR (I18N-01). Use the stable 8.x line until 9.x is stable (see [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)). The transpiler is the template `.agents/skills/baseline-angular/templates/src/platform/adapter/in/ui/icu-transpiler.ts` (with its spec), registered once with `provideTranslocoTranspiler(IcuTranspiler)` in `app.config.ts`. `@jsverse/transloco-messageformat` is not used: `@messageformat/core` compiles every message with `new Function`, which the CSP of NG-SEC-05 (no `unsafe-eval`, `require-trusted-types-for 'script'`) blocks at runtime.
+  *Why:* runtime switching and one artifact; the eval-based plugin passes the dev server and jsdom tests, which enforce no CSP, and fails only in the BFF-served build (NG-SEC-12).
 - **NG-I18N-02: Catalogs are nested JSON, one file per language and scope,** next to the feature: `features/<f>/adapter/in/ui/i18n/<lang>.json` with its `context.json`; shared UI in `src/shared/ui/i18n`; platform texts in `src/platform`. Scopes are lazy and provided in the route providers (NG-ARCH-11).
   *Why:* translations live in the incoming UI adapter ring and load with the feature.
 - **NG-I18N-03: Keys are stable semantic ids** `<feature>.<screen-or-component>.<element>[.<state>]`, lower-camel segments, never the English sentence. A changed meaning gets a new key.
@@ -20,7 +20,7 @@ The frontend-mechanism decision of [i18n.md](i18n.md#decisions) in Angular: runt
   *Why:* keeps the core language-free and tests deterministic.
 - **NG-I18N-05: No hard-coded user-visible text** in templates, TypeScript, `aria-label`, `title`, `placeholder`, `mat-label`, dialog titles, snackbar texts and the document `<title>`. Enforced by lint (NG-TOOL).
   *Why:* accessibility labels are text too (NG-UI-12/13).
-- **NG-I18N-06: Plural, select and gender use ICU MessageFormat** through the messageformat plugin; no `if (n === 1)`.
+- **NG-I18N-06: Plural, select and gender use ICU MessageFormat** through the ICU transpiler of NG-I18N-01; no `if (n === 1)`.
   *Why:* Polish, Arabic and others have more than two plural forms.
 - **NG-I18N-12: The catalog request is cached and the first route's scope is preloaded;** the source locale is the fallback, and a missing key logs a warning and never shows the raw key in production builds (I18N-09).
   *Why:* no flash of keys, no blank UI.

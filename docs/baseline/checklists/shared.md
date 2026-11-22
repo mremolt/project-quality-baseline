@@ -45,6 +45,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Domain events raised in `domain` and handed to an outgoing port, not to another use case (ARCH-UC-14)?
 - [ ] Transaction boundary on the service, with no remote call inside it (ARCH-UC-11)?
 - [ ] Every rule that depends on other rows (uniqueness, closed periods, "at least one", process once) enforced by a constraint, a conditional write or a shared lock, with a concurrency test (ARCH-UC-16)?
+- [ ] A refused caller raises the Access denied category (403, security event), not Business rule or a framework exception; an object the caller may not know stays Not found (ARCH-UC-13/15)?
 
 ## Container Images, Frontend Delivery and Runtime Contract
 
@@ -53,6 +54,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] New deployable or image change: non-root, minimal base pinned by digest, no build tools or secrets in layers, SBOM, labels (REL-IMG-01, REL-RUN-07)?
 - [ ] Build method other than Buildpacks: customer platform reason recorded in chapter 7, or an ADR (REL-IMG-02)?
 - [ ] Frontend change to serving, routing or caching: deep-link, cache-header and 404 rules kept; previous release's chunks still served (REL-FE-03/04)?
+- [ ] Nonce templating tested against a real build's `index.html`, not a stub (REL-FE-03)?
 - [ ] BFF image: start fails without the bundle, built image answers `GET /` with `200` `text/html` (REL-FE-06)?
 - [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7 (REL-RUN-*)?
 
@@ -155,6 +157,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] New skill or stack? Its entry in `baseline-stacks.json` and its `AGENTS.md` lines tagged (TOOL-SKL-09)?
 - [ ] Changed a doc's rules? Its section in `docs/baseline/checklists/` updated (TOOL-SKL-13)?
 - [ ] Changed a rule doc or a stack page? `npm run docs:rule-index` run, `docs:rule-index:check` and `docs:lint` green (TOOL-SKL-11); new rules start with a self-contained bold headline (TOOL-SKL-12)?
+- [ ] Scripted multi-line replacements only on freshly formatted files, failing when a pattern does not match; otherwise the editor tools (TOOL-SKL-14)?
 - [ ] Wrote reading instructions in a skill, hook or `AGENTS.md`? They follow the steps of TOOL-SKL-10 and point to the rule index, not to "every doc a stack page lists"?
 
 ## Architecture Documentation (arc42)
@@ -319,7 +322,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Status message announced (visible status region or announcer), without moving focus?
 - [ ] Route title set; focus on the new `h1` when the path changes, also on back/forward, not on query-only changes?
 - [ ] Error linked to its field (`aria-invalid`, accessible description)?
-- [ ] Session timeout warns and can be extended; legal or financial submits can be reviewed, confirmed or undone; hover and focus content dismissible; `html lang` set?
+- [ ] Session timeout warns and can be extended, counted from the last backend answer and the server's idle timeout; legal or financial submits can be reviewed, confirmed or undone; hover and focus content dismissible; `html lang` set?
 - [ ] L6 release checklist run, results recorded; legal applicability recorded (A11Y-26)?
 - [ ] No a11y rule disabled or loosened; every exclusion has a ticket and an expiry date?
 

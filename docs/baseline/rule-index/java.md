@@ -29,7 +29,7 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-TOOL-05: Every version lives in `<properties>` or the BOM.
 - JAVA-TOOL-06: The enforcer bans what the baseline forbids:
 - JAVA-TOOL-07: Error Prone and NullAway run in every compile, in JSpecify mode, restricted to `@NullMarked` code.
-- JAVA-TOOL-08: Every package is `@NullMarked` (`package-info.java` with `org.jspecify.annotations.NullMarked`).
+- JAVA-TOOL-08: Every package is `@NullMarked` (`package-info.java` with `org.jspecify.annotations.NullMarked`), container packages without classes (`adapter`, `adapter.in`, `ports`) included;
 - JAVA-TOOL-09: Generated code is excluded from Error Prone (`-XepExcludedPaths`), Spotless and SpotBugs.
 - JAVA-TOOL-10: `.mvn/jvm.config` carries the `--add-exports`/`--add-opens` flags Error Prone needs on a modern JDK (file in the templates).
 - JAVA-TOOL-11: Spotless formats Java with palantir-java-format (120 columns, like Prettier in the frontend), removes unused imports and orders the rest.
@@ -43,4 +43,5 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-TOOL-23: Builds are reproducible.
 - JAVA-TOOL-19: Unit tests are `*Test` (Surefire), integration tests `*IT` (Failsafe).
 - JAVA-TOOL-20: Every Java component offers the same commands, run from the component folder (REPO-TOOL-03), so humans, agents and CI don't have to guess:
+- JAVA-TOOL-24: Before the commit, all gate findings are collected in one run, without ignoring any.
 - JAVA-TOOL-21: A SAST tool runs in CI next to FindSecBugs with an agreed rule set (SEC-CI-01, secure-pipeline.md;

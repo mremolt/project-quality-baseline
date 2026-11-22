@@ -83,6 +83,7 @@
     "e2e": "playwright test --project=stubbed-*",
     "e2e:nightly": "playwright test --project=stubbed-* --project=nightly-*",
     "e2e:smoke": "playwright test --project=smoke",
-    "verify": "npm run generate:api && npm run format:check && npm run lint && npm run check:arch && npm run check:unused && npm run test && npm run build && npm run check:bundle"
+    "check": "node scripts/verify.mjs generate:api! typecheck lint check:arch test",
+    "verify": "node scripts/verify.mjs generate:api! format:check lint check:arch check:unused test build! check:bundle"
   }
 }

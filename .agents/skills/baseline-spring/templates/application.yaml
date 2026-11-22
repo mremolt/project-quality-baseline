@@ -6,6 +6,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  jackson:
+    default-property-inclusion: non_absent   # optional fields are omitted when empty, never sent as null (API-REST-04, SPRING-REST-08)
   lifecycle:
     timeout-per-shutdown-phase: 20s   # per phase; grace period >= phases x 20s + pre-stop + margin (SPRING-OBS-04)
   http:
@@ -28,7 +30,7 @@ spring:
     init-sqls: SET lock_timeout = '5s'   # a blocked migration fails the start-up instead of queueing live traffic (SPRING-REL-02)
     lock-retry-count: 50                 # waiting instances give up after ~50 s (1 s apart); covers the longest migration, fits the start-up budget (REL-DB-03, REL-RUN-04)
     placeholders:
-      app-role: ${spring.datasource.username}   # DML role for the default privileges (SPRING-REL-03)
+      app-role: ${spring.datasource.username}   # DML role for the default privileges (SPRING-REL-03); tests set it explicitly, @ServiceConnection leaves the username empty (SPRING-DB-19)
     # Deployed: spring.flyway.user/password = migration (DDL) role, spring.datasource.* = DML-only role (SPRING-REL-01),
     # both mounted as config-tree files by the platform (SPRING-CFG-07; env variables only as fallback, SPRING-CFG-06);
     # locally one Compose user does both. Keys a deployment sets: configuration-keys.yaml (CFG-12).

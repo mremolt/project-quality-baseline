@@ -61,10 +61,23 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: "8180"                          # same port inside and outside, so the issuer URL is identical (SPRING-DEV-11)
+      KC_HOSTNAME: http://keycloak.localhost:8180   # issuer seen by the browser, the app on the host and other containers
+      KC_HEALTH_ENABLED: "true"                     # /health/ready on the management port 9000 (SPRING-DEV-12)
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost                      # other containers (compose.app.yaml) reach the same issuer URL
     volumes:
-      - ./dev/keycloak:/opt/keycloak/data/import:ro
+      - ./dev/keycloak:/opt/keycloak/data/import:ro # realm template: dev/keycloak/orders-realm.json (SPRING-DEV-12)
     ports:
-      - "127.0.0.1:8180:8080"
+      - "127.0.0.1:8180:8180"
+    healthcheck:                                    # the image has no curl: plain bash /dev/tcp against the management port
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 60                                   # realm import on first start takes a while
+      start_period: 10s
 
   mailpit:
     profiles: [mail]

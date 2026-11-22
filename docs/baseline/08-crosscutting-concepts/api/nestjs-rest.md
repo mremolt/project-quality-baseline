@@ -87,6 +87,7 @@ export const ApiDecimal = z
 | `RequestValidationError` (pipe, NEST-REST-07) | 400 | `errors` |
 | `DomainValidationError` | 400 | `code`, `errors` |
 | `NotFoundError` | 404 | `code` |
+| `AccessDeniedError` | 403; the filter also records the security event (NEST-SEC-33) | `code` |
 | `BusinessRuleError` | 409 | the rule's `code` |
 | `ConflictError` | 409; 412 when the request carried `If-Match` (NEST-REST-18) | conflict `code` |
 | Temporarily unavailable (`UnavailableError` from `src/platform/domain` for an exhausted pool, open circuit, full bulkhead or the auth guard's key set outage, NODE-ARCH-07; NEST-RES rules in [resilience/nestjs.md](../resilience/nestjs.md), NEST-SEC-04) | 503 + `Retry-After` | none |
@@ -125,6 +126,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       return { status: 400, code: error.code, errors: error.field ? [{ field: error.field, code: error.code }] : [] };
     }
     if (error instanceof NotFoundError) return { status: 404, code: error.code };
+    if (error instanceof AccessDeniedError) return { status: 403, code: error.code };
     if (error instanceof ConflictError) return { status: request.headers['if-match'] ? 412 : 409, code: error.code };
     if (error instanceof BusinessRuleError) return { status: 409, code: error.code };
     if (error instanceof UnavailableError) return unavailable(error.retryAfterSeconds);

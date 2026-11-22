@@ -254,6 +254,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - TOOL-SKL-11: The rule index is generated, never edited by hand.
 - TOOL-SKL-12: Every rule starts with a bold headline that states the rule on its own as one sentence:
 - TOOL-SKL-13: Agent checklists and sources live outside the rule docs.
+- TOOL-SKL-14: Agents edit code with the editor tools, or run the formatter before a scripted multi-line replacement.
 
 ## [Architecture Documentation (arc42)](../08-crosscutting-concepts/development/architecture-documentation.md)
 

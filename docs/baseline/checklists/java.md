@@ -11,6 +11,7 @@ The agent checklists of the java docs, one section per doc, titled like the doc.
 - [ ] New business exception extends one category base type (JAVA-ARCH-13)?
 - [ ] ArchUnit test still green, and not weakened?
 - [ ] No setters on domain entities?
+- [ ] Authorization refusals throw the domain `AccessDeniedException` (403), objects the caller may not know `NotFoundException` (JAVA-ARCH-13, ARCH-UC-13)?
 
 ## Java Tooling
 
@@ -18,6 +19,7 @@ The agent checklists of the java docs, one section per doc, titled like the doc.
 
 - [ ] Used `./mvnw`, from the component folder?
 - [ ] No Lombok, no new `@SuppressWarnings`/`@SuppressFBWarnings` without a reason, no check switched off?
-- [ ] New package has `@NullMarked`?
+- [ ] New package, container packages included, has `@NullMarked` (JAVA-TOOL-08)?
 - [ ] New dependency reviewed, version from the BOM or `<properties>` (JAVA-TOOL-05)?
 - [ ] `./mvnw verify` green before finishing?
+- [ ] `verify-all` green before the commit, no failure ignored to collect output (JAVA-TOOL-24)? SpotBugs findings on fixed content fixed in code, not excluded (JAVA-TOOL-12)?

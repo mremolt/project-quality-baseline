@@ -24,7 +24,8 @@
     "openapi": "OPENAPI_UPDATE=true vitest run --project unit openapi",
     "migrate": "node dist/migrate.js",
     "check:migrations": "node scripts/check-migrations.mjs",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:arch && npm run check:migrations && npm run check:unused && npm run test && npm run test:it && npm run build",
+    "check": "node scripts/verify.mjs typecheck lint check:arch test",
+    "verify": "node scripts/verify.mjs format:check lint typecheck check:arch check:migrations check:unused test test:it build",
     "start:debug": "nest start --watch --debug --env-file .env.local"
   },
   "dependencies": {

@@ -81,6 +81,7 @@ The responsive rules are framework-neutral ([ui-patterns.md](ui-patterns.md)); t
 | `angular-new-app` / `angular-developer` | Add Tailwind (`ng add tailwindcss`), Tailwind reference | No Tailwind (NG-UI-09) |
 | `angular-developer` | Angular Aria for Accordion, Listbox, Menu, Tabs, … | Material component first; Angular Aria/CDK only for gaps (NG-UI-01/02) |
 | `accessibility` | Hand-rolled live-region announcer; `role="alert"` nested inside an `aria-live` field wrapper; Lighthouse as the automated check | CDK `LiveAnnouncer` behind the app `Announcer` (NG-UI-30); `mat-error` already handles field errors (NG-UI-12); axe fixture ([TS-TEST-12](../testing/typescript.md)) |
+| Angular Material docs, `angular-material-design` (upstream habit) | Route tabs with `nav[mat-tab-nav-bar]` + `a[mat-tab-link]` | A plain `nav` with router links and `ariaCurrentWhenActive="page"`, styled like tabs: `mat-tab-nav-bar` gives the links `role="tab"`, which UI-22 forbids for navigation |
 | Angular Material docs | "Prefer a native `<select>` over `MatSelect`" for accessibility | Material first (NG-UI-01); `MatSelect` follows the ARIA combobox pattern |
 | `material-3` (original, not installed) | `@material/web` elements and `--md-sys-*` tokens; Compose and Flutter code | Angular Material components and `--mat-sys-*` tokens; replaced by our `angular-material-design` skill |
 

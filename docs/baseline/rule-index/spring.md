@@ -50,6 +50,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-REL-07: The pre-deploy variant (REL-DB-01) runs the same image in a migrate-only mode.
 - SPRING-REL-06: The image does not carry the release version; the deployment injects it (REL-CD-01).
 - SPRING-REL-08: The BFF embeds the bundle through a Maven profile activated by the bundle path.
+- SPRING-REL-09: The hashed files are served by one resource handler per URL pattern, each with its own location.
 
 ## [Spring Boot: Local Development](../07-deployment-view/spring-local-development.md)
 
@@ -63,6 +64,8 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-DEV-08: No bash or PowerShell start-up scripts.
 - SPRING-DEV-09: A frontend developer gets a working backend with `cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local`, or only the dependencies with `docker compose up -d` when the API runs from the IDE.
 - SPRING-DEV-10: The `e2e:smoke` job (REPO-CI-04) runs `docker compose -f compose.yaml -f compose.app.yaml up` from `backend/`, where `compose.app.yaml` only adds the application image built from the same commit (`spring-boot:build-image`;
+- SPRING-DEV-11: The IdP issuer URL is identical for the browser, the app on the host and the app in a container.
+- SPRING-DEV-12: Keycloak has a health check and a realm template.
 
 ## [Spring Boot: Producing the OpenAPI Contract (code-first)](../08-crosscutting-concepts/api/spring-openapi.md)
 
@@ -78,6 +81,8 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-API-10: Consumers get the committed spec file, not a URL (API-CON-08, REPO-API-01).
 - SPRING-API-11: The N+1 check (API-CON-06, API-N1-01) is done for every new read endpoint;
 - SPRING-API-12: `LocalDateTime` and `LocalTime` never appear as `format: date-time` in the spec (API-REST-02).
+- SPRING-API-13: The exported spec is independent of the test run: `servers` is fixed and the error schema is declared.
+- SPRING-API-14: Parameters the server resolves itself never appear in the spec.
 
 ## [Spring Boot: REST and JSON Conventions](../08-crosscutting-concepts/api/spring-rest.md)
 
@@ -161,7 +166,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 ## [Spring Boot: Observability and Operability](../08-crosscutting-concepts/observability/spring.md)
 
 - SPRING-OBS-01: Probes are served on the main port; everything else of actuator runs on a separate management port (OBS-19, realisation a).
-- SPRING-OBS-02: Probes stay reachable despite `anyRequest().authenticated()` (SPRING-SEC-01) through one dedicated `SecurityFilterChain` for actuator and the probe paths, ordered before the API chain, in `adapter.in.rest`:
+- SPRING-OBS-02: Probes stay reachable despite `anyRequest().authenticated()` (SPRING-SEC-01) through one dedicated `SecurityFilterChain` for actuator and the probe paths, ordered before the API chain, in `adapter.in.rest`.
 - SPRING-OBS-03: The liveness group keeps its default (`livenessState`) and gets no other contributor (OBS-02).
 - SPRING-OBS-04: Graceful shutdown stays on, and the budget is the sum of the shutdown phases (OBS-04).
 - SPRING-OBS-05: Kafka listeners finish their current poll on shutdown:
@@ -188,6 +193,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-DB-12: Query ports are bounded.
 - SPRING-DB-13: Native SQL and `JdbcClient` are fine where JPA adds nothing (ARCH-ADP-13), inside the adapter, with the same tests.
 - SPRING-DB-14: Every persistence test runs the real migrations against a Testcontainers PostgreSQL (SPRING-TEST-05).
+- SPRING-DB-19: Privilege tests run as the non-superuser DML role, never as the Testcontainers user.
 - SPRING-DB-15: Spring Data JPA plus `JdbcClient` is the default.
 - SPRING-DB-16: Invariants across rows are enforced in PostgreSQL, atomically (ARCH-UC-16).
 - SPRING-DB-17: Every adapter query on a table that grows has an index for its filter and sort columns, and every foreign-key column is indexed (PostgreSQL does not index foreign keys itself).
@@ -232,6 +238,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-SEC-32: BFF sessions have explicit lifetimes, and the tokens stay server-side.
 - SPRING-SEC-33: Logout ends the session in the BFF and at the IdP.
 - SPRING-SEC-37: BFF sessions live in a shared, persistent session store: Spring Session JDBC on the product's PostgreSQL by default.
+- SPRING-SEC-40: Back-channel logout with Spring Session JDBC maps the IdP `sid` to session ids in an own table.
 - SPRING-SEC-38: The BFF authenticates to the IdP as a confidential client and still uses PKCE.
 - SPRING-SEC-26: Uploads are limited and stored, scanned and served so that a file cannot attack the server or other users:
 - SPRING-SEC-27: The application's database role has DML rights only;
@@ -270,3 +277,4 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-TEST-11: `@Autowired` fields are allowed in test classes;
 - SPRING-TEST-12: An architecture test fails when a `@RestController` in `adapter.in.rest` is not covered by a web slice test.
 - SPRING-TEST-13: Integration tests control background work and reset state in one place.
+- SPRING-TEST-14: Use case tests share three fakes from `src/test/java/<base>/support` (templates in `baseline-spring/templates/test/support/`):

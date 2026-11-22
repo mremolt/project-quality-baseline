@@ -13,7 +13,7 @@ Architecture erodes when nothing stops it. Code review and good intentions are n
 ## Rules (default D4)
 
 - **ARCH-ENF-01: Every project MUST have automated architecture tests from day one** that check the dependency rule for the reference layout.
-- **ARCH-ENF-02: Architecture tests MUST fail if they match no classes/files.**
+- **ARCH-ENF-02: Architecture tests MUST fail if they match no classes/files.** The one exception is a template rule for an element the new service does not have yet (no entity, no request record): it ships marked as allowed-empty with a comment, and the mark is removed with the first matching class.
   *Why:* a renamed package or a typo otherwise produces a green test that checks nothing.
 - **ARCH-ENF-03: Use the narrowest visibility the language offers** for adapter internals and service implementations.
 - **ARCH-ENF-04: The architecture tests check [ARCH-DEP-05](../../04-solution-strategy/hexagonal-architecture.md) automatically**, with one slice per adapter (direction and technology), so a new adapter is covered without editing the test. It is the rule most often broken by accident.

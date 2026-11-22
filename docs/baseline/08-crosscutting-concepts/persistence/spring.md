@@ -29,6 +29,8 @@ Database engine, migrations and Hibernate settings for services with PostgreSQL.
 ### Testing
 
 - **SPRING-DB-14: Every persistence test runs the real migrations against a Testcontainers PostgreSQL** (SPRING-TEST-05). Mapping and migration are tested together, so a missing migration fails the test, not production.
+- **SPRING-DB-19: Privilege tests run as the non-superuser DML role, never as the Testcontainers user.** The Testcontainers user is a superuser and passes every `UPDATE` on an append-only table (SEC-AUD-01, SPRING-SEC-27). The shared test infrastructure creates the DML role (`CREATE ROLE app LOGIN PASSWORD …`, no superuser, no ownership), runs the migrations with the container user so the grants of SPRING-REL-03 apply to it, and the privilege test opens a connection as that role and asserts that `UPDATE` and `DELETE` on the append-only tables fail with SQL state `42501` (insufficient privilege) while `INSERT` succeeds. Reading `information_schema.role_table_grants` alone is not enough: it does not prove the effect.
+  *Why:* a grant test as superuser is green whatever the grants say.
 
 ### Persistence technology (default SPRING-D4)
 

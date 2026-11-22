@@ -43,12 +43,14 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Security lint rules green, `bypassSecurityTrust*` not suppressed?
 - [ ] No developer-preview or experimental API outside the allow-list (NG-TOOL-09)?
 - [ ] No `no-extraneous-class` or `unbound-method` switched off (NG-TOOL-11)? Bundle budgets only raised by a reviewed change (NG-TOOL-05)?
+- [ ] `check` and `verify` run through `scripts/verify.mjs` (NG-TOOL-04, TS-TOOL-19)?
 - [ ] `npm run verify` green?
 
 ## Angular: Internationalization
 
 [08-crosscutting-concepts/i18n/angular.md](../08-crosscutting-concepts/i18n/angular.md)
 
+- [ ] ICU through the eval-free `IcuTranspiler`, no `@jsverse/transloco-messageformat` (NG-I18N-01)?
 - [ ] Every new user-visible string, including `aria-label` and `title`, uses a key with context (NG-I18N-03/05)?
 - [ ] Stores and mappers return codes or keys only (NG-I18N-04)? Scope catalogs without a root key, route titles in the shell catalog (NG-I18N-13)?
 - [ ] Money, dates and sorting go through the shared pipes or `Intl` with the active locale (NG-I18N-08)?
@@ -75,6 +77,8 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] CSP/header change: still strict (nonce in `script-src` and `style-src`, `base-uri 'self'`, Trusted Types incl. `angular#components`, report destination), `index.html` uncached, no `autoCsp`, E2E assertion updated (deep-link reload included)?
 - [ ] New third-party script or font: nonce or trusted loader plus SRI, hosts in the matching non-script directive, or self-hosted?
 - [ ] zod jitless module imported first in `main.ts` (TS-SEC-09)?
+- [ ] BFF nonce templating: placeholders replaced, `nonce` added only where missing, tested against a real build's `index.html` (NG-SEC-06)?
+- [ ] Session-timeout warning driven by the last backend answer and the configured idle seconds (NG-SEC-13)?
 - [ ] Guards treated as UX; backend enforces the rule?
 
 ## Angular Testing
@@ -103,6 +107,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Harnesses for Material widgets in tests; theme projects cover the screen (TS-TEST-28)?
 - [ ] Framework-neutral UI rules met ([ui-patterns.md](../08-crosscutting-concepts/ui/ui-patterns.md) checklist): layout per size class, `WindowSize` only for structure, logical properties, `dvh`, no hover-only function, zoom not blocked?
 - [ ] Fonts and icons self-hosted, no Google Fonts link (NG-UI-34)?
+- [ ] Route tabs are a `nav` with router links and `ariaCurrentWhenActive`, not `mat-tab-nav-bar` (UI-22)?
 
 ## Angular State Management: NgRx Signal Store
 

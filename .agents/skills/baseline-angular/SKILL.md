@@ -24,6 +24,9 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
 | Global error handling, error reporting, source maps | `docs/baseline/08-crosscutting-concepts/observability/observability.md`, `observability/angular.md` (NG-OBS-*) |
 | Personal data in the UI, third-party resources, fonts | `docs/baseline/08-crosscutting-concepts/data-protection/data-protection.md` (DP-*), NG-UI-34 |
 | Lint, compiler, scripts | `docs/baseline/08-crosscutting-concepts/development/typescript-tooling.md`, `docs/baseline/08-crosscutting-concepts/development/angular-tooling.md` |
+| Scripts `check`, `verify` | runner `templates/scripts/verify.mjs`, copied to `frontend/scripts/` (TS-TOOL-19, NG-TOOL-04) |
+| ICU, session-timeout warning | templates `templates/src/platform/adapter/` (`icu-transpiler.ts` NG-I18N-01, `session-activity.ts` and `activity-interceptor.ts` NG-SEC-13) |
+| New feature | generate with `templates/scripts/new-feature.mjs` (`.agents/skills/baseline-angular/templates/scripts/` in a project; copy to `frontend/scripts/`, NG-ARCH-23), imports through the aliases of NG-ARCH-22 |
 | New app | `docs/baseline/05-building-block-view/angular.md` (NG-ARCH-17), `docs/baseline/08-crosscutting-concepts/development/agent-skills.md` |
 
 ## 2. Load the skills for the task

@@ -35,9 +35,10 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 
 - [ ] No `any`, no unexplained `as`, no new `eslint-disable` without a reason?
 - [ ] `npm run check` after every change, `npm run verify` green before finishing? (E2E for changed screens runs separately.) (TS-TOOL-18)
+- [ ] `check` and `verify` use the runner and report all failing steps in one run, never `&&` chains (TS-TOOL-19)?
 - [ ] No script that relies on a `pre*`/`post*` hook (TS-TOOL-10)?
 - [ ] No unused dependency, export or file (`npm run check:unused`, TS-TOOL-17)?
-- [ ] npm 11.10 or newer, `engines` and `engine-strict` in place (TS-TOOL-14)?
+- [ ] npm 11.10 or newer, `engines` and `engine-strict` in place; after scaffolding, packages younger than the cooldown pinned (TS-TOOL-14)?
 - [ ] No compiler check or lint rule loosened?
 
 ## TypeScript: Browser Security
@@ -60,7 +61,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] Target size asserted at `compact`; `target-size` proven to have run?
 - [ ] Status messages, route title and focus (link, back, query-only change) and form errors asserted (TS-TEST-23/24/26); shell and screen ARIA snapshots (TS-TEST-25)?
 - [ ] No new retries or timeouts to hide a flaky test; pull-request tier within its time budget?
-- [ ] `e2e:fast` at milestones, the full matrix once before the commit that closes a part (TS-TEST-33)?
+- [ ] `e2e:fast` at milestones; `e2e:smoke` at the first call of a new real dependency and after security-chain, session or SPA-serving changes; the full matrix once before the commit that closes a part (TS-TEST-33)?
 - [ ] Shared fixture fails on unstubbed API calls, page errors, `console.error` and missing translations (TS-TEST-32)?
 
 ## TypeScript Testing

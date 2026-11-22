@@ -320,7 +320,7 @@ How many top-level destinations?
 │   ├── Medium    → rail with the main 3–7 + modal drawer for the rest, or modal drawer
 │   └── Expanded+ → standard drawer
 ├── Hierarchical sections → drawer with headings (mat-nav-list + mat-subheader / expansion)
-└── Related views of one item → tabs (mat-tab-nav-bar for routes)
+└── Related views of one item → tabs (`nav` with router links for routes, UI-22)
 ```
 
 | Component | Destinations | Window | Angular |
@@ -329,7 +329,7 @@ How many top-level destinations?
 | Navigation rail | 3–7 | Medium (also expanded+) | Gap component (below) |
 | Standard drawer | Any | Expanded+ | `mat-sidenav mode="side" opened` |
 | Modal drawer | Any | Compact, medium | `mat-sidenav mode="over"` |
-| Tabs | 2+ related views | Any | `mat-tab-nav-bar` / `mat-tab-group` |
+| Tabs | 2+ related views | Any | `nav` + router links (routes, UI-22) / `mat-tab-group` (same URL) |
 
 Consistency (WCAG 3.2.3, 3.2.6): the same destinations in the same relative order in every mode; the help
 entry (contact, FAQ) in the same place on every page, e.g. the last drawer item and the app bar.
@@ -390,21 +390,23 @@ there's exactly one per page.
 
 ## Tabs
 
-- **Route tabs** (each tab a URL): `nav[mat-tab-nav-bar]` + `a[mat-tab-link]` + `mat-tab-nav-panel`
-  (`[tabPanel]` is required for correct ARIA).
+- **Route tabs** (each tab a URL): a plain `nav` with router links and `ariaCurrentWhenActive="page"`,
+  styled like tabs (UI-22). Not `mat-tab-nav-bar`: it gives its links `role="tab"` and the bar
+  `role="tablist"`, which announces navigation as an in-page tab widget and conflicts with UI-22
+  (links with `aria-current="page"`).
 - **Content tabs** (same URL): `mat-tab-group` + `mat-tab`; lazy content with `<ng-template matTabContent>`.
 - Primary tabs for top-level views of the screen, secondary tabs inside content. Don't nest tab groups of
   the same type; don't use tabs as main app navigation.
 
 ```html
-<nav mat-tab-nav-bar [tabPanel]="panel" aria-label="Order sections">
+<nav class="route-tabs" [attr.aria-label]="'orders.detail.sections' | transloco">
   @for (tab of tabs; track tab.path) {
-    <a mat-tab-link [routerLink]="tab.path" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
-      {{ tab.label }}
+    <a [routerLink]="tab.path" routerLinkActive="route-tabs__link--active" ariaCurrentWhenActive="page">
+      {{ tab.labelKey | transloco }}
     </a>
   }
 </nav>
-<mat-tab-nav-panel #panel><router-outlet /></mat-tab-nav-panel>
+<router-outlet />
 ```
 
 ## Gap component: navigation rail (NG-UI-02)

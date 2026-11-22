@@ -60,6 +60,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TOOL-16: Builds are reproducible.
 - TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it.
 - TS-TOOL-18: `check` is the inner loop, `verify` the gate.
+- TS-TOOL-19: `verify` and `check` run every step, report all failures together and fail at the end.
 
 ## [TypeScript: Browser Security](../08-crosscutting-concepts/security/typescript.md)
 

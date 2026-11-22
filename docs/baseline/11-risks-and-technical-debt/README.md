@@ -67,7 +67,7 @@ Rules that depend on tool or library behaviour the baseline could not confirm ag
 | Material icons render under enforced Trusted Types with `angular#components` | NG-SEC-05/12 | E2E check in the first app |
 | Route focus after back/forward: `focus({ preventScroll: true })` plus `scrollPositionRestoration` keeps the scroll position; `afterNextRender` runs after the routed `h1` | A11Y-21, NG-UI-31, TS-TEST-26 | Real-browser E2E |
 | axe in Chromium with `forcedColors: 'active'` gives no false contrast findings | TS-TEST-28 | Spike run |
-| Transloco stable line (8.x until 9.x is stable), zoneless behaviour, testing helper names | NG-I18N-01, TEST-I18N-01 | Spike app; Transloco releases |
+| Transloco stable line (8.x until 9.x is stable), zoneless behaviour, testing helper names, the `intl-messageformat` transpiler under enforced Trusted Types in the BFF-served build | NG-I18N-01, TEST-I18N-01 | Spike app; Transloco releases |
 | Own `Intl` pipes and `DateAdapter.setLocale` on a language switch with the chosen Material date adapter; `Intl.NumberFormat` with decimal-string input | NG-I18N-07/08, TEST-I18N-08 | Language-switch component test; E2E in all three engines |
 | Locale Hibernate Validator uses under the current Boot line | SPRING-I18N-06 | `@WebMvcTest` with an invalid body and a non-source `Accept-Language` |
 | Weblate import path for `context.json`; how it marks changed source strings | TOOL-I18N-07 | Weblate docs and a test component |
@@ -75,7 +75,8 @@ Rules that depend on tool or library behaviour the baseline could not confirm ag
 | release-please (or equivalent) with prefixed component tags (`backend/v1.4.0`) and one release pull request per deployable | REL-VER-03 | Manifest docs (`tag-separator`, `include-component-in-tag`); dry run in the first product |
 | Validate-only `FlywayMigrationStrategy` fails on pending migrations; the migrate-only runner exits cleanly | SPRING-REL-07 | Integration test in the first product that uses the pre-deploy variant |
 | PR template locations for Azure DevOps (`.azuredevops/`) and Bitbucket (no template file) | `sync-baseline --host` | Azure Repos and Bitbucket docs |
-| Kafka listener and producer, the `tools`, `auth`, `mail` and `observability` Compose profiles and their pinned images | SPRING-DEV-03/04 | First service that uses them |
+| Kafka listener and producer, the `tools`, `mail` and `observability` Compose profiles and their pinned images | SPRING-DEV-03/04 | First service that uses them |
+| Keycloak `auth` profile: health check, realm import and an admin-API token with `kc-admin-api` were run against Keycloak 26.8; the issuer alias with an app container (`compose.app.yaml`) ran in one product, not with the template | SPRING-DEV-11/12 | Every Keycloak major (scope name and management port) |
 | The image carries the previous release's hashed files; the one-time reload after a failed chunk load | REL-FE-04, NG-ARCH-20 | First BFF product, during a rolling deployment |
 | The Paketo image-labels buildpack is part of the Java builder used | REL-RUN-07 | `pack inspect` on the built image |
 | NestJS template service in a product (validated 2026-11-20 as a skeleton: `npm run verify`, app against PostgreSQL 18, Docker image read-only and non-root) with real contexts and traffic | NEST-ARCH-*, NODE-ARCH-13/14 | `npm run verify` and the image smoke test on the first service |

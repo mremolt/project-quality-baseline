@@ -28,6 +28,7 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | Skill or habit | Baseline rule |
 |---|---|
 | `@angular/localize`, `i18n` attributes, `ng build --localize` | Transloco at runtime; build-time only via ADR (NG-I18N-01) |
+| `@jsverse/transloco-messageformat` for ICU plurals | The eval-free `IcuTranspiler` on `intl-messageformat` (NG-I18N-01); the plugin compiles with `new Function`, which the CSP blocks |
 | English sentence as the key | Semantic keys (NG-I18N-03) |
 | Translating in a store, service or use case | Codes and keys in the core, text in the UI edge (I18N-02, NG-I18N-04) |
 | Showing the server's `detail` | Translate by `code`, generic fallback (NG-I18N-04, SPRING-I18N-02) |

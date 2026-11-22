@@ -175,7 +175,7 @@ from `@angular/material/<component>/testing` (NG-UI-17).
 | Top app bar | `mat-toolbar` (title as heading, actions as icon buttons) | `MatToolbarHarness` |
 | Navigation drawer (standard / modal) | `mat-sidenav` `mode="side"` / `mode="over"` + `mat-nav-list` | `MatSidenavHarness`, `MatNavListHarness` |
 | Tabs (content) | `mat-tab-group` + `mat-tab` | `MatTabGroupHarness` |
-| Tabs (routes) | `nav[mat-tab-nav-bar]` + `a[mat-tab-link]` + `mat-tab-nav-panel` | `MatTabNavBarHarness` |
+| Tabs (routes) | `nav` + `a[routerLink]` with `ariaCurrentWhenActive="page"`, styled like tabs; not `mat-tab-nav-bar` (its `role="tab"` breaks UI-22) | `getByRole('link', { current: 'page' })` |
 | List | `mat-list`, `mat-nav-list`, `mat-action-list`, `mat-selection-list` | `MatListHarness`, `MatNavListHarness`, … |
 | Data table | `mat-table` + `matSort` + `mat-paginator` | `MatTableHarness`, `MatSortHarness`, `MatPaginatorHarness` |
 | Expansion / accordion | `mat-expansion-panel`, `mat-accordion` | `MatExpansionPanelHarness`, `MatAccordionHarness` |

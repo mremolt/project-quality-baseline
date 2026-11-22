@@ -66,6 +66,11 @@ The docs of one stack chain run to 50,000–100,000 words, more than an agent ca
 - **TOOL-SKL-13: Agent checklists and sources live outside the rule docs.** Each doc's checklist is a section titled like the doc in [`docs/baseline/checklists/<scope>.md`](../../checklists/) (`shared` or the stack in the doc's file name), its sources a section in [`docs/baseline/sources.md`](../../sources.md); the doc ends with one line that points to both. A change to a doc's rules updates its checklist section in the same change. Agents read only the sections of the docs they used, once, before finishing a task.
   *Why:* the checklists restate the rules and the sources serve people; kept in the docs, they cost every agent that opens a doc for its rules.
 
+## Editing files
+
+- **TOOL-SKL-14: Agents edit code with the editor tools, or run the formatter before a scripted multi-line replacement.** Prettier, Spotless and `ng lint --fix` rewrite line breaks, quotes and import order, so a `sed`, Python or Node replacement written against the text as the agent last saw it no longer matches and changes nothing, without an error. A scripted replacement runs only on freshly formatted files, and the script fails when a pattern does not match (count the replacements, or assert before writing).
+  *Why:* in the first test drive five scripted replacements silently did not apply after a formatter run, and each cost a failed build to find.
+
 ## Distribution to consuming projects
 
 Products get the baseline by running the sync from the baseline repository against the product's repository root (never a component folder, REPO-LAY-06):

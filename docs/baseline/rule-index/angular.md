@@ -11,7 +11,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-ARCH-03: Core files are named by business term (`order.ts`, `place-order-service.ts`), with a role suffix where the architectural role matters:
 - NG-ARCH-04: `src/platform` is treated like a feature:
 - NG-ARCH-22: Imports across rings use path aliases, never deep relative paths.
-- NG-ARCH-23: The baseline ships generators for the repetitive file sets, and new features and use cases start from them.
+- NG-ARCH-23: A new feature starts from the `baseline-angular` feature generator.
 - NG-ARCH-05: Standalone components, `OnPush`, zoneless:
 - NG-ARCH-21: Every component keeps its template and its styles in dedicated files:
 - NG-ARCH-06: Signal APIs only:
@@ -63,13 +63,13 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 
 ## [Angular: Internationalization](../08-crosscutting-concepts/i18n/angular.md)
 
-- NG-I18N-01: Runtime translation with Transloco (`@jsverse/transloco` plus `@jsverse/transloco-messageformat` for ICU) is the default;
+- NG-I18N-01: Runtime translation with Transloco (`@jsverse/transloco`) is the default, with ICU interpreted by `intl-messageformat` through the baseline's eval-free transpiler;
 - NG-I18N-02: Catalogs are nested JSON, one file per language and scope, next to the feature:
 - NG-I18N-03: Keys are stable semantic ids `<feature>.<screen-or-component>.<element>[.<state>]`, lower-camel segments, never the English sentence.
 - NG-I18N-13: A lazy scope is the key prefix, so its catalog has no root key for it.
 - NG-I18N-04: Stores, use cases and mappers return codes or keys, never translated text.
 - NG-I18N-05: No hard-coded user-visible text in templates, TypeScript, `aria-label`, `title`, `placeholder`, `mat-label`, dialog titles, snackbar texts and the document `<title>`.
-- NG-I18N-06: Plural, select and gender use ICU MessageFormat through the messageformat plugin; no `if (n === 1)`.
+- NG-I18N-06: Plural, select and gender use ICU MessageFormat through the ICU transpiler of NG-I18N-01;
 - NG-I18N-12: The catalog request is cached and the first route's scope is preloaded;
 - NG-I18N-07: The active language is one signal in `src/platform` that drives every locale-dependent setting (fed by Transloco's active language):
 - NG-I18N-08: Format at the edge with own shared pipes on `Intl.*`, bound to the active-language signal (NG-I18N-07):
@@ -98,6 +98,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-SEC-07: With the BFF, the SPA is served from the BFF's origin.
 - NG-SEC-08: No code reads or sets the session cookie, and no interceptor adds tokens (the BFF holds them).
 - NG-SEC-09: Route guards improve UX only;
+- NG-SEC-13: The session-timeout warning (A11Y-29) is driven by an HTTP interceptor that records every backend answer.
 - NG-SEC-10: An SSR server (NG-ARCH-18) restricts hosts and proxy trust and keeps the nonce CSP:
 - NG-SEC-11: A global `ErrorHandler` shows a generic message and reports scrubbed data (TS-SEC-06);
 - NG-SEC-12: E2E tests assert the security behaviour (`playwright-best-practices`, `security-testing`):

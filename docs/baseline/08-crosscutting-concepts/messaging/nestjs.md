@@ -102,7 +102,7 @@ export type Envelope = z.infer<typeof Envelope>;
 | Error (ARCH-UC-13 category) | Handling |
 |---|---|
 | `TypeError` from the UTF-8 decoder, `SyntaxError` from `JSON.parse`, `z.ZodError` from envelope or payload | Dead letter at once |
-| `DomainValidationError` (also from a command factory), `BusinessRuleError`, `NotFoundError` (base classes in `src/platform/domain`, NODE-ARCH-07) | Dead letter at once |
+| `DomainValidationError` (also from a command factory), `BusinessRuleError`, `NotFoundError`, `AccessDeniedError` (base classes in `src/platform/domain`, NODE-ARCH-07) | Dead letter at once |
 | `ConflictError`, `UnavailableError` | Retry with backoff, then dead letter |
 | Any other error (unknown, technical) | Retry with backoff, then dead letter |
 

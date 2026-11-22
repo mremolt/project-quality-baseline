@@ -22,7 +22,8 @@ How REST APIs between our systems look on the wire, independent of the stack: da
 | Created | | 201 + `Location` |
 | Success without body | | 204 |
 | Malformed request, invalid input, domain validation exception | validation | 400 (one status for invalid input; 422 is not used) |
-| Not authenticated / not allowed | (security, handled before the use case) | 401 / 403 |
+| Not authenticated / not allowed by a coarse route check | (security, handled before the use case) | 401 / 403 |
+| The use case refuses: the caller may know the object but lacks the permission for this action | access denied | 403 with `code` (`ACCESS_DENIED` or a more specific one) |
 | Resource missing, or not visible to the caller | not found | 404 |
 | Business rule violated by the current state ("order already shipped") | business rule | 409 with the rule's `code` |
 | Conflict: `version` mismatch in the body, optimistic-lock failure, duplicate key, `Idempotency-Key` reused with a different payload (RES-IDM-02) | conflict | 409 with a conflict `code` |

@@ -24,6 +24,7 @@ Copy everything except this README into `frontend/` (REPO-TOOL-03), then:
 | `test/` | `frontend/test/` | The dependency-cruiser canary with `fixtures/arch-violation` (NEXT-ARCH-13, NEXT-TEST-17), the one-build check (NEXT-CFG-01) |
 | `e2e/` | `frontend/e2e/` | `stubbed-server.ts` (standalone server in test mode with Redis), `fixtures.ts` (login through the real BFF, CSP and axe checks), `orders.spec.ts` (NEXT-TEST-12..15) |
 | `scripts/check-bundle.mjs`, `scripts/copy-api-spec.mjs` | `frontend/scripts/` | Gzip budgets, no source maps (NEXT-TOOL-08); the backend's spec into `openapi/` (NEXT-REL-06) |
+| `scripts/verify.mjs` | `frontend/scripts/` | Runner for `check` and `verify`: runs every step, reports all failures, fails at the end (TS-TOOL-19) |
 
 Locally: `docker compose up -d --wait`, then `npm run dev`; backend and IdP are stubs inside the server (`APP_TEST_STUBS=1`, NEXT-DEV-05). Against a real backend and IdP: NEXT-DEV-06/07.
 

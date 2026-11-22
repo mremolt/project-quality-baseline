@@ -91,8 +91,12 @@ Follow `docs/baseline/05-building-block-view/spring.md#new-service`. The templat
 | `spotbugs-exclude.xml` | `backend/spotbugs-exclude.xml` |
 | `sdkmanrc` | `backend/.sdkmanrc` (renamed) |
 | `compose.yaml` | `backend/compose.yaml` (rename project and database) |
+| `dev/keycloak/orders-realm.json` | `backend/dev/keycloak/<realm>-realm.json` for the `auth` profile (rename realm and clients; SPRING-DEV-11/12) |
 | `application.yaml`, `application-local.yaml` | `backend/src/main/resources/` |
 | `stereotype/*.java` | `backend/src/main/java/<base>/stereotype/` |
 | `test/ArchitectureTest.java` | `backend/src/test/java/<base>/ArchitectureTest.java` |
+| `scripts/new-use-case.mjs` | `tools/new-use-case.mjs` (set the base package and the slice test's security import; generates each new use case, `--with-controller` adds controller and web slice test, SPRING-ARCH-19) |
+| `scripts/verify-all.sh`, `scripts/verify-all.cmd` | `backend/` (all gate findings in one run before the commit, JAVA-TOOL-24) |
+| `test/support/*.java` | `backend/src/test/java/<base>/support/` (`InMemoryRepository`, `People`, `Transactions`; adapt `People.caller(...)` to the `Caller` record, SPRING-TEST-14) |
 
 Generate the skeleton with start.spring.io using fixed parameters (no piped installers): `type=maven-project`, `language=java`, `javaVersion=25`, `bootVersion=<pinned 4.1.x>`, the dependency ids from the doc, then apply the templates. Check that the repository layout decision was made first (REPO-LAY-02).

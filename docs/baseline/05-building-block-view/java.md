@@ -106,7 +106,7 @@ class ArchitectureTest {
 }
 ```
 
-- **JAVA-ARCH-08: Never disable `archRule.failOnEmptyShould`** (enabled by default in current ArchUnit versions). It makes a rule fail when it matches no classes, e.g. after a package rename (ARCH-ENF-02).
+- **JAVA-ARCH-08: Never disable `archRule.failOnEmptyShould`** (enabled by default in current ArchUnit versions). It makes a rule fail when it matches no classes, e.g. after a package rename (ARCH-ENF-02). `allowEmptyShould(true)` only on a single rule, with a comment, for the bootstrap case of ARCH-ENF-02 (the template's `jpaEntitiesStayInAdapter`, `httpClientAdaptersLiveInAdapterOutHttp` and `noServerOwnedFieldsInRequests` until their first class) or for an opt-in rule such as `secretsUseSecretType`.
 
 ## Build modules (Maven / Gradle)
 
@@ -122,6 +122,6 @@ class ArchitectureTest {
 
 - **JAVA-ARCH-12: Invalid input throws one dedicated exception from `domain`** (the validation category of ARCH-UC-13) (e.g. `DomainValidationException extends RuntimeException`, carrying a stable error code and, where known, the field). Commands, queries, value objects and entities throw it when a business or format rule is violated; nothing in the core throws a bare `IllegalArgumentException` for invalid input. `Objects.requireNonNull` stays: a `null` there is a programming error, because the adapter checks mappability first (SPRING-ARCH-08).
   *Why:* adapters must tell "the caller sent bad data" (400, not retryable) from "our code has a bug" (500, alert). Mapping every `IllegalArgumentException` to 400 would hide bugs; mapping none would turn bad input into server errors and endless retries. Spring mapping: SPRING-ARCH-18.
-- **JAVA-ARCH-13: Each business error category of ARCH-UC-13 has one abstract base type in `domain`:** `BusinessRuleException`, `NotFoundException`, `ConflictException`, each extending `RuntimeException` and carrying a stable error code. Concrete business exceptions (`InsufficientFundsException extends BusinessRuleException`) extend exactly one of them. Adapters classify by base type, never by concrete class (SPRING-ARCH-18).
+- **JAVA-ARCH-13: Each business error category of ARCH-UC-13 has one abstract base type in `domain`:** `BusinessRuleException`, `NotFoundException`, `AccessDeniedException`, `ConflictException`, each extending `RuntimeException` and carrying a stable error code. Concrete business exceptions (`InsufficientFundsException extends BusinessRuleException`) extend exactly one of them. Adapters classify by base type, never by concrete class (SPRING-ARCH-18). The domain `AccessDeniedException` shares its simple name with Spring Security's; the advice imports the domain one, the security chain handles Spring's (SPRING-REST-14).
 
 *Agent checklist in [checklists/java.md](../checklists/java.md) and sources in [sources.md](../sources.md), section "Java: Hexagonal Architecture".*

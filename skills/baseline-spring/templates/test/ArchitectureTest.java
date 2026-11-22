@@ -16,15 +16,18 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.example.orders.stereotype.HttpClientAdapter;
 import com.example.orders.stereotype.MessagingAdapter;
 import com.example.orders.stereotype.MetricsAdapter;
 import com.example.orders.stereotype.PersistenceAdapter;
 import com.example.orders.stereotype.SchedulingAdapter;
 import com.example.orders.stereotype.UseCase;
 import com.example.orders.stereotype.WebAdapter;
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaCodeUnit;
+import com.tngtech.archunit.core.domain.JavaField;
 import com.tngtech.archunit.core.domain.properties.HasAnnotations;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -225,6 +228,9 @@ class ArchitectureTest {
             .dependOnClassesThat()
             .haveFullyQualifiedName("jakarta.transaction.Transactional");
 
+    // allowEmptyShould: the one bootstrap exception to ARCH-ENF-02 / JAVA-ARCH-08. A new service has no @Entity yet,
+    // and the rule would fail with "failed to check any classes". Remove allowEmptyShould with the first entity
+    // (a service without JPA removes the rule instead).
     @ArchTest
     static final ArchRule jpaEntitiesStayInAdapter = classes()
             .that()
@@ -232,7 +238,8 @@ class ArchitectureTest {
             .should()
             .resideInAPackage("..adapter.out.jpa..")
             .andShould()
-            .notBePublic();
+            .notBePublic()
+            .allowEmptyShould(true);
 
     // Scanned classes stay package-private: Spring instantiates them reflectively (JAVA-ARCH-01, SPRING-ARCH-04).
     @ArchTest
@@ -243,6 +250,8 @@ class ArchitectureTest {
             .areAnnotatedWith(WebAdapter.class)
             .or()
             .areAnnotatedWith(MessagingAdapter.class)
+            .or()
+            .areAnnotatedWith(HttpClientAdapter.class)
             .or()
             .areAnnotatedWith(PersistenceAdapter.class)
             .or()
@@ -257,10 +266,23 @@ class ArchitectureTest {
     static final ArchRule useCasesLiveInApplication =
             classes().that().areAnnotatedWith(UseCase.class).should().resideInAPackage("..application..");
 
+    // Outgoing HTTP clients live in adapter.out.http (SPRING-ARCH-04). allowEmptyShould: bootstrap exception as for
+    // jpaEntitiesStayInAdapter; remove it with the first @HttpClientAdapter.
+    @ArchTest
+    static final ArchRule httpClientAdaptersLiveInAdapterOutHttp = classes()
+            .that()
+            .areAnnotatedWith(HttpClientAdapter.class)
+            .should()
+            .resideInAPackage("..adapter.out.http..")
+            .allowEmptyShould(true);
+
     // Every class lives in a ring, an adapter package adapter.<in|out>.<technology>, the composition root or a
     // support package that spring.md names (ARCH-ORG-01, SPRING-ARCH-01): no misc, util or common packages.
+    // package-info is ignored, so container packages (adapter, adapter.in, ports) can be @NullMarked (JAVA-TOOL-08).
     @ArchTest
     static final ArchRule everyClassHasAHome = classes()
+            .that()
+            .doNotHaveSimpleName("package-info")
             .should()
             .resideInAnyPackage(
                     "com.example.orders",
@@ -331,7 +353,17 @@ class ArchitectureTest {
             .haveRawType(Float.class);
 
     // Mass assignment (SPRING-SEC-34): request records never carry fields that only the server may set.
-    // Adjust the suffix if request records are named differently.
+    // Adjust the suffix if request records are named differently. An admin endpoint that legitimately assigns
+    // such a field (roles of another user) is listed with its reason; its use case authorizes with an admin
+    // permission, and the list is reviewed like a lowered rule (SEC-REV-02).
+    // Entry: "<fully qualified Request class>#<field>" (nested records: Outer$Inner); commas between entries, none after
+    // the last.
+    private static final Set<String> ADMIN_ASSIGNED_FIELDS = Set.of(
+            // "com.example.orders.adapter.in.rest.v1.UserController$ChangeRolesRequest#roles", // admin assigns roles
+            //     of another user; ChangeRolesService requires MANAGE_USERS
+    );
+
+    // allowEmptyShould: bootstrap exception as for jpaEntitiesStayInAdapter; remove it with the first Request record.
     @ArchTest
     static final ArchRule noServerOwnedFieldsInRequests = noFields()
             .that()
@@ -340,8 +372,10 @@ class ArchitectureTest {
             .and()
             .areDeclaredInClassesThat()
             .haveSimpleNameEndingWith("Request")
+            .and(notListedIn(ADMIN_ASSIGNED_FIELDS))
             .should()
-            .haveNameMatching("ownerId|tenantId|role|roles|permissions|createdBy|createdAt");
+            .haveNameMatching("ownerId|tenantId|role|roles|permissions|createdBy|createdAt")
+            .allowEmptyShould(true);
 
     // No process execution (SPRING-SEC-31). A product that needs one names its single adapter here, with a reason.
     @ArchTest
@@ -355,9 +389,12 @@ class ArchitectureTest {
             .callMethod(Runtime.class, "exec", String[].class);
 
     // Every use case that takes an id from the caller is referenced by a test tagged "cross-user" (SPRING-SEC-16/35).
-    // A use case that takes no caller-supplied id is listed here with a reason.
+    // A use case that takes no caller-supplied id is listed here with a reason. Typical entries: use cases that
+    // create a new aggregate, act only on the caller's own row, or run without a caller (scheduled jobs, start-up
+    // jobs, provider-initiated calls such as back-channel logout). Commas between entries, none after the last.
     private static final Set<String> NO_CALLER_SUPPLIED_ID = Set.of(
             // "com.example.orders.application.PlaceOrderService", // creates a new order, takes no id
+            // "com.example.orders.application.DeliverQueuedMailService", // scheduled job: no caller, no id
     );
 
     @ArchTest
@@ -421,6 +458,12 @@ class ArchitectureTest {
         return element.tryGetAnnotationOfType(Tag.class)
                 .map(tag -> "cross-user".equals(tag.value()))
                 .orElse(false);
+    }
+
+    private static DescribedPredicate<JavaField> notListedIn(Set<String> allowed) {
+        return DescribedPredicate.describe(
+                "not listed in ADMIN_ASSIGNED_FIELDS",
+                field -> !allowed.contains(field.getOwner().getName() + "#" + field.getName()));
     }
 
     private static ArchCondition<JavaCodeUnit> notTakeOrReturnLocale() {

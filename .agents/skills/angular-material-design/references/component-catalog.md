@@ -277,7 +277,7 @@ See [layout-and-navigation.md](layout-and-navigation.md) for selection by window
 | Top app bar | `mat-toolbar` (+ `mat-toolbar-row`) | `MatToolbarHarness` |
 | Navigation drawer | `mat-sidenav` + `mat-nav-list` | `MatSidenavHarness`, `MatNavListHarness` |
 | Navigation rail, navigation bar | Gap: `src/shared/ui/` | Role queries + keyboard journey |
-| Tabs | `mat-tab-group` / `mat-tab-nav-bar` | `MatTabGroupHarness`, `MatTabNavBarHarness` |
+| Tabs | `mat-tab-group` (same URL); route tabs are a `nav` with router links, not `mat-tab-nav-bar` (UI-22) | `MatTabGroupHarness`; route tabs by role `link` and `aria-current` |
 | Search | Gap: `mat-form-field` + `matAutocomplete`, or Angular Aria combobox | `MatAutocompleteHarness` |
 | Stepper (MD2 pattern, still useful) | `mat-stepper` (`linear`, `orientation` by window size) | `MatStepperHarness` |
 | Paginator | `mat-paginator` | `MatPaginatorHarness` |

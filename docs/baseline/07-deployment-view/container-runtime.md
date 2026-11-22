@@ -23,7 +23,7 @@ What every deployable ships as and what it expects from the platform it runs on:
 
   | Request | Response |
   |---|---|
-  | `GET /` and deep links (a `GET` that accepts `text/html` and matches no API, login, actuator or file path) | `index.html` with the per-request CSP nonce (the frontend's CSP rule), `Cache-Control: no-store` |
+  | `GET /` and deep links (a `GET` that accepts `text/html` and matches no API, login, actuator or file path) | `index.html` with the per-request CSP nonce (the frontend's CSP rule), `Cache-Control: no-store`. The nonce templating is tested against the `index.html` of a real production build: the build tools already mark tags with the placeholder, and a stub hides duplicates or misses |
   | Hashed files (`*-<hash>.js`, `.css`, fonts, media) | `Cache-Control: public, max-age=31536000, immutable` |
   | Unhashed public files (`favicon.ico`, `/.well-known/security.txt`) | short cache (`max-age` of minutes) |
   | `GET /config.json` | generated per environment, not cached (CFG-11, SPRING-CFG-10, NEST-CFG-11) |
