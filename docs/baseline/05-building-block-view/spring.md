@@ -92,6 +92,8 @@ Below the application's base package (where the `@SpringBootApplication` class l
 ### Validation errors
 
 - **SPRING-ARCH-18: Every incoming adapter maps the error categories of ARCH-UC-13 explicitly, by their base types in `domain`.** The REST advice maps the domain validation exception (JAVA-ARCH-12) to 400 `application/problem+json` with its code and an `errors` entry, and the business exceptions to their status and `code` (SPRING-REST-07, SPRING-I18N-02). The Kafka error handler classifies the validation exception and the business-rule and not-found exceptions as not retryable (`DefaultErrorHandler.addNotRetryableExceptions(DomainValidationException.class, BusinessRuleException.class, NotFoundException.class)`, SPRING-MSG-05), so the record goes straight to the dead-letter topic; a listener for which the rejection is an expected outcome catches that one exception, acknowledges and logs instead (MSG-ERR-01). A `ConflictException` (including an optimistic-lock failure) is retried with backoff (RES-RTY-02) and then dead-lettered. Any exception that is neither the validation exception nor a business exception, including `IllegalArgumentException`, is a bug: 500 with a generic `ProblemDetail` (SPRING-SEC-18) in REST, retry with backoff and then the dead-letter topic in Kafka.
+- **SPRING-ARCH-19: New use cases start from the generator,** `templates/scripts/new-use-case.mjs` of `baseline-spring` (copied to `tools/` with the product's base package): command record, incoming port, `@UseCase` service, test shell, and the printed checklist of what the architecture tests demand (`@NullMarked`, web slice test, `cross-user` test or a listed reason, spec refresh). The generated service throws until the first failing test is written (TEST-TDD-01).
+  *Why:* a use case is about eight files; scaffolding them by hand drifts from the layout and the stereotypes.
   *Why:* bad input is the caller's fault and repeats identically on retry; a bug must stay visible as a server error instead of being reported as the client's mistake.
 
 ## Testing
@@ -135,6 +137,7 @@ Copy `.agents/skills/baseline-spring/templates/test/ArchitectureTest.java` into 
 2. Replace the generated `pom.xml` build section with `.agents/skills/baseline-spring/templates/pom.reference.xml`; copy `spotbugs-exclude.xml`, `compose.yaml`, `application.yaml` and `application-local.yaml` from the same folder. Two template files must be **renamed** when copied (the template names have no leading dot so they are not hidden): `mvn-jvm.config` → `backend/.mvn/jvm.config`, `sdkmanrc` → `backend/.sdkmanrc`.
 3. Create the ring packages with `package-info.java` (`@NullMarked`), the `stereotype` package and `ArchitectureTest` from the templates.
 4. Run `./mvnw verify`; it must be green before the first feature.
+5. New use cases start from `.agents/skills/baseline-spring/templates/scripts/new-use-case.mjs` (SPRING-ARCH-19): `node new-use-case.mjs <cut> <UseCase>` creates the command record, the incoming port, the `@UseCase` service and the test shell, and prints the checklist of the architecture-test gotchas. Copy it to `tools/` and set the base package at the top.
 
 *Agent checklist in [checklists/spring.md](../checklists/spring.md) and sources in [sources.md](../sources.md), section "Spring Boot: Hexagonal Architecture".*
 

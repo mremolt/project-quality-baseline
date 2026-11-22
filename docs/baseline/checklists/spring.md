@@ -17,7 +17,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 
 [05-building-block-view/spring.md](../05-building-block-view/spring.md)
 
-- [ ] New class in the right package from the table?
+- [ ] New class in the right package from the table? New use case from the generator (SPRING-ARCH-19)?
 - [ ] No JPA entity used as domain model (SPRING-ARCH-10); invalid input throws the domain validation exception, mapped in REST and Kafka (SPRING-ARCH-18)?
 - [ ] Stereotype annotation instead of plain `@Component`; class package-private?
 - [ ] `@Transactional` only on application services, and not around a remote call (SPRING-ARCH-07)?
@@ -178,7 +178,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 [08-crosscutting-concepts/security/spring.md](../08-crosscutting-concepts/security/spring.md)
 
 - [ ] Security config only in `adapter.in.rest`; deny-by-default ends the rule list?
-- [ ] No Spring Security types in `domain`/`ports`; `Caller` carried in the command?
+- [ ] No Spring Security types in `domain`/`ports`; `Caller` carried in the command, a `domain` record, never null (SPRING-SEC-39)?
 - [ ] No hand-rolled token handling, no secrets in the repo, nothing sensitive logged?
 - [ ] 401/403/success tests for each new endpoint?
 - [ ] Actuator exposure unchanged (allow-list), every exposed endpoint permitted by name?

@@ -54,3 +54,4 @@ Every rule ID of the node docs with its headline, grouped by doc. The headline i
 - TS-TOOL-15: Dependency updates are automated as a capability of the repository.
 - TS-TOOL-16: Builds are reproducible.
 - TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it.
+- TS-TOOL-18: `check` is the inner loop, `verify` the gate.

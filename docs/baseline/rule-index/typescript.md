@@ -59,6 +59,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TOOL-15: Dependency updates are automated as a capability of the repository.
 - TS-TOOL-16: Builds are reproducible.
 - TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it.
+- TS-TOOL-18: `check` is the inner loop, `verify` the gate.
 
 ## [TypeScript: Browser Security](../08-crosscutting-concepts/security/typescript.md)
 
@@ -81,6 +82,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TEST-30: The pull-request tier has a wall-clock budget, recorded in the product's chapter 10 and enforced as the time limit of the pipeline job (default:
 - TS-TEST-31: Retries only in CI, and a retried test is a defect.
 - TS-TEST-32: A stubbed E2E test fails when the page makes an API call that no stub answers, throws an unhandled error, or reports a missing translation.
+- TS-TEST-33: Run E2E at milestones while building, the full matrix once per delivered part.
 - TS-TEST-19: A shared fixture asserts reflow and text spacing on every `@responsive` screen:
 - TS-TEST-20: Each shell and each list-detail screen has a resize-transition test:
 - TS-TEST-21: Target size (A11Y-10, A11Y-16) is asserted in the browser, and the axe fixture proves that `target-size` ran.

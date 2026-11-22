@@ -39,10 +39,14 @@ src/
 
 ### Structure and naming
 
-- **NG-ARCH-01: New code follows the layout above.** Generate with the CLI and the target path, e.g. `ng generate component features/orders/adapter/in/ui/order-list`.
+- **NG-ARCH-01: New code follows the layout above.** Generate with the CLI and the target path, e.g. `ng generate component features/orders/adapter/in/ui/order-list`. A new feature is created with the generator of this skill (`.agents/skills/baseline-angular/templates/scripts/new-feature.mjs`, NG-ARCH-23), which writes the ring folders, tokens, providers, lazy routes, page and catalogs in one step.
 - **NG-ARCH-02: Angular artifacts use the suffixless naming of the Angular style guide** (CLI default since v20): `order-list.ts` / `class OrderList`, `orders-store.ts` / `OrdersStore`. Templates and styles share the base name (`order-list.html`, `order-list.scss`).
 - **NG-ARCH-03: Core files are named by business term** (`order.ts`, `place-order-service.ts`), with a role suffix where the architectural role matters: `-port`, `-use-case`, `-command`, `-query`. Adapters are named technology + subject: `http-orders.ts` / `HttpOrders`. No `.model.ts` files.
 - **NG-ARCH-04: `src/platform` is treated like a feature**: same rings, the same dependency-cruiser rules (TS-ARCH-12), reachable only through its `index.ts`, never imports `features/`. Shared API clients and interceptors live in `platform/adapter/out/http`. A feature's `domain`, `ports` and `application` may import only `src/platform/domain/index.ts` (framework-free shared value objects and errors), never `src/platform/index.ts`, which also exports tokens and UI code.
+- **NG-ARCH-22: Imports across rings use path aliases, never deep relative paths.** `tsconfig.json` defines exactly these aliases: `@platform` (`src/platform/index.ts`), `@platform/domain` (`src/platform/domain/index.ts`), `@shared/ui/*`, `@features/*` (a feature's `index.ts`, TS-ARCH-19) and `@testing/*`. Inside one ring or one feature, relative imports stay. dependency-cruiser resolves the aliases through `tsConfig` (TS-ARCH-12), so the ring rules apply unchanged; an alias that points past an `index.ts` is a violation.
+- **NG-ARCH-23: The baseline ships generators for the repetitive file sets,** and new features and use cases start from them. `templates/scripts/new-feature.mjs` creates the ~10 files of a feature (tokens, providers, routes, `index.ts`, page `.ts`/`.html`/`.scss`/spec, two catalogs with `context.json`) with the aliases of NG-ARCH-22; the product adds it as `npm run new:feature`. After generating, the next step is the failing test (TEST-TDD-01), not more scaffolding. A product adapts the generator to its shell (page header, test helpers) and keeps it current when a rule changes.
+  *Why:* an Angular feature needs about ten hand-written files; written by hand (or by an agent) they drift from the rings.
+  *Why:* `../../../../../platform` is error-prone to write and unreadable to review, and wrong import depths were a recurring source of failed builds.
 
 ### Components and templates
 

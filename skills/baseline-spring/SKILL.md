@@ -94,5 +94,6 @@ Follow `docs/baseline/05-building-block-view/spring.md#new-service`. The templat
 | `application.yaml`, `application-local.yaml` | `backend/src/main/resources/` |
 | `stereotype/*.java` | `backend/src/main/java/<base>/stereotype/` |
 | `test/ArchitectureTest.java` | `backend/src/test/java/<base>/ArchitectureTest.java` |
+| `scripts/new-use-case.mjs` | `tools/new-use-case.mjs` (set the base package; generates each new use case, SPRING-ARCH-19) |
 
 Generate the skeleton with start.spring.io using fixed parameters (no piped installers): `type=maven-project`, `language=java`, `javaVersion=25`, `bootVersion=<pinned 4.1.x>`, the dependency ids from the doc, then apply the templates. Check that the repository layout decision was made first (REPO-LAY-02).

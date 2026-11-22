@@ -39,6 +39,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-ARCH-13: If an event must be consistent with a database write, don't publish it to Kafka directly inside the use case.
 - SPRING-ARCH-14: Third-party SDK types (AWS S3, HTTP clients) never leave their adapter package.
 - SPRING-ARCH-18: Every incoming adapter maps the error categories of ARCH-UC-13 explicitly, by their base types in `domain`.
+- SPRING-ARCH-19: New use cases start from the generator, `templates/scripts/new-use-case.mjs` of `baseline-spring` (copied to `tools/` with the product's base package):
 
 ## [Spring Boot: Delivery](../07-deployment-view/spring-delivery.md)
 
@@ -242,6 +243,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 
 - SPRING-SEC-01: The `SecurityFilterChain`, CORS configuration and the `Authentication → Caller` conversion live in `adapter.in.rest` (next to what they configure, SPRING-ARCH-02).
 - SPRING-SEC-02: Authorization is plain code on a `Caller`; the REST adapter authenticates, the use case authorizes (ARCH-UC-15).
+- SPRING-SEC-39: `Caller` is a record in `domain`, built in one place per adapter, and never null.
 - SPRING-SEC-03: The backend is an OAuth2 resource server (`spring-boot-starter-security-oauth2-resource-server`, JWT validated through `issuer-uri`).
 - SPRING-SEC-04: Stateless and token-based means CSRF off for that chain; a cookie-authenticated chain keeps CSRF on.
 - SPRING-SEC-05: CORS is one `CorsConfigurationSource` with explicit origins from configuration.

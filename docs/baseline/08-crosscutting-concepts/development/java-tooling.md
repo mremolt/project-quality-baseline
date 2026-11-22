@@ -93,7 +93,7 @@ SAST next to FindSecBugs: JAVA-TOOL-21 under [Security tooling](#security-toolin
 | Command | Does |
 |---|---|
 | `./mvnw verify` | The component's local gate: enforcer, compile with Error Prone/NullAway, unit and integration tests, ArchUnit, Spotless check, SpotBugs, JaCoCo report. No security scans, no E2E |
-| `./mvnw test` / `./mvnw test -Dtest=Class` | Fast loop: all `*Test` classes, no Docker needed |
+| `./mvnw test` / `./mvnw test -Dtest=Class` | The inner loop: all `*Test` classes including ArchUnit, or one class, no Docker needed. Run it after every change and `verify` once before the commit |
 | `./mvnw verify -Dit.test=Class` | One integration test (`*IT`, needs Docker), after the unit tests and checks |
 | `./mvnw spotless:apply` | Format |
 | `./mvnw verify -Dopenapi.update=true` | Regenerate the committed OpenAPI spec (`OpenApiSpecIT`, SPRING-API-08) |

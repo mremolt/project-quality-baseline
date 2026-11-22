@@ -6,7 +6,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 
 [05-building-block-view/angular.md](../05-building-block-view/angular.md)
 
-- [ ] File in the right ring and folder; suffixless Angular naming?
+- [ ] File in the right ring and folder; suffixless Angular naming? New feature from the generator, cross-ring imports through the aliases (NG-ARCH-22/23)?
 - [ ] Signal APIs, `inject()`, control flow; no `NgModule`, no constructor DI?
 - [ ] Template and styles in dedicated `.html` / `.scss` files, no inline `template:` or `styles:` outside spec test hosts (NG-ARCH-21)?
 - [ ] Use cases plain, wired in `<feature>.providers.ts`; adapters use `inject()` and are bound with `useExisting`; tokens in `<feature>.tokens.ts`?
@@ -42,6 +42,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Template a11y rules green without new disables?
 - [ ] Security lint rules green, `bypassSecurityTrust*` not suppressed?
 - [ ] No developer-preview or experimental API outside the allow-list (NG-TOOL-09)?
+- [ ] No `no-extraneous-class` or `unbound-method` switched off (NG-TOOL-11)? Bundle budgets only raised by a reviewed change (NG-TOOL-05)?
 - [ ] `npm run verify` green?
 
 ## Angular: Internationalization
@@ -49,7 +50,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 [08-crosscutting-concepts/i18n/angular.md](../08-crosscutting-concepts/i18n/angular.md)
 
 - [ ] Every new user-visible string, including `aria-label` and `title`, uses a key with context (NG-I18N-03/05)?
-- [ ] Stores and mappers return codes or keys only (NG-I18N-04)?
+- [ ] Stores and mappers return codes or keys only (NG-I18N-04)? Scope catalogs without a root key, route titles in the shell catalog (NG-I18N-13)?
 - [ ] Money, dates and sorting go through the shared pipes or `Intl` with the active locale (NG-I18N-08)?
 - [ ] `lang`, `dir`, formatting pipes and Material locale follow the active-language signal (NG-I18N-07)?
 - [ ] Formatting pipes impure with a per-locale cache or pure with the locale as an argument; language-switch test (NG-I18N-08, TEST-I18N-08)?
