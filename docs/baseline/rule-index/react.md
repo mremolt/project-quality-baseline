@@ -19,6 +19,7 @@ Every rule ID of the react docs with its headline, grouped by doc. The headline 
 - REACT-ARCH-11: `<feature>.api.tsx` is the feature's published API and imports only adapters, use cases, the tokens file and the platform's public entry.
 - REACT-ARCH-12: The HTTP stack is configured once, in the platform.
 - REACT-ARCH-13: Server state is loaded with TanStack Query in the UI adapter, and `queryFn` calls the use case (REACT-D4, TS-ARCH-08).
+- REACT-ARCH-25 (implements TS-ARCH-22): Time comes from the platform's `clock`, the business date from `businessDate()` in `src/platform/domain`.
 - REACT-ARCH-14: Forms use React Hook Form with `standardSchemaResolver` and the command's zod schema from `ports/in` (REACT-D6, TS-ARCH-06).
 - REACT-ARCH-15: Render errors are caught by two error boundaries, and both report.
 - REACT-ARCH-16: Every data-loading feature gets an N+1 check (API-N1-01).
@@ -72,6 +73,7 @@ Every rule ID of the react docs with its headline, grouped by doc. The headline 
 - REACT-TOOL-12: (React SPA) The standard scripts (TS-TOOL-10) map to the React tools like this (Next.js: NEXT-TOOL):
 - REACT-TOOL-13: (React SPA) `check:bundle` enforces the bundle budgets and fails the build.
 - REACT-TOOL-14: Keep the React stack current, one major at a time.
+- REACT-TOOL-15 (implements TS-TOOL-21): The wall-clock ban covers all of `src/` except the platform composition and tests.
 
 ## [React: Internationalization](../08-crosscutting-concepts/i18n/react.md)
 
@@ -197,3 +199,4 @@ Every rule ID of the react docs with its headline, grouped by doc. The headline 
 - REACT-STATE-17: Screens render loading, empty and error from the query result with the shared state components.
 - REACT-STATE-18: Query devtools are not part of production builds.
 - REACT-STATE-19: A failed refetch keeps the data on screen.
+- REACT-STATE-20 (implements TS-ARCH-21): Loads cancel through TanStack Query, and saves on the same item run one after another.

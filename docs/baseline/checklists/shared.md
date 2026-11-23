@@ -21,6 +21,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Port is narrow (ideally one method, or a cohesive few)?
 - [ ] No transaction handling in the adapter?
 - [ ] Incoming adapter authenticates and passes the caller; object-level authorization left to the use case (ARCH-UC-15)?
+- [ ] Outgoing adapter stores what its port method promises: no second table synced on save, no business rule, no wall clock, no denormalised copy of versioned facts (ARCH-ADP-14)?
 
 ## Code Organization
 
@@ -49,7 +50,8 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] A check against state that may not exist yet uses an advisory lock on the business key, tested in both orders (ARCH-UC-16)?
 - [ ] Commands that may act for someone else carry owner and caller separately, owner = caller by default (ARCH-UC-17)?
 - [ ] Helpers shared within a cut are package-private classes built by each service, not beans (ARCH-UC-18)?
-- [ ] Bulk import parsed in the adapter, rows through one use case, all or nothing, per-row report with codes (ARCH-UC-19)?
+- [ ] Bulk import parsed in the adapter, rows through one use case, all or nothing, per-row report with codes; own transaction timeout, set-based key reads, max-size IT (ARCH-UC-19)?
+- [ ] Time read only from the injected clock, business date from the one shared function in the product's zone, long-lived screens roll over at midnight (ARCH-UC-20)?
 
 ## Container Images, Frontend Delivery and Runtime Contract
 
@@ -60,7 +62,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Frontend change to serving, routing or caching: deep-link, cache-header and 404 rules kept; previous release's chunks still served (REL-FE-03/04)?
 - [ ] Nonce templating tested against a real build's `index.html`, not a stub (REL-FE-03)?
 - [ ] BFF image: start fails without the bundle, built image answers `GET /` with `200` `text/html` (REL-FE-06)?
-- [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7 (REL-RUN-*)?
+- [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7; also for a delivered Compose installation (REL-RUN-*)?
 - [ ] Feature needing fonts, AWT, native libraries or locale data: avoided, or exercised against the real image in the smoke tier (REL-RUN-08)?
 
 ## Delivery and Release
@@ -109,15 +111,19 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Consumer in the same repo: regenerated and adapted in the same pull request as the spec change?
 - [ ] N+1 check done ([08-crosscutting-concepts/api/avoiding-n-plus-one.md](../08-crosscutting-concepts/api/avoiding-n-plus-one.md))?
 - [ ] Schema names unique across the API; several request media types as content entries of one operation; downloads with a binary schema (API-CON-12/13)?
+- [ ] No two paths that differ only in a template name; spec linted in the spec test (API-CON-14)?
 
 ## REST Conventions (wire format)
 
 [08-crosscutting-concepts/api/rest-conventions.md](../08-crosscutting-concepts/api/rest-conventions.md)
 
 - [ ] Decimals and money as strings (`format: decimal`), instants in UTC, enums as `UPPER_SNAKE_CASE` strings (API-REST-01..03)?
-- [ ] Errors as problem+json with `code` from the catalogue and `traceId`; status from the table (API-REST-05..07)?
+- [ ] Errors as problem+json with `code` from the catalogue and `traceId`; status from the table, business rules 409 (API-REST-05..07)? New codes added without breaking the `oasdiff` check (API-REST-07)?
 - [ ] Collection paged or bounded in the query; sort and filter parameters allow-listed in the spec (API-REST-08..10)?
-- [ ] Concurrent updates carry a version or `If-Match`, and a successful update answers 200 with the resource or its version, never a bare 204 (API-REST-11)?
+- [ ] Concurrent updates and deletes carry a version (`DELETE …?version=`) or `If-Match`, and a successful update answers 200 with the resource or its version, never a bare 204 (API-REST-11)?
+- [ ] No `GET` creates or changes data; generated data comes from a migration, job or command (API-REST-15)?
+- [ ] Every date, month and period input checked against the product's window, ranges against a maximum span, with an out-of-window slice test (API-REST-16)?
+- [ ] A hard bound that cuts data refuses or reports `truncated`; internal "all rows" reads page through (API-REST-08)?
 - [ ] Singleton state transitions as `POST …/<singleton>/<verb>` only, verbs listed in the API doc; everything else nouns (API-REST-14)?
 - [ ] Removing something: deprecated first, `Deprecation`/`Sunset` headers, consumers migrated (API-REST-12)?
 
@@ -146,6 +152,8 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 
 - [ ] New or changed personal data: `processing-record.md` and `deletion-concept.md` updated, flagged for DPO review (DP-INV-03)?
 - [ ] Field needed for a stated purpose; optional processing off by default (DP-MIN-01/03)?
+- [ ] Aggregate-only role: groups below the minimum size suppressed or merged, small filters refused, minimum recorded, IT proves no one person can be isolated (DP-MIN-04)?
+- [ ] New table: named in the deletion concept or its "no personal data" list; the schema-vs-concept test passes (DP-INV-04)?
 - [ ] Retention job and erasure/export cover the new location; tests updated (DP-RET-02, DP-DSR-02, DP-TEST-01)?
 - [ ] Export includes soft-deleted records, is never silently truncated, and redacts other people's data (DP-DSR-05)?
 - [ ] No personal data in logs, telemetry, URLs, events beyond IDs (DP-TEL-01/02, DP-MIN-02)?
@@ -183,6 +191,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Diagrams as Mermaid in the Markdown file?
 - [ ] In the baseline repository: did the change alter architecture, technology or a decision? Then `ARCHITECTURE.md` is updated in the same change, current state only (DOC-ARC-09).
 - [ ] Agreed business answers recorded in chapter 8 "Business rules", open assumptions in `open-questions.md` (DOC-ARC-10)?
+- [ ] Every mechanism, value or table the product docs name for this change exists in the code, or is marked planned; chapter 5 shows the current state; superseded ADRs marked (DOC-ARC-11)?
 
 ## IDE Setup: VS Code and IntelliJ IDEA Ultimate
 
@@ -248,6 +257,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] File adapter in `adapter/out/file/<format>`, binary media type in the spec, `Content-Disposition`, `no-store` for personal data, bounded read (EXP-07)?
 - [ ] No fonts, AWT or native libraries needed from the image, or the feature runs in the smoke tier (EXP-08)?
 - [ ] PDFs for people: PDF/UA-1 validated by veraPDF in tests, manual check in the L6 checklist (EXP-09)?
+- [ ] Heavy export: data loaded in the transaction, rendered outside it, behind a concurrency limit with `503` + `Retry-After`; maximum-size test, limit and peak in chapter 7 (EXP-10)?
 - [ ] New export of personal data or new download endpoint: threat model note (SEC-TM-02)?
 
 ## Resilience and Idempotency
@@ -303,6 +313,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Nothing that looks like a credential in the diff, tests, fixtures or logs?
 - [ ] A leaked secret in the conversation or diff: stop and tell the developer; do not just delete it.
 - [ ] New security event: written to the audit trail with a pseudonymous id only (SEC-AUD-01/02); audit retention by dropping time partitions with a separate role, not by `DELETE` (SEC-AUD-04)?
+- [ ] New export of other people's personal data: audit event with caller, kind, format, period, per person or aggregated, row count, and a test (SEC-AUD-05)?
 
 ## Test-Driven Development
 
@@ -311,6 +322,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Did I see the new test fail before implementing?
 - [ ] One behavior per cycle; did I refactor while green?
 - [ ] Style matches the element table (London for use cases and incoming adapters, Chicago for domain, pure code and outgoing adapters)?
+- [ ] Every use case has a unit test, except a frontend use case that only forwards to one port (TEST-ARCH-02)?
 - [ ] Only owned contracts mocked; interactions verified only for commands?
 - [ ] Expected values independent of the implementation?
 - [ ] Test data from builders; clock and ids fixed in the test (TEST-TDD-16)?
@@ -335,10 +347,11 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] CSS for layout, the window-size contract only for structure; same data in every size class (UI-04..06)?
 - [ ] Logical properties, `rem`, `dvh`, safe areas, no hover-only function, zoom not blocked (UI-09..12)?
 - [ ] Inputs with `type`, `autocomplete`, `inputmode` (UI-13)?
-- [ ] Status via visible region or the announcer; route title; route focus only on path changes (UI-15, UI-16)?
+- [ ] Status via visible region or the announcer; route title; route focus only on path changes, not on `replaceUrl` or same-route pagers (UI-15, UI-16)?
 - [ ] Snackbars never the only error channel; progress and tables labelled; dialog focus restored when the trigger can vanish (UI-17, UI-18)?
 - [ ] Loading, empty and error states from the shared components (UI-19)?
-- [ ] Status regions rendered before their text changes (UI-15)? Focus moved when an action removes its trigger; refresh after a command keeps the view (UI-18)?
+- [ ] Status regions rendered before their text changes; never a status region and the announcer for the same text (UI-15)? Focus moved when an action removes its trigger; refresh after a command keeps the view, also for app-wide state such as a session renewal, and refreshes every derived figure; e2e `toBeFocused` after each dialog close and destructive action (UI-18)?
+- [ ] Every form, including dynamic rows (breaks, list items), shows each error as text linked to its field, and a failed submit focuses the first invalid field (A11Y-22)?
 - [ ] Commands show a pending state and ignore re-entry (UI-20)? Dirty dialog asks before closing; unchangeable control explained (UI-21)? Route navigation is a `nav` with `aria-current`, not a tab list (UI-22)?
 - [ ] Lists announce their result count after a filter or page change (A11Y-20); destructive and bulk actions confirm or can be undone (A11Y-30)?
 
@@ -362,6 +375,8 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Panels with fixed foreground and background colours have a forced-colors variant (A11Y-28)?
 - [ ] Charts named, with a table or text carrying the same figures (A11Y-33); value bars as `meter`/`progressbar` with value text and visible status (A11Y-34)?
 - [ ] No wrapper repeats the accessible name of the group or landmark inside it (A11Y-35)?
+- [ ] No select, date or text control navigates, submits or reloads on change; navigation commits on Enter, blur or a button (A11Y-36)?
+- [ ] Same-route pagers and `replaceUrl` navigations keep focus on the control and announce the new period (A11Y-21)? Idle time shared across tabs, remaining time asked from the server before the redirect, extending keeps the page (A11Y-29)?
 
 ## Taking Shortcuts Consciously
 

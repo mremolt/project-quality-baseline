@@ -56,3 +56,5 @@ Every rule ID of the node docs with its headline, grouped by doc. The headline i
 - TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it.
 - TS-TOOL-18: `check` is the inner loop, `verify` the gate.
 - TS-TOOL-19: `verify` and `check` run every step, report all failures together and fail at the end.
+- TS-TOOL-20: E2E code is type-checked and linted inside `verify`.
+- TS-TOOL-21: ESLint bans reading the wall clock outside the platform clock (TS-ARCH-22).

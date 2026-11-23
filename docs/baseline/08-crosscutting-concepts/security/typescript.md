@@ -21,6 +21,9 @@ import { z } from 'zod';
 z.config({ jitless: true });
 ```
 
+- **TS-SEC-10: Sign-out posts to the BFF's logout endpoint with the XSRF header, expects `200 {"redirectUri": …}` and then navigates the whole page there with `window.location.assign`.** The sign-out adapter (an outgoing HTTP adapter like any other) validates the answer with a schema that accepts only an `https` URL (`http` only for a local IdP) and reports a failure as a `TechnicalError`; the UI clears client state before navigating. The BFF answers JSON for this call (SPRING-SEC-33, NODE-BFF-08) because a browser `fetch` cannot follow the cross-origin redirect to the IdP. Every sign-out path (menu, "no access" page, session-timeout dialog) uses the same use case. The real-backend smoke test signs out and asserts that the browser reaches the IdP's end-session page and that the next login asks for credentials again; a test that only checks that the session API answers 401 does not prove the IdP session ended.
+  *Why:* front end and BFF are written against each other; when one side redirects and the other expects JSON, every sign-out "fails" in the UI and the IdP session may survive on a shared machine, and only a test across both ends notices.
+
 Supply chain and scanning: [TS-TOOL-11..16](../development/typescript-tooling.md).
 
 *Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript: Browser Security".*

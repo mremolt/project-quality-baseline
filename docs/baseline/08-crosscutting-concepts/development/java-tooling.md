@@ -36,7 +36,7 @@ A complete, validated configuration is in `.agents/skills/baseline-spring/templa
 ## Compile-time checks (default JAVA-D5)
 
 - **JAVA-TOOL-07: Error Prone and NullAway run in every compile**, in JSpecify mode, restricted to `@NullMarked` code. Warnings fail the build (`failOnWarning`): a check is an error or it is switched off in the build file, with a reason. No warnings policy (TS-TOOL-05 applies by analogy).
-- **JAVA-TOOL-08: Every package is `@NullMarked`** (`package-info.java` with `org.jspecify.annotations.NullMarked`), container packages without classes (`adapter`, `adapter.in`, `ports`) included; `@Nullable` marks the places where `null` is legal. `@SuppressWarnings("NullAway")` needs a comment with the reason. `org.jspecify` is allowed in `domain` and `ports` (annotation-only, no framework).
+- **JAVA-TOOL-08: Every package is `@NullMarked`** (`package-info.java` with `org.jspecify.annotations.NullMarked`), container packages without classes (`adapter`, `adapter.in`, `ports`) included; `@Nullable` marks the places where `null` is legal. `@SuppressWarnings("NullAway")` needs a comment with the reason. `org.jspecify` is allowed in `domain` and `ports` (annotation-only, no framework). The template's ArchUnit rule `everyPackageIsNullMarked` fails for a package with classes that has no `@NullMarked` `package-info.java`: with `-XepOpt:NullAway:OnlyNullMarked=true` (JAVA-TOOL-07), NullAway silently skips unmarked code, so a forgotten `package-info.java` turns null checking off for that package without any warning.
   *Why:* Spring Framework 7 and Boot 4 are JSpecify-annotated, so calls into the framework are checked too.
 - **JAVA-TOOL-09: Generated code is excluded** from Error Prone (`-XepExcludedPaths`), Spotless and SpotBugs.
 

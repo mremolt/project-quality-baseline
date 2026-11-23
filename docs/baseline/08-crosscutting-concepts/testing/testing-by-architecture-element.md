@@ -18,7 +18,8 @@ Follow the test pyramid: many cheap, fast, stable unit tests; fewer integration 
 
 - **TEST-ARCH-01: Domain entities → unit tests.** Build the entity in a known state, call a behaviour method, assert the resulting state. No mocks needed.
 - **TEST-ARCH-02: Use cases (application services) → unit tests with mocked/faked outgoing ports.**
-  Verify **only the important interactions**, not every call. Over-specified interaction tests break on every refactoring.
+  Verify **only the important interactions**, not every call. Over-specified interaction tests break on every refactoring. Exception: a frontend use case whose whole body forwards its arguments to one outgoing port and returns its result needs no own unit test; the store or component test (with the use case mocked) and the HTTP adapter test cover the path. The test comes back with the first line of logic (a rule, a mapping, a second port, error handling).
+  *Why:* a test of a one-line delegation restates the implementation (TEST-TDD-10) and catches nothing the adapter and store tests don't.
 - **TEST-ARCH-03: Incoming adapters → integration tests inside the real framework** (routing, serialization, validation, error mapping), with the incoming port mocked.
   *Why:* a plain unit test of a controller misses everything the framework does around it.
 - **TEST-ARCH-04: Outgoing adapters → integration tests against the real technology.** Persistence adapters test against **the same database engine as production** (e.g. via containers), not an in-memory substitute.

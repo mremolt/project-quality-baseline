@@ -11,6 +11,7 @@
 - [ ] Tests written first, of the type each changed architecture element requires (TEST-ARCH-06)
 - [ ] Bug fix: a test that would have caught it (TEST-ARCH-11)
 - [ ] `docs/architecture/` updated for a new component, adapter, external system, deployment target or quality requirement (DOC-ARC-06)
+- [ ] Every claim the docs make about this change (mechanisms, values, tables, checks) is true in the code, or marked planned (DOC-ARC-11)
 - [ ] New decision or shortcut: ADR in `docs/adr/` and linked in chapter 9, naming the rule IDs it deviates from (ARCH-SC-02, ARCH-SC-08, DOC-ARC-03)
 - [ ] Rule that depends on other rows or concurrent requests (uniqueness, closed periods, "at least one", process once): enforced by a constraint, conditional write or shared lock (NestJS: exclusion constraint or advisory lock, NEST-DB-23), with a two-transaction concurrency test in a controlled order, seen failing without the mechanism (ARCH-UC-16)
 - [ ] New query on a table that grows: the index it uses is named, or why a scan is fine (SPRING-DB-17)
@@ -56,7 +57,7 @@ N+1 check
 | Cryptography and secrets: TLS, hashing, encryption at rest and keys per SEC-CRY-01..05; no credential in code, config, fixtures or logs (SEC-INC-01)? | |
 | Audit trail: security-relevant actions write an audit event with a pseudonymous id, tested? | |
 | Dependencies: new dependency reviewed (maintainer, age, licence, install scripts)? | |
-| Personal data: inventory and deletion concept updated, retention covered, export/erasure extended (export includes soft-deleted records, redacts other people's data, DP-DSR-05), nothing personal in logs, telemetry or URLs (DP-INV-03, DP-RET-02, DP-DSR-02, DP-TEL-01/02)? | |
+| Personal data: inventory and deletion concept updated, retention covered, export/erasure extended (export includes soft-deleted records, redacts other people's data, DP-DSR-05), nothing personal in logs, telemetry or URLs, bulk exports audited, aggregate-only roles cannot isolate a person (DP-INV-03, DP-RET-02, DP-DSR-02, DP-TEL-01/02, SEC-AUD-05, DP-MIN-04)? | |
 | Design: new entry point, outbound call, role or personal data → threat model below (SEC-TM-02)? | |
 | Pipeline: gates, thresholds and permissions unchanged or tightened (SEC-CI-02, SEC-REV-02)? | |
 

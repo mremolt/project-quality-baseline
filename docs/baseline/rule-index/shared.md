@@ -28,6 +28,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - ARCH-ADP-10: Bounded contexts don't share outgoing adapters.
 - ARCH-ADP-12: Technology-specific models (ORM entities, API DTOs) stay inside their adapter, with the narrowest visibility possible.
 - ARCH-ADP-13: SHOULD: choose the simplest technology that fits.
+- ARCH-ADP-14: An outgoing adapter does what its port method promises and nothing more.
 
 ## [Code Organization](../05-building-block-view/code-organization.md)
 
@@ -61,6 +62,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - ARCH-UC-17: A command that may act on someone else's data carries the owner separately from the caller.
 - ARCH-UC-18: Logic shared by several use cases of one cut lives in package-private final helper classes that each service builds, not in a shared bean.
 - ARCH-UC-19: A bulk import of structured data (CSV, spreadsheet) follows four defaults, deviation stated in an ADR.
+- ARCH-UC-20: Production code reads the time only from an injected clock, and the business date comes from one function in the product's time zone.
 - ARCH-UC-12 (default D2): Use a rich domain model for logic-heavy domains.
 
 ## [Container Images, Frontend Delivery and Runtime Contract](../07-deployment-view/container-runtime.md)
@@ -164,6 +166,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - API-CON-06: Every new or changed endpoint is checked for N+1 usage by its consumers (08-crosscutting-concepts/api/avoiding-n-plus-one.md).
 - API-CON-12: Schema names are unique across the API.
 - API-CON-13: One operation that accepts several request media types declares one content entry per media type; one that returns a file declares its media type with a binary schema.
+- API-CON-14: No two paths differ only in the name of a path template, and the spec is linted.
 - API-CON-07: Consumers MUST NOT hand-write low-level HTTP calls or DTO types for an API that has a spec.
 - API-CON-08: The consumer pins the spec it was generated from.
 - API-CON-09: Generated code lives inside the outgoing adapter for that API and never leaves it (ARCH-ADP-12).
@@ -183,6 +186,8 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - API-REST-09: Sorting uses a repeatable `sort` parameter, `sort=<field>,<asc|desc>` (`sort=createdAt,desc&sort=id,asc`).
 - API-REST-10: Filtering uses one query parameter per filterable field, named after the response field.
 - API-REST-11: Updates to resources that users change concurrently use optimistic concurrency, and a successful update answers `200` with the resource or its new version, never a bare `204`.
+- API-REST-15: `GET` and `HEAD` never create or change persistent state.
+- API-REST-16: Every date, month and period input is validated at the incoming adapter against a documented plausible window, and ranges have a maximum span.
 - API-REST-14: A state transition of a singleton resource MAY be an action sub-resource `POST …/<singleton>/<verb>`; everything else uses nouns.
 - API-REST-12: An operation, parameter or field that will be removed is deprecated first.
 - API-REST-13: Checks answer in a fixed order: 401, then request-shape errors that need no data (400 for malformed input, 428 for a missing `If-Match`), then 403/404 decided by the use case, then 409/412 from the current state.
@@ -222,9 +227,11 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - DP-INV-01: Every product keeps a personal-data inventory in `docs/data-protection/processing-record.md`, structured like an Art.
 - DP-INV-02: Every product keeps a deletion concept in `docs/data-protection/deletion-concept.md`:
 - DP-INV-03: A change that adds a personal-data field, a storage location, a purpose or a recipient updates both documents in the same pull request (like DOC-ARC-06) and is flagged for DPO review in the pull request.
+- DP-INV-04 (SHOULD): A test checks that every table of the migrated schema is named in the deletion concept or on its list of tables without personal data.
 - DP-MIN-01: Every personal-data field has a purpose in the inventory.
 - DP-MIN-02: Personal data stays where it is needed.
 - DP-MIN-03: Privacy-friendly defaults (Art. 25(2)):
+- DP-MIN-04 (SHOULD): Views for roles that may see only aggregates never show a group smaller than the product's minimum group size (default 5 people).
 - DP-RET-01: Every data category has a retention period and a start event (e.g. "contract end + statutory period", "last login + 24 months") from the deletion concept, decided by the controller.
 - DP-RET-02: Deletion after the period is automated by a scheduled job per data category that calls a use case (e.g. `PurgeExpiredCustomerAccounts`) and is covered by tests (DP-TEST-01).
 - DP-RET-03: Data under statutory retention is restricted, not deleted (Art. 17(3)(b), Art. 18):
@@ -280,6 +287,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - DOC-ARC-08: The baseline follows the same structure.
 - DOC-ARC-09: The baseline repository keeps `ARCHITECTURE.md` at its root current.
 - DOC-ARC-10: Product business rules live in chapter 8, section "Business rules"; open assumptions in `docs/architecture/open-questions.md`.
+- DOC-ARC-11: Product docs state only what exists; anything not built yet is marked as planned.
 
 ## [IDE Setup: VS Code and IntelliJ IDEA Ultimate](../08-crosscutting-concepts/development/ide-setup.md)
 
@@ -302,6 +310,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - EXP-07: Exports are produced by an outgoing file adapter behind a port and delivered as a binary download.
 - EXP-08: Generated documents need no fonts, AWT or native libraries from the image.
 - EXP-09: PDFs for people meet PDF/UA-1 and are checked automatically, plus once per release by hand.
+- EXP-10: A heavy export loads its data inside the read transaction and renders outside it, behind a concurrency limit.
 
 ## [Internationalization (i18n)](../08-crosscutting-concepts/i18n/i18n.md)
 
@@ -474,6 +483,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - SEC-AUD-02: The audit trail identifies people by pseudonymous ids only and has its own retention period in the deletion concept (DP-INV-02), decided by the controller with the DPO.
 - SEC-AUD-03: Spikes of denied access and token validation failures raise an alert.
 - SEC-AUD-04: Expired audit events are removed by a separate privileged path, never by the application role.
+- SEC-AUD-05: A bulk export of personal data writes an audit event.
 
 ## [Test-Driven Development](../08-crosscutting-concepts/testing/tdd.md)
 
@@ -570,6 +580,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - A11Y-21: Every route has a unique, descriptive title (2.4.2), and focus moves to the new page's main heading when the path changes:
 - A11Y-22: Input errors are identified in text and linked to the field programmatically.
 - A11Y-23: Each main screen has a landmark and heading contract:
+- A11Y-36: A control never changes the context while the user operates it (WCAG 3.2.2).
 - A11Y-35: A wrapper never repeats the accessible name of the group, region or landmark it contains.
 - A11Y-24: The screen reader protocol of the L6 release checklist runs once per release for every pair in the A11Y-19 matrix (tier T3, TS-TEST-18).
 - A11Y-25: Real screen reader automation is optional and supplementary:

@@ -161,6 +161,8 @@ function retryTransient(failureCount: number, error: Error): boolean {
 }
 ```
 
+- **REACT-ARCH-25 (implements TS-ARCH-22): Time comes from the platform's `clock`, the business date from `businessDate()` in `src/platform/domain`.** `createPlatform()` creates `clock: { now: () => Date.now() }` (the only `Date.now()` outside tests, ESLint REACT-TOOL-15) and hands it to the feature factories and the hooks that tick; tests pass a fixed clock. `businessDate(instant)` and `businessMonth(instant)` format with `Intl.DateTimeFormat('en-CA', { timeZone })` in the product's zone, declared once in the platform.
+
 ### Forms
 
 - **REACT-ARCH-14: Forms use React Hook Form with `standardSchemaResolver` and the command's zod schema from `ports/in`** (REACT-D6, TS-ARCH-06). Submitting builds the command through its validating factory (`CancelOrderCommand.of(values)`). MUI inputs are bound with `Controller`, taking `ref` out of `field` and passing it as `inputRef`: `render={({ field: { ref, ...field } }) => <TextField {...field} inputRef={ref} />}`. Spreading the whole `field` into `TextField` puts the ref on the root element, and React Hook Form then cannot move focus to the first invalid field after a failed submit (A11Y-22; asserted by REACT-TEST-10). Field errors are shown as translated text linked to the field. `standardSchemaResolver` is imported from `@hookform/resolvers/standard-schema`; it works with branded zod schemas.

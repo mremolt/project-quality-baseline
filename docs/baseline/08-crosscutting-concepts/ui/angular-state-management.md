@@ -45,6 +45,8 @@ The skill's original advice ("the store holds state and orchestration, a service
   ```ts
   effect(() => { const week = this.week(); untracked(() => void this.store.load(week)); });
   ```
+- **NG-STATE-18 (implements TS-ARCH-21): A store load aborts the previous one, and results are patched with an updater on the current state.** One shared feature from `src/platform` (for example `withLatestLoad`, a `signalStoreFeature` constant, NG-STATE-16) owns one `AbortController` per load key: starting a load aborts the previous controller, the result is applied only while its key is still the current one, and `withHooks({ onDestroy })` aborts what is running. `rxMethod` with `switchMap` that passes the signal on is the alternative where RxJS adds value (NG-STATE-08). After an `await`, the store writes `patchState(store, (s) => ({ week: withCell(s.week, …) }))`, never a value built from `store.week()` read before the `await`. Autosaves on the same item go through a per-key queue (or are coalesced) in the store, and the control shows the saving state (UI-20). Store tests (NG-STATE-14) resolve an older response after a newer one and run two overlapping saves on one key.
+  *Why:* a `new AbortController().signal` per call satisfies TS-API-06 literally but cancels nothing, and a patch built from a snapshot undoes the save that finished in between.
 - **NG-STATE-11: Stores don't cache backend data across screens.** Shared caching and batching live in the outgoing adapter (TS-ARCH-15, API-N1-04). A store only keeps what its screen shows.
 
 ### Scope

@@ -6,7 +6,7 @@ Rules for every Java project, framework-independent. Spring Boot additions are i
 
 | Doc | Covers | Rule IDs |
 |---|---|---|
-| [05-building-block-view/java.md](../05-building-block-view/java.md) | Package layout, visibility, records, ArchUnit, build modules | `JAVA-ARCH-*` |
+| [05-building-block-view/java.md](../05-building-block-view/java.md) | Package layout, visibility, records, ArchUnit, build modules, the `Clock` bean | `JAVA-ARCH-*` |
 | [08-crosscutting-concepts/development/java-tooling.md](../08-crosscutting-concepts/development/java-tooling.md) | JDK, Maven and wrapper, compiler checks (Error Prone, NullAway), Spotless, SpotBugs, JaCoCo, dependency scanning, reproducible builds, standard commands | `JAVA-TOOL-*` |
 
 Configuration, observability, resilience, messaging, data protection and delivery have shared rules (`CFG-*`, `OBS-*`, `RES-*`, `MSG-*`, `DP-*`, `REL-*`) and Spring implementations; the Spring pages are listed in [stacks/spring.md](spring.md). A plain Java project applies the shared rules directly.

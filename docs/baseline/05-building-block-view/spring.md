@@ -135,6 +135,8 @@ Copy `.agents/skills/baseline-spring/templates/test/ArchitectureTest.java` into 
 | `updatesAnswerWithTheResource` | No `PUT`/`PATCH` handler returns `void`, carries `@ResponseStatus(NO_CONTENT)` or calls `ResponseEntity.noContent()` (API-REST-11, SPRING-REST-12); `allowEmptyShould(true)` until the first one |
 | `restRecordNamesAreUnique` | No two `*Request`/`*Response` types in `adapter.in.rest` share a simple name, which springdoc would merge into one schema (SPRING-API-02) |
 | `everyClassHasAHome` | Every class is in a ring, an `adapter.<in\|out>.<technology>` package, the composition root, `stereotype` or `config` (ARCH-ORG-01, SPRING-ARCH-01). `package-info` is ignored, so container packages (`adapter`, `adapter.in`, `ports`) can be `@NullMarked` too (JAVA-TOOL-08) |
+| `everyPackageIsNullMarked` | Every package that holds classes has a `@NullMarked` `package-info.java`; NullAway skips unmarked packages silently (JAVA-TOOL-08) |
+| `noDirectClockAccess` | No `now()` without a `Clock`, no `Clock.system*()` and no `System.currentTimeMillis()` outside `config`, where the `Clock` bean lives (ARCH-UC-20, JAVA-ARCH-14) |
 | `noFieldInjection`, `noStandardStreams`, `noJavaUtilLogging` (`GeneralCodingRules`) | SPRING-ARCH-06, SPRING-LOG-01 |
 | `noJackson2` | No Jackson 2 databind/core anywhere in production code; springdoc brings it transitively (SPRING-LIB-04) |
 | `noRestTemplate` | `RestClient` / HTTP Service Clients only (SPRING-LIB-06) |

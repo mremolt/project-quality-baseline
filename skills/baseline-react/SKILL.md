@@ -23,6 +23,7 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
 | Runtime configuration, `/config.json`, environments | `docs/baseline/08-crosscutting-concepts/configuration/configuration.md`, `configuration/react.md` |
 | Error boundaries, error reporting, source maps | `docs/baseline/08-crosscutting-concepts/observability/observability.md`, `observability/react.md` |
 | Retries, timeouts | `docs/baseline/08-crosscutting-concepts/resilience/resilience.md` (RES-RTY, RES-TMO), REACT-STATE-15, REACT-API-05 |
+| Time, "today", business date; overlapping loads and saves | `clock` from `createPlatform()` and `businessDate()` (REACT-ARCH-25, TS-ARCH-22, REACT-TOOL-15); signal passed on, mutation `scope` per item, updater writes (REACT-STATE-20, TS-ARCH-21); catch only expected errors (TS-ARCH-23) |
 | Personal data in the UI, third-party resources, fonts | `docs/baseline/08-crosscutting-concepts/data-protection/data-protection.md`, REACT-UI-13 |
 | tsconfig, ESLint, scripts, bundle budgets, upgrades | `docs/baseline/08-crosscutting-concepts/development/typescript-tooling.md`, `development/react-tooling.md` |
 | Bundle delivery by the BFF, chunk reload | `docs/baseline/07-deployment-view/container-runtime.md` (REL-FE-*), REACT-ARCH-21 |

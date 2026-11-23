@@ -132,7 +132,7 @@ it('reports an unexpected error once and shows the generic message (REACT-STATE-
 ## Routing (React SPA)
 
 - **REACT-TEST-14: (React SPA) Route behaviour is tested with a memory router and the feature's real route options**, the lazy component replaced by a stub: `createRoute({ getParentRoute: () => rootRoute, ...ordersRouteOptions, component: () => <Page title="Orders" /> })` with `createMemoryHistory`. This tests the route's search validation (an invalid `?page=-3` falls back to `{ page: 0 }`, REACT-ARCH-19) and its title key without loading the feature chunk. `test/setup-dom.ts` stubs `window.scrollTo` once for all tests (`vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)`), because the router's scroll handling calls it and jsdom does not implement it.
-- **REACT-TEST-15: (React SPA) The app-wide route-change handler has one test with several navigations** (A11Y-21, UI-16): first load sets the title and moves no focus; a path change sets "Page | App" and focuses the routed `h1`; a query-only change keeps focus where it was; going back focuses the previous page's `h1`. Real browsers are covered by TS-TEST-26.
+- **REACT-TEST-15: (React SPA) The app-wide route-change handler has one test with several navigations** (A11Y-21, UI-16): first load sets the title and moves no focus; a path change sets "Page | App" and focuses the routed `h1`; a query-only change, a `replace` navigation and a navigation with `state: { keepFocus: true }` keep focus where it was; going back focuses the previous page's `h1`. Real browsers are covered by TS-TEST-26.
   *Why:* the handler ignores the first navigation, so a per-route test with a single navigation cannot see it move focus.
 
 ```tsx

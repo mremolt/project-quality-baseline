@@ -185,5 +185,17 @@ Two details keep the template valid under TS-TOOL-05, and under TS-TOOL-01 when 
   *Why:* the first test drive of the baseline lost most of its time in 3–4 minute loops, because the only named command was the final gate.
 - **TS-TOOL-19: `verify` and `check` run every step, report all failures together and fail at the end.** They call the runner `scripts/verify.mjs` (shipped in each TypeScript stack's skill templates) with the npm scripts in order, e.g. `node scripts/verify.mjs generate:api! format:check lint typecheck check:arch check:unused test build! check:bundle`. A failing step does not stop the run; a step marked `!` is a gate whose output later steps need (generated client, build), so its failure stops the run there. The runner prints a summary and exits non-zero when any step failed or was skipped, so every check still fails the build and CI (REPO-CI-01). Chaining with `&&` is not used for these two scripts.
   *Why:* with `&&` each run shows only the first failing stage; the first test drive needed four closing `verify` runs where one would have shown all findings.
+- **TS-TOOL-20: E2E code is type-checked and linted inside `verify`.** `e2e/`, `e2e-smoke/` and the Playwright configs are in a tsconfig that `typecheck` runs (the project tsconfig's `include`, or an own `tsconfig.e2e.json` behind a `typecheck:e2e` step), and in the files ESLint lints (`eslint .`; Angular: `lintFilePatterns` in `angular.json`, NG-TOOL-04). Stub payloads are typed with the types generated from the spec (API-CON-07), never with hand-written interfaces.
+  *Why:* Playwright only strips types, so untyped stubs drift from the contract while staying green, and a fixture guard that compares the wrong strings passes forever without a lint or type error.
+- **TS-TOOL-21: ESLint bans reading the wall clock outside the platform clock (TS-ARCH-22).** Every stack's config adds these selectors to its `no-restricted-syntax` list for `src/**` and lifts them only for the platform clock and for specs (ESLint replaces a rule's options per block, so each block repeats its full list):
+
+  ```ts
+  const noWallClock = [
+    { selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']", message: 'Use the platform clock (TS-ARCH-22).' },
+    { selector: "NewExpression[callee.name='Date'][arguments.length=0]", message: 'Use the platform clock (TS-ARCH-22).' },
+  ];
+  ```
+
+  *Why:* "today" computed from `new Date()` in a component cannot be pinned in a test and is the usual source of time-zone bugs; a lint rule finds every place, a review finds some.
 
 *Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript Tooling".*

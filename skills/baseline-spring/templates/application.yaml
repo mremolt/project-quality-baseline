@@ -81,6 +81,16 @@ management:
       # group:
       #   readiness:
       #     include: readinessState,db  # only where OBS-03 applies, with a reason (SPRING-OBS-03)
+  otlp:
+    metrics:
+      export:
+        enabled: false                # no push to the localhost default; an environment enables it with its URL (SPRING-OBS-08)
+  tracing:
+    export:
+      enabled: false                  # same for traces (SPRING-OBS-08)
+  logging:
+    export:
+      enabled: false                  # same for logs (SPRING-OBS-08)
 
 springdoc:
   api-docs:

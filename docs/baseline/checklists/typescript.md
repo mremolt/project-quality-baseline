@@ -16,6 +16,9 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] Routes only in `<feature>.routes.ts`, loaded with a dynamic `import()` from the app routes (TS-ARCH-20)?
 - [ ] HTTP errors mapped to domain errors in the adapter; the `TechnicalError`s it creates reported once, those it receives passed on unreported; no status codes above it (TS-ARCH-18)?
 - [ ] dependency-cruiser green with `tsPreCompilationDeps: true`, rules not loosened?
+- [ ] A new load aborts the previous one and on destroy; superseded results dropped; results after an `await` applied to the current state; autosaves serialized per item; tested with an out-of-order response (TS-ARCH-21)?
+- [ ] Time only from the platform clock; business date from the one platform function, never `toISOString().slice(0, 10)` or the browser zone; long-open pages roll over (TS-ARCH-22)?
+- [ ] `catch` handles only the feature's domain errors and `TechnicalError`; anything else rethrown or passed to the global error handler; no bare `catch {}` (TS-ARCH-23)?
 
 ## Generated API Clients (Orval)
 
@@ -27,7 +30,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] N+1 check done; batching/caching as decorator if chosen?
 - [ ] Adapter tests use the generated MSW handlers, including an error and a malformed response?
 - [ ] `urlEncodeParameters: true` in the Orval config (TS-API-09); `@faker-js/faker` a dev dependency when MSW mocks are generated?
-- [ ] File downloads through the adapter, not hand-built URLs in `<a download>` (TS-API-10)?
+- [ ] File downloads through the adapter, not hand-built URLs in `<a download>`; a `Blob` error body parsed as problem details, tested (TS-API-10)?
 
 ## TypeScript Tooling
 
@@ -40,6 +43,8 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] No unused dependency, export or file (`npm run check:unused`, TS-TOOL-17)?
 - [ ] npm 11.10 or newer, `engines` and `engine-strict` in place; after scaffolding, packages younger than the cooldown pinned (TS-TOOL-14)?
 - [ ] No compiler check or lint rule loosened?
+- [ ] `e2e/` and `e2e-smoke/` type-checked and linted in `verify`; stubs typed with generated types (TS-TOOL-20)?
+- [ ] Wall-clock selectors (`Date.now()`, `new Date()`) banned outside the platform clock and specs (TS-TOOL-21)?
 
 ## TypeScript: Browser Security
 
@@ -50,6 +55,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] No secret in `environment` files, no new third-party script without nonce (or trusted loader) and SRI; its other hosts in `connect-src`/`img-src`/`font-src`?
 - [ ] Error reports and client logs scrubbed?
 - [ ] zod configured jitless by the entry's first import, bundler keeps the execution order (TS-SEC-09)?
+- [ ] Sign-out expects `200 {redirectUri}` and navigates with `window.location.assign`; one use case for every sign-out path; smoke test proves the IdP session ended (TS-SEC-10)?
 
 ## TypeScript E2E: Matrix, Responsive, Themes, Screen Readers
 
@@ -69,7 +75,8 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 [08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md)
 
 - [ ] Doubles via `mock<Contract>()`; no `vi.mock` of our own modules?
-- [ ] Component tests query by role; every component spec runs axe on its main states?
+- [ ] Component tests query by role and use user-event (`fireEvent` only for native date/time inputs, with a comment, TS-TEST-08); every component spec runs axe on its main states?
+- [ ] HTTP adapters tested against MSW with the generated handlers; `HttpTestingController` only for Angular interceptors (TS-TEST-04)?
 - [ ] E2E: axe fixture on new screens/states, scanning only after animations settled (TS-TEST-12), keyboard journey, request budget as an upper bound, polled, counting catch-all calls and shell reads (TS-TEST-14)?
 - [ ] No `isVisible()` branches; list settled (exact row count) before acting on a row (TS-TEST-15)?
 - [ ] Scenario data unique and looked up by exact name or id; shared state restored in teardown; no empty-table or fresh-stack assumption (TS-TEST-34)?

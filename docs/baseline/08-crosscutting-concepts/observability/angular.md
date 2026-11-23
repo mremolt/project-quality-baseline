@@ -29,7 +29,7 @@ How an Angular frontend implements [observability.md](observability.md) (`OBS-*`
 | Scrubber (NG-OBS-05) | Vitest, Chicago style: URLs become route templates; query strings, e-mail addresses, tokens and form values are removed |
 | `ReportErrorUseCase` | Vitest, London style with a mocked `ErrorReportingPort`: dedupe and limit, nothing sent when disabled |
 | `GlobalErrorHandler` | Unit test with a mocked `REPORT_ERROR`: reports through the use case and shows the generic message; no rethrow |
-| Interceptor (NG-OBS-04) | `HttpTestingController`: a 5xx problem+json reports its `traceId`; a 409 is not reported |
+| Interceptor (NG-OBS-04) | `HttpTestingController` (the interceptor case of TS-TEST-04: it tests the `HttpClient` pipeline, not the contract): a 5xx problem+json reports its `traceId`; a 409 is not reported |
 | Feature HTTP adapter (NG-OBS-04, TS-ARCH-18) | `TestBed` with `provideHttpClient()`, MSW and `{ provide: REPORT_ERROR, useValue: mock<ReportErrorUseCase>() }`: a malformed body and an unknown problem `code` each report the `TechnicalError` the adapter rejects with exactly once (`toHaveBeenCalledExactlyOnceWith(failure)`); a known `code` and a 5xx, which the adapter passes on as the interceptor's failure, report nothing from the adapter |
 | E2E stubbed | Playwright: a stubbed 500 with `traceId` produces one request to the configured reporting path, without PII in its body (`page.waitForRequest`) |
 | Build | CI check: no `.map` file and no `sourceMappingURL` in the packaged artifact |

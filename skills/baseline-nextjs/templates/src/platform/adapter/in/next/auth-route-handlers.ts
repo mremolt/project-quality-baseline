@@ -28,6 +28,18 @@ function redirect(location: URL, status: 302 | 303, cookies: readonly string[]):
 }
 
 /**
+ * Logout answer (NODE-BFF-08): the browser client calls it with `fetch` (it must send the XSRF header, so it cannot
+ * submit a plain form) and cannot follow a cross-origin redirect to the IdP, so a JSON request gets the end-session
+ * URL as `200 { redirectUri }` and navigates itself; any other request gets the `303`.
+ */
+function logoutResponse(request: Request, location: URL, cookies: readonly string[]): Response {
+  if (!(request.headers.get('accept') ?? '').includes('application/json')) return redirect(location, 303, cookies);
+  const headers = new Headers({ 'content-type': 'application/json', 'cache-control': 'no-store' });
+  for (const cookie of cookies) headers.append('set-cookie', cookie);
+  return new Response(JSON.stringify({ redirectUri: location.href }), { status: 200, headers });
+}
+
+/**
  * Login, callback and logout of the BFF (NODE-BFF-02..08).
  * `appOrigin` comes from configuration: the callback URL is rebuilt from it, never from the Host header.
  */
@@ -64,7 +76,7 @@ export function createAuthRouteHandlers(sessions: SessionUseCase, appOrigin: str
       const session = await sessions.resolve(sessionId);
       if (session && !hasValidXsrfHeader(request, session.xsrfToken)) return problemResponse(403);
       const endSession = (await sessions.logout(sessionId)) ?? new URL('/', appOrigin); // IdP unreachable: home
-      return redirect(endSession, 303, [clearedSessionCookie(), clearedXsrfCookie()]);
+      return logoutResponse(request, endSession, [clearedSessionCookie(), clearedXsrfCookie()]);
     },
   };
 }

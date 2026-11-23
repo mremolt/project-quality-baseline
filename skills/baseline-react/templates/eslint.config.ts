@@ -58,6 +58,11 @@ const noHtmlWrites = [
   },
   { selector: "CallExpression[callee.property.name='insertAdjacentHTML']", message: 'TS-SEC-02' },
 ];
+// TS-TOOL-21, REACT-TOOL-15: time only from the platform clock (TS-ARCH-22)
+const noWallClock = [
+  { selector: "CallExpression[callee.object.name='Date'][callee.property.name='now']", message: 'TS-ARCH-22' },
+  { selector: "NewExpression[callee.name='Date'][arguments.length=0]", message: 'TS-ARCH-22' },
+];
 const noRtkQuery = {
   patterns: [
     { group: ['@reduxjs/toolkit/query', '@reduxjs/toolkit/query/*'], message: 'RTK Query is banned (REACT-STATE-09)' },
@@ -116,7 +121,10 @@ export default defineConfig(
       warnAsError(reactHooks.configs.flat['recommended-latest']),
       pluginQuery.configs['flat/recommended-strict'],
     ],
-    rules: { 'no-restricted-globals': ['error', fetchOnlyInHttpAdapters, noProcessInBrowser] },
+    rules: {
+      'no-restricted-globals': ['error', fetchOnlyInHttpAdapters, noProcessInBrowser],
+      'no-restricted-syntax': ['error', ...noHtmlWrites, ...noWallClock],
+    },
   },
   {
     files: ['src/**/*.tsx'],
@@ -129,6 +137,10 @@ export default defineConfig(
   {
     files: ['src/**/adapter/out/http/**/*.ts', 'src/platform/adapter/out/http/**/*.ts'],
     rules: { 'no-restricted-globals': ['error', noProcessInBrowser] }, // fetch allowed here only
+  },
+  {
+    files: ['src/platform/platform.composition*.{ts,tsx}', '**/*.spec.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+    rules: { 'no-restricted-syntax': ['error', ...noHtmlWrites] }, // the clock lives here; tests pin time themselves
   },
   {
     files: ['**/*.spec.{ts,tsx}', 'test/**/*.{ts,tsx}', 'e2e/**/*.ts'],

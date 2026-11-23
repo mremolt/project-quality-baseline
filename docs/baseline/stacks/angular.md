@@ -6,14 +6,14 @@ Rules for Angular frontends. They implement the shared docs and the TypeScript d
 
 | Doc | Covers | Rule IDs |
 |---|---|---|
-| [05-building-block-view/angular.md](../05-building-block-view/angular.md) | Project layout, naming, DI and wiring, HTTP, routing, forms, setup | `NG-ARCH-*` |
-| [08-crosscutting-concepts/ui/angular-state-management.md](../08-crosscutting-concepts/ui/angular-state-management.md) | NgRx Signal Store as view state of the UI adapter | `NG-STATE-*` |
+| [05-building-block-view/angular.md](../05-building-block-view/angular.md) | Project layout, naming, DI and wiring, HTTP, routing, forms, setup, `CLOCK` token and business date | `NG-ARCH-*` |
+| [08-crosscutting-concepts/ui/angular-state-management.md](../08-crosscutting-concepts/ui/angular-state-management.md) | NgRx Signal Store as view state of the UI adapter, latest-load and per-key saves | `NG-STATE-*` |
 | [08-crosscutting-concepts/ui/angular-material.md](../08-crosscutting-concepts/ui/angular-material.md) | Angular Material, Material Design 3, theming, the Angular mechanisms of the UI patterns (layout, route focus, loading/empty/error states; shared: [ui-patterns.md](../08-crosscutting-concepts/ui/ui-patterns.md)), a11y in the UI | `NG-UI-*`, `UI-*` |
 | [08-crosscutting-concepts/api/angular-openapi-clients.md](../08-crosscutting-concepts/api/angular-openapi-clients.md) | Orval `angular` client, `provideIn: false`, `untilAborted`, adapter example (shared: [typescript-openapi-clients.md](../08-crosscutting-concepts/api/typescript-openapi-clients.md)) | `TS-API-*` |
 | [08-crosscutting-concepts/security/angular.md](../08-crosscutting-concepts/security/angular.md) | Template and DOM safety, CSP (`base-uri 'self'`, report endpoint) and Trusted Types (incl. `angular#components`), XSRF with the BFF, SSR, security E2E tests | `NG-SEC-*` |
 | [08-crosscutting-concepts/i18n/angular.md](../08-crosscutting-concepts/i18n/angular.md) | Transloco, catalogs and keys, locale and formatting, language switch (shared rules: [i18n.md](../08-crosscutting-concepts/i18n/i18n.md)) | `NG-I18N-*`, `I18N-*` |
 | [08-crosscutting-concepts/testing/angular.md](../08-crosscutting-concepts/testing/angular.md) | Vitest via the CLI, zoneless tests, Testing Library + harnesses, E2E | `NG-TEST-*` |
-| [08-crosscutting-concepts/development/angular-tooling.md](../08-crosscutting-concepts/development/angular-tooling.md) | Compiler options, browser matrix through the CLI, angular-eslint, `@ngrx/eslint-plugin`, Prettier template parser, CLI scripts, preview-API allow-list | `NG-TOOL-*` |
+| [08-crosscutting-concepts/development/angular-tooling.md](../08-crosscutting-concepts/development/angular-tooling.md) | Compiler options, browser matrix through the CLI, angular-eslint, `@ngrx/eslint-plugin`, Prettier template parser, CLI scripts, preview-API allow-list, wall-clock ban | `NG-TOOL-*` |
 | [08-crosscutting-concepts/configuration/angular.md](../08-crosscutting-concepts/configuration/angular.md) | Runtime configuration: one build, `/config.json`, `RUNTIME_CONFIG` (shared rules: [configuration.md](../08-crosscutting-concepts/configuration/configuration.md)) | `NG-CFG-*`, `CFG-*` |
 | [08-crosscutting-concepts/observability/angular.md](../08-crosscutting-concepts/observability/angular.md) | Global error path, error reporting, trace correlation, hidden source maps (shared rules: [observability.md](../08-crosscutting-concepts/observability/observability.md)) | `NG-OBS-*`, `OBS-*` |
 

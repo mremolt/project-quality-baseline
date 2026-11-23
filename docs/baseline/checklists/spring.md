@@ -35,7 +35,8 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 
 [07-deployment-view/spring-delivery.md](../07-deployment-view/spring-delivery.md)
 
-- [ ] Flyway configured with its own user, `lock_timeout` and an explicit `lock-retry-count`; application datasource is DML-only; credentials from the config tree?
+- [ ] Flyway configured with its own user, `lock_timeout` and an explicit `lock-retry-count`; application datasource is DML-only, in a delivered Compose installation too; credentials from the config tree (SPRING-REL-01)?
+- [ ] Test `app-role` placeholder set by the shared Testcontainers configuration, no `application-test.yaml` (SPRING-REL-03, SPRING-CFG-05)?
 - [ ] New schema object covered by the schema grant and default privileges, or granted explicitly?
 - [ ] `CREATE INDEX CONCURRENTLY` in use: transactional lock off, Flyway connects directly?
 - [ ] Pre-deploy migration: same image, migrate-only runner, instances validate only and hold no DDL credentials (SPRING-REL-07)?
@@ -74,6 +75,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] New endpoint follows URL, status and error conventions; `operationId` set?
 - [ ] DTOs are package-private records with unique names; no entity or domain type in the body?
 - [ ] Decimals as `ApiDecimal`, instants as `Instant`, enums as strings (SPRING-REST-04..06)?
+- [ ] Date, month and enum parameters bound as `LocalDate`/`YearMonth`/enum, checked against the window by the shared helper (SPRING-REST-15, API-REST-16)?
 - [ ] Collection paged or bounded in the query, sort and filters allow-listed; update carries a version (SPRING-REST-11/12)?
 - [ ] Error cases documented as problem+json and tested; 401/403 from the filter chain are problem+json with a code (SPRING-REST-14)?
 - [ ] Absent optional fields omitted, asserted in the slice test; security entry point and handler use the Boot `JsonMapper` bean (SPRING-REST-08/14)?
@@ -133,6 +135,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] AsyncAPI regenerated and committed; examples updated (SPRING-MSG-11, MSG-CON)?
 - [ ] `*IT` with Kafka container covering success, unknown type, validation → DLT, transient retry; relay parking and trace id (SPRING-MSG-12)?
 - [ ] Mail or other after-commit side effect without a broker: outbox row in the use case's transaction plus a ShedLock sender in the adapter, no direct send after commit (SPRING-MSG-13)?
+- [ ] Rendering inside the per-row `try`; a non-transient failure parks the row; test with an unrenderable mail ahead of a good one (SPRING-MSG-13)?
 
 ## Spring Boot: Observability and Operability
 
@@ -144,6 +147,8 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] New Kafka listener: observation on, poll batch fits the shutdown phase (SPRING-OBS-05/09)?
 - [ ] New business metric: outgoing port, adapter with `MeterRegistry`, closed-set tags, cardinality test (SPRING-OBS-06/11)?
 - [ ] New HTTP client built from the injected builder (SPRING-OBS-09)?
+- [ ] OTLP metric, trace and log export off by default, enabled per environment with its endpoint; keys in `configuration-keys.yaml` (SPRING-OBS-08)?
+- [ ] Incoming `traceparent`/`tracestate`/`baggage` removed at the ingress, or by a BFF filter before the observation filter when nothing is in front (SPRING-OBS-10)?
 
 ## Spring Boot: Persistence with PostgreSQL
 
@@ -163,7 +168,9 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Rare change against many commands with no row to lock: shared advisory lock in the commands, exclusive in the change, both orders tested (SPRING-DB-16)?
 - [ ] Pre-check for the clean error plus the constraint as race guard, both ending in the same code (SPRING-DB-16)?
 - [ ] Constraint name read through Hibernate, driver runtime-only; SQLState mapping only where one constraint can fail, documented (SPRING-DB-18)?
-- [ ] Lazily generated reference data in the adapter, `REQUIRES_NEW`, `on conflict do nothing` (SPRING-DB-20)?
+- [ ] Optional filters appended as fragments, no `(:p IS NULL OR col = :p)`; append-only listings paged by keyset without a per-page `count(*)` (SPRING-DB-21)?
+- [ ] Count-of-rows rule ("at least one admin") locked before counting (SPRING-DB-22)? Upsert only where overwriting is intended, audit with the stored id and old values (SPRING-DB-23)?
+- [ ] After a violation no further statement in the aborted transaction; mapping IT runs inside a transaction (SPRING-DB-18)?
 
 ## Spring Boot: Resilience and Idempotency
 
@@ -183,15 +190,16 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 
 [08-crosscutting-concepts/security/spring-hardening.md](../08-crosscutting-concepts/security/spring-hardening.md)
 
-- [ ] New chain or header change: header table of SPRING-SEC-13 kept, nothing disabled, CSP reports reach the endpoint?
+- [ ] New chain or header change: header table of SPRING-SEC-13 kept, nothing disabled, CSP reports reach the endpoint (exempt from CSRF)?
 - [ ] New endpoint that takes an id: owner/tenant check, 404 for foreign objects, `cross-user` tagged test (SPRING-SEC-16, SPRING-SEC-35/36)?
-- [ ] New request record: no owner, tenant, role or audit fields (SPRING-SEC-34); size and length limits; JSON body size limited at the proxy and by the filter (SPRING-SEC-15)?
+- [ ] New request record: no owner, tenant, role, permission or group fields, synonyms included (SPRING-SEC-34); size and length limits; JSON body size limited at the proxy and by the filter (SPRING-SEC-15)?
+- [ ] Numbers parsed from uploads or other untrusted text bounded in length, precision and exponent before `BigDecimal` conversion, with the huge-exponent test (SPRING-SEC-43)?
 - [ ] New query: bind parameters only, sort and identifiers from an allow-list, no process execution with user input (SPRING-SEC-31)?
 - [ ] New outbound call to a variable URL: allow-list and address filter (SPRING-SEC-19)?
 - [ ] No exception text, stack trace or SQL in a response (SPRING-SEC-18)?
 - [ ] New polymorphic JSON or Kafka payload: closed types (SPRING-SEC-20)?
 - [ ] Security-relevant action: audit event and test (SPRING-SEC-22)?
-- [ ] BFF session change: lifetimes, rotation, logout at the IdP and their tests, idle timeout published in `/config.json` (SPRING-SEC-32/33)? Sessions in Spring Session JDBC (SPRING-SEC-37)? Confidential client with PKCE (SPRING-SEC-38)?
+- [ ] BFF session change: lifetimes, rotation, logout at the IdP and their tests, idle timeout published in `/config.json` (SPRING-SEC-32/33)? Logout answers `200 {redirectUri}` to a JSON request and `303` otherwise, both tested (SPRING-SEC-33)? Session attributes serialized as JSON, or logout-all on upgrade recorded in the release steps (SPRING-SEC-42)? Sessions in Spring Session JDBC (SPRING-SEC-37)? Confidential client with PKCE (SPRING-SEC-38)?
 - [ ] New unauthenticated endpoint that allocates state, or new export: rate limit listed in chapter 7 (SPRING-SEC-21)?
 - [ ] New upload: name, scan, archive limits, download authorization, separate origin for active content (SPRING-SEC-26)?
 - [ ] New dependency: reviewed (JAVA-TOOL-05)?
@@ -213,6 +221,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Hardening checklist ([spring-hardening.md](../08-crosscutting-concepts/security/spring-hardening.md)) answered for headers, limits, injection, object-level access, sessions, errors?
 - [ ] Resource-server chain present once a non-browser client exists; IdP named in an ADR (Keycloak when the organisation has none) (SPRING-SEC-03)?
 - [ ] Admin-managed users provisioned through an outgoing port to the IdP admin API, no own password store (SPRING-SEC-41)?
+- [ ] Account linking only with `email_verified` and to an unlinked row; existing IdP account adopted only when unlinked; retried invitation applies the data or answers 409; exact redirect and post-logout URIs (SPRING-SEC-44)?
 
 ## Spring Boot: Testing
 

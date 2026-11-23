@@ -8,8 +8,8 @@ A React project reads the shared docs, [stacks/typescript.md](typescript.md) and
 
 | Doc | Covers | Rule IDs |
 |---|---|---|
-| [05-building-block-view/react.md](../05-building-block-view/react.md) | Layout, naming, tokens and composition, components and hooks, data loading, forms, error boundaries, (React SPA) Vite, router, lazy routes, chunk reload, bootstrap, new app, dependency-cruiser | `REACT-ARCH-*` |
-| [08-crosscutting-concepts/ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md) | Redux Toolkit view state (one store, lazy slices, shared view state only), TanStack Query rules for queries and command mutations | `REACT-STATE-*` |
+| [05-building-block-view/react.md](../05-building-block-view/react.md) | Layout, naming, tokens and composition, components and hooks, data loading, forms, error boundaries, (React SPA) Vite, router, lazy routes, chunk reload, bootstrap, new app, dependency-cruiser, platform clock and business date | `REACT-ARCH-*` |
+| [08-crosscutting-concepts/ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md) | Redux Toolkit view state (one store, lazy slices, shared view state only), TanStack Query rules for queries and command mutations, cancelled loads and serialized saves | `REACT-STATE-*` |
 | [08-crosscutting-concepts/ui/react-mui.md](../08-crosscutting-concepts/ui/react-mui.md) | MUI theme, tokens, the UI-* patterns in MUI, forms, dialogs, status messages, route title and focus | `REACT-UI-*` |
 | [08-crosscutting-concepts/api/react-openapi-clients.md](../08-crosscutting-concepts/api/react-openapi-clients.md) | Orval `fetch` client, platform mutator (XSRF, timeouts, 401, reporting), adapters, MSW handlers | `REACT-API-*` |
 | [08-crosscutting-concepts/security/react.md](../08-crosscutting-concepts/security/react.md) | JSX and DOM safety, URLs, (React SPA) CSP nonce and Trusted Types, zod jitless, XSRF, security E2E | `REACT-SEC-*` |
@@ -17,7 +17,7 @@ A React project reads the shared docs, [stacks/typescript.md](typescript.md) and
 | [08-crosscutting-concepts/observability/react.md](../08-crosscutting-concepts/observability/react.md) | Error boundaries, window listeners, error reporting, trace ids, hidden source maps (shared: [observability.md](../08-crosscutting-concepts/observability/observability.md)) | `REACT-OBS-*`, `OBS-*` |
 | [08-crosscutting-concepts/i18n/react.md](../08-crosscutting-concepts/i18n/react.md) | `use-intl`, catalogs and keys, ICU, formatting, language switch (shared: [i18n.md](../08-crosscutting-concepts/i18n/i18n.md)) | `REACT-I18N-*`, `I18N-*` |
 | [08-crosscutting-concepts/testing/react.md](../08-crosscutting-concepts/testing/react.md) | Vitest projects, Testing Library with mocked contracts, slice and query tests, router tests, MSW, architecture canary, (React SPA) E2E behind the CSP server | `REACT-TEST-*` |
-| [08-crosscutting-concepts/development/react-tooling.md](../08-crosscutting-concepts/development/react-tooling.md) | ESLint set for ESLint 10, React Compiler, tsconfig additions, scripts, bundle check, updates | `REACT-TOOL-*` |
+| [08-crosscutting-concepts/development/react-tooling.md](../08-crosscutting-concepts/development/react-tooling.md) | ESLint set for ESLint 10, React Compiler, tsconfig additions, scripts, bundle check, updates, wall-clock ban | `REACT-TOOL-*` |
 
 Delivery of a React SPA is the shared model: the BFF serves the bundle (`REL-FE-*` in [container-runtime.md](../07-deployment-view/container-runtime.md)).
 

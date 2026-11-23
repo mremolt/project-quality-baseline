@@ -39,7 +39,7 @@ What every deployable ships as and what it expects from the platform it runs on:
 
 ### Runtime contract
 
-Kubernetes and Compose examples follow the rules. The product's chapter 7 records the actual values.
+Kubernetes and Compose examples follow the rules. The product's chapter 7 records the actual values. The runtime contract applies to every installation the product delivers, including a Compose file that customers or a demo audience run on their own machine (REL-CD-08). "Local" here means the developer's inner loop (`compose.yaml` for dependencies), not a deliverable.
 
 - **REL-RUN-01: Containers run without privileges:** non-root (REL-IMG-01), no privilege escalation, all Linux capabilities dropped, no host paths, host network or host ports beyond what the platform's ingress needs.
 - **REL-RUN-02: The root filesystem is read-only.** The only writable path is a size-limited ephemeral `/tmp` (or the stack's equivalent). The container keeps no state that must survive a restart; data lives in the database or an object store.

@@ -42,7 +42,9 @@ export class RouteFocus {
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
       .subscribe((e) => {
         const path = e.urlAfterRedirects.split(/[?#]/)[0];
-        const moveFocus = previousPath !== undefined && path !== previousPath; // not on first load, not on query-only changes
+        const extras = this.router.lastSuccessfulNavigation()?.extras; // a property before Angular 21
+        const keepFocus = extras?.replaceUrl === true || extras?.state?.['keepFocus'] === true; // canonical URL, same-route pager
+        const moveFocus = previousPath !== undefined && path !== previousPath && !keepFocus; // not on first load, not on query-only changes
         previousPath = path;
         if (!moveFocus) return;
         afterNextRender(
@@ -60,6 +62,9 @@ export class RouteFocus {
 provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
 // app.ts (shell)
 constructor() { inject(RouteFocus).start(); }
+// same-route pager: focus stays on the button, the new period is announced (A11Y-21)
+void this.router.navigate(['/week', next], { state: { keepFocus: true } });
+this.announcer.announce(this.transloco.translate('week.shown', { week: label }));
 ```
 
 ```html

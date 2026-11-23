@@ -94,6 +94,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-REST-04: Decimals and money use the `ApiDecimal` type, never `BigDecimal`, `double` or `float` in a REST record (API-REST-01).
 - SPRING-REST-05: Date and time (API-REST-02):
 - SPRING-REST-06: Enums are Java enums whose constant names are the wire values (API-REST-03).
+- SPRING-REST-15 (implements API-REST-16): Dates, months and enums in query and path parameters are bound as `LocalDate`, `YearMonth` and the enum type, never as `String` parsed by hand.
 - SPRING-REST-07: Errors are `ProblemDetail` (API-REST-05/06/07), produced by one `@RestControllerAdvice` in `adapter.in.rest` that extends Spring's `ResponseEntityExceptionHandler` and maps business exceptions from `domain` (SPRING-ARCH-03), including the domain validation exception (400, SPRING-ARCH-18).
 - SPRING-REST-08: Optional fields are omitted when empty (API-REST-04):
 - SPRING-REST-09: Unknown request properties are ignored (Boot default, API-REST-04).
@@ -199,9 +200,11 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-DB-19: Privilege tests run as the non-superuser DML role, never as the Testcontainers user.
 - SPRING-DB-15: Spring Data JPA plus `JdbcClient` is the default.
 - SPRING-DB-16: Invariants across rows are enforced in PostgreSQL, atomically (ARCH-UC-16).
+- SPRING-DB-22: A rule over a count of other rows locks before it counts (ARCH-UC-16, SPRING-DB-16).
+- SPRING-DB-23: `INSERT … ON CONFLICT DO UPDATE` is used only where overwriting is the domain's intent.
 - SPRING-DB-17: Every adapter query on a table that grows has an index for its filter and sort columns, and every foreign-key column is indexed (PostgreSQL does not index foreign keys itself).
 - SPRING-DB-18: Constraint violations are mapped by constraint name, never by message text.
-- SPRING-DB-20: Reference data that a read creates lazily is generated in the persistence adapter, in its own `REQUIRES_NEW` transaction and idempotently.
+- SPRING-DB-21: Optional filters build their `WHERE` clause from the filters present, and listings of growing append-only tables page by keyset.
 
 ## [Spring Boot: Resilience and Idempotency](../08-crosscutting-concepts/resilience/spring.md)
 
@@ -225,6 +228,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-SEC-13: Every filter chain sets explicit response headers; never `headers().disable()`.
 - SPRING-SEC-14: TLS everywhere outside the developer machine, with the versions of SEC-CRY-01.
 - SPRING-SEC-15: Request limits are configured, not defaulted:
+- SPRING-SEC-43: Numbers parsed from untrusted text are bounded in length, precision and exponent before any arbitrary-precision conversion.
 - SPRING-SEC-31: Queries and commands receive user-influenced values only as bind parameters.
 - SPRING-SEC-16: Objects are authorized by owner or tenant inside the use case, and a test proves that user A cannot read or change user B's resource.
 - SPRING-SEC-17: The JWT decoder validates `iss`, `aud` and `exp`, and the allowed algorithms are explicit (SPRING-SEC-03 sets `issuer-uri`; add the audience validator).
@@ -243,6 +247,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-SEC-33: Logout ends the session in the BFF and at the IdP.
 - SPRING-SEC-37: BFF sessions live in a shared, persistent session store: Spring Session JDBC on the product's PostgreSQL by default.
 - SPRING-SEC-40: Back-channel logout with Spring Session JDBC maps the IdP `sid` to session ids in an own table.
+- SPRING-SEC-42 (SHOULD): Session attributes are serialized as JSON, so live sessions survive a rolling framework upgrade; otherwise the release steps state that an upgrade logs every user out.
 - SPRING-SEC-38: The BFF authenticates to the IdP as a confidential client and still uses PKCE.
 - SPRING-SEC-26: Uploads are limited and stored, scanned and served so that a file cannot attack the server or other users:
 - SPRING-SEC-27: The application's database role has DML rights only;
@@ -263,6 +268,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-SEC-08: Browser applications authenticate through a backend-for-frontend (BFF) that performs the OIDC login, keeps the tokens server-side and gives the browser a session cookie (CSRF protection on).
 - SPRING-SEC-09: Whether the BFF is its own component (`backend-bff/`, REPO-LAY-03) or an additional filter chain (`spring-boot-starter-security-oauth2-client`) in the backend is decided per project in an ADR.
 - SPRING-SEC-41: Users the product administers are provisioned in the IdP through an outgoing port, never by a second user store with passwords:
+- SPRING-SEC-44: A product account is linked to an IdP subject only on a verified e-mail address and only while it is not linked yet.
 - SPRING-SEC-10: Every endpoint has security tests for 401 (no token), 403 (insufficient permission) and the success case, with the `jwt()` request post-processor from the `*-security-test` starters.
 - SPRING-SEC-11: Authorization rules are unit-tested on `Caller` without a Spring context (use-case tests, London style for the ports, TEST-TDD).
 - SPRING-SEC-12: The forwarded-header strategy is set explicitly per deployment, never left to the default:

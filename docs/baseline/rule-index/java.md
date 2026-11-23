@@ -19,6 +19,7 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-ARCH-11: A plain-Java application wires everything in one place:
 - JAVA-ARCH-12: Invalid input throws one dedicated exception from `domain` (the validation category of ARCH-UC-13) (e.g. `DomainValidationException extends RuntimeException`, carrying a stable error code and, where known, the field).
 - JAVA-ARCH-13: Each business error category of ARCH-UC-13 has one abstract base type in `domain`:
+- JAVA-ARCH-14: Time comes from one `java.time.Clock` bean, and ArchUnit bans every other source of the current time (ARCH-UC-20).
 
 ## [Java Tooling](../08-crosscutting-concepts/development/java-tooling.md)
 

@@ -27,6 +27,7 @@ import com.example.orders.stereotype.SchedulingAdapter;
 import com.example.orders.stereotype.UseCase;
 import com.example.orders.stereotype.WebAdapter;
 import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.AccessTarget;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaCodeUnit;
@@ -46,6 +47,7 @@ import com.tngtech.archunit.library.GeneralCodingRules;
 import jakarta.persistence.Entity;
 import java.math.BigDecimal;
 import java.net.http.HttpClient;
+import java.time.Clock;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -328,6 +330,23 @@ class ArchitectureTest {
                     "com.example.orders.stereotype",
                     "com.example.orders.config");
 
+    // NullAway runs with OnlyNullMarked=true (JAVA-TOOL-07), so a package without a @NullMarked package-info.java
+    // is silently not checked at all (JAVA-TOOL-08).
+    @ArchTest
+    static final ArchRule everyPackageIsNullMarked =
+            classes().that().doNotHaveSimpleName("package-info").should(resideInANullMarkedPackage());
+
+    // The current time comes only from the Clock bean in the configuration package (ARCH-UC-20, JAVA-ARCH-14).
+    // now(clock) stays allowed; now(), now(zone), Clock.system*() and System.currentTimeMillis() do not.
+    @ArchTest
+    static final ArchRule noDirectClockAccess = noClasses()
+            .that()
+            .resideOutsideOfPackage("com.example.orders.config")
+            .should()
+            .callMethodWhere(DescribedPredicate.describe(
+                    "read the system clock", call -> readsSystemClock(call.getTarget())))
+            .because("time comes from the injected Clock (ARCH-UC-20, JAVA-ARCH-14)");
+
     @ArchTest
     static final ArchRule noFieldInjection = GeneralCodingRules.NO_CLASSES_SHOULD_USE_FIELD_INJECTION;
 
@@ -440,7 +459,8 @@ class ArchitectureTest {
             .haveSimpleNameEndingWith("Request")
             .and(notListedIn(ADMIN_ASSIGNED_FIELDS))
             .should()
-            .haveNameMatching("ownerId|tenantId|role|roles|permissions|createdBy|createdAt")
+            // Synonyms count too (permissionGroups, userRoles): renaming never escapes the rule.
+            .haveNameMatching("ownerId|tenantId|createdBy|createdAt|.*([Rr]ole|[Pp]ermission|[Gg]roup)s?")
             .allowEmptyShould(true);
 
     // No process execution (SPRING-SEC-31). A product that needs one names its single adapter here, with a reason.
@@ -590,6 +610,38 @@ class ArchitectureTest {
                         .anyMatch(p -> p.isAnnotatedWith("org.springframework.beans.factory.annotation.Value"));
                 if (usesValue) {
                     events.add(SimpleConditionEvent.violated(unit, unit.getDescription() + " injects @Value"));
+                }
+            }
+        };
+    }
+
+    private static final Set<String> TIME_TYPES = Set.of(
+            "java.time.Instant",
+            "java.time.LocalDate",
+            "java.time.LocalDateTime",
+            "java.time.LocalTime",
+            "java.time.ZonedDateTime",
+            "java.time.OffsetDateTime",
+            "java.time.YearMonth");
+
+    private static boolean readsSystemClock(AccessTarget.MethodCallTarget target) {
+        String owner = target.getOwner().getName();
+        String method = target.getName();
+        boolean withoutClock =
+                target.getRawParameterTypes().stream().noneMatch(type -> type.isEquivalentTo(Clock.class));
+        return (TIME_TYPES.contains(owner) && method.equals("now") && withoutClock)
+                || (owner.equals("java.time.Clock") && method.startsWith("system"))
+                || (owner.equals("java.lang.System") && method.equals("currentTimeMillis"));
+    }
+
+    private static ArchCondition<JavaClass> resideInANullMarkedPackage() {
+        return new ArchCondition<>("reside in a package whose package-info.java is @NullMarked") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                if (!javaClass.getPackage().isAnnotatedWith("org.jspecify.annotations.NullMarked")) {
+                    events.add(SimpleConditionEvent.violated(
+                            javaClass,
+                            javaClass.getPackageName() + " has no @NullMarked package-info.java (JAVA-TOOL-08)"));
                 }
             }
         };

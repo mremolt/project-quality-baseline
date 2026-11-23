@@ -42,7 +42,8 @@ describe('PlaceOrderService', () => {
 });
 ```
 
-- **TS-TEST-04: HTTP adapters are tested against MSW**, using the handlers Orval generates from the spec (`get<Operation>MockHandler`) with per-test overrides. Cover: success mapping, each documented error status, a malformed response (zod parse must fail), and batching/caching behavior where the adapter has it (API-N1-06).
+- **TS-TEST-04: HTTP adapters are tested against MSW**, using the handlers Orval generates from the spec (`get<Operation>MockHandler`) with per-test overrides. Cover: success mapping, each documented error status, a malformed response (zod parse must fail), and batching/caching behavior where the adapter has it (API-N1-06). This holds in Angular too: `HttpTestingController` is not used for adapter tests. Its one allowed use is an Angular HTTP interceptor's test (NG-OBS-04, NG-SEC-13), which tests the `HttpClient` pipeline, not the contract.
+  *Why:* the generated handlers derive the fixtures from the spec, so a contract change breaks the adapter test instead of passing it with a hand-written body; and MSW is the same mechanism in every TypeScript stack and in the stubbed E2E tier.
 - **TS-TEST-05: Domain tests are plain functions in, values out.** No DOM environment (`environment: 'node'` for domain/application projects or files).
 - **TS-TEST-06: Snapshot tests are not used for component output.** Inline snapshots are acceptable for stable, small data structures (e.g. a mapped DTO), never as the only assertion of behavior. Scoped ARIA snapshots are the one exception (TS-TEST-25).
   *Why:* large snapshots get updated without being read and become tautological (TEST-TDD-11).
@@ -51,7 +52,7 @@ describe('PlaceOrderService', () => {
 
 - **TS-TEST-07: Component tests use Testing Library and query by role and accessible name** (`getByRole('button', { name: 'Place order' })`). `getByTestId` only when no accessible query exists, and then with a comment.
   *Why:* the test interacts like a user, and an element without a name can't be found, so the test also enforces accessibility (A11Y layer L2).
-- **TS-TEST-08: Interactions use `@testing-library/user-event`**, not synthetic `dispatchEvent`.
+- **TS-TEST-08: Interactions use `@testing-library/user-event`**, not synthetic `dispatchEvent`. The one exception is a native `type="date"`, `"time"` or `"month"` input that user-event cannot type into under jsdom: there `fireEvent.input`/`fireEvent.change` sets the value, with a comment naming this exception (component libraries' pickers are driven through their harness or user-event).
 - **TS-TEST-09: Every component test file runs axe on its main rendered states** (A11Y layer L3):
 
 ```ts

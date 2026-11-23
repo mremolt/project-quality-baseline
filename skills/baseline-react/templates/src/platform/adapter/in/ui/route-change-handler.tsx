@@ -11,6 +11,13 @@ declare module '@tanstack/react-router' {
   }
 }
 
+declare module '@tanstack/history' {
+  interface HistoryState {
+    /** Set by an in-page control of the same route (a prev/next pager): focus stays on it (UI-16, A11Y-21). */
+    readonly keepFocus?: boolean;
+  }
+}
+
 function focusMainHeading(): void {
   const main = document.querySelector<HTMLElement>('main');
   const target = main?.querySelector<HTMLElement>('h1') ?? main;
@@ -19,7 +26,8 @@ function focusMainHeading(): void {
 
 /**
  * UI-16: sets "Page | App" as document title and, after each completed navigation that changed the
- * path, moves focus to the routed h1 (fallback `main`). Query-only changes and the first load keep focus.
+ * path, moves focus to the routed h1 (fallback `main`). Query-only changes, the first load, replace navigations
+ * (the page canonicalising its own URL) and navigations with `state: { keepFocus: true }` (a same-route pager) keep focus.
  */
 export function RouteChangeHandler(): null {
   const router = useRouter();
@@ -32,10 +40,19 @@ export function RouteChangeHandler(): null {
 
   useEffect(() => {
     let previousPath = router.state.location.pathname;
-    return router.subscribe('onRendered', ({ toLocation }) => {
-      if (toLocation.pathname !== previousPath) focusMainHeading();
+    let lastAction: string | undefined;
+    const stopHistory = router.history.subscribe(({ action }: { readonly action: { readonly type: string } }) => {
+      lastAction = action.type;
+    });
+    const stopRendered = router.subscribe('onRendered', ({ toLocation }) => {
+      const keepFocus = lastAction === 'REPLACE' || toLocation.state.keepFocus === true;
+      if (toLocation.pathname !== previousPath && !keepFocus) focusMainHeading();
       previousPath = toLocation.pathname;
     });
+    return () => {
+      stopHistory();
+      stopRendered();
+    };
   }, [router]);
 
   return null;

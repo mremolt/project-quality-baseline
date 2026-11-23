@@ -26,6 +26,7 @@ The agent checklists of the react docs, one section per doc, titled like the doc
 - [ ] Render errors reach a boundary that reports and shows the generic message?
 - [ ] N+1 check done, including per-row queries and dependent-query waterfalls?
 - [ ] `npm run check:arch` and the canary green, rules not loosened?
+- [ ] Time from the platform `clock`, business date from `businessDate()`, zone declared once (REACT-ARCH-25)?
 
 ## React: Generated API Clients
 
@@ -59,6 +60,7 @@ The agent checklists of the react docs, one section per doc, titled like the doc
 - [ ] React Compiler output present after a build-tool upgrade (REACT-TOOL-10)?
 - [ ] `sourcemap: 'hidden'`, browser target of TS-TOOL-02, no release version or environment value in `define` (REACT-TOOL-11)?
 - [ ] `npm run verify` green, including `check:bundle`; a raised budget reviewed with its reason (REACT-TOOL-12/13)?
+- [ ] Wall-clock selectors banned outside the platform composition and tests (REACT-TOOL-15)?
 
 ## React: Internationalization
 
@@ -141,4 +143,5 @@ The agent checklists of the react docs, one section per doc, titled like the doc
 - [ ] No per-row queries, no `useQueries` over ids; N+1 check stated and request budget asserted (REACT-STATE-12)?
 - [ ] No RTK Query, no Orval query client, no `useEffect` fetch (REACT-STATE-09)?
 - [ ] Retry only transient technical errors, with jitter (REACT-STATE-15)? Full-screen error only without data; failed refetch is an inline alert (REACT-STATE-19)?
+- [ ] Rapid saves on one item share a mutation `scope`; cache writes use an updater on the current data; page test with an out-of-order response (REACT-STATE-20)?
 - [ ] Slice tests with the real store; commands, error keys and reporting covered by the page test with mocked use cases (REACT-STATE-13)?

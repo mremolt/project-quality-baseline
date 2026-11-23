@@ -16,9 +16,9 @@ The baseline docs are the rules; skills supply know-how. **Where a skill disagre
 | Personal data: new field, store, recipient, retention, export/erasure, logs and telemetry, breach | `data-protection/data-protection.md` (DP-*), `data-protection/spring.md` (SPRING-DP-*) or `data-protection/nestjs.md` (NEST-DP-*), the project's `docs/data-protection/` |
 | TLS, password hashing, encryption at rest, keys, random values | `security-requirements.md` (SEC-CRY-01..05), `spring-hardening.md` (SPRING-SEC-30) or `nestjs-hardening.md` (NEST-SEC-42) |
 | Project security artefacts | The sync creates them from templates once: `docs/security/{requirements,threat-model,exceptions,incident-runbook}.md`, `SECURITY.md`, the PR template with the SEC-REV-01 checklist (at the host's path; without a known host in `docs/pull-request-template.md`, answered per change until the project has one), `frontend/public/.well-known/security.txt`. Without an issue tracker, unmet ASVS items (SEC-REQ-02) are tracked in `docs/security/requirements.md`. If one is missing, re-run the sync or copy it from the baseline's `templates/`; fill in the placeholders, never invent contacts or dates |
-| Auth, `Caller`, CORS, CSRF, actuator / probes | Spring: `spring.md`; NestJS: `nestjs.md` |
+| Auth, `Caller`, CORS, CSRF, actuator / probes, IdP provisioning and account linking (SPRING-SEC-44) | Spring: `spring.md`; NestJS: `nestjs.md` |
 | Headers, limits, injection, object-level access, mass assignment, tenancy, errors, SSRF, JSON, uploads, audit events, DB, Kafka, images, BFF session, session store, OIDC client and logout | Spring: `spring-hardening.md`; NestJS: `nestjs-hardening.md` (also prototype pollution, ReDoS, process hardening); Node BFF (NestJS or Next.js): `node-bff.md` |
-| Browser code, storage, redirects, bundle, third-party scripts | `typescript.md` |
+| Browser code, storage, redirects, bundle, third-party scripts, sign-out (TS-SEC-10) | `typescript.md` |
 | Angular templates, CSP, Trusted Types, XSRF, SSR, security E2E | `angular.md` |
 | React JSX and DOM safety, CSP nonce, Trusted Types, zod jitless, XSRF, security E2E | `react.md` (REACT-SEC-*) |
 | Next.js: BFF wiring, `proxy.ts` CSP and headers, server actions as endpoints, secrets in client props | `nextjs.md` (NEXT-SEC-*), `node-bff.md` (NODE-BFF-*) |

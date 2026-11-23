@@ -80,4 +80,20 @@ describe('RouteChangeHandler (REACT-TEST-15, UI-16, A11Y-21)', () => {
     });
     expect(document.title).toBe('Home | Shop');
   });
+
+  it('keeps focus on replace navigations and on navigations with keepFocus state', async () => {
+    const router = setUp('/orders');
+    await screen.findByRole('heading', { name: 'Orders' });
+
+    screen.getByRole('main').focus();
+    await act(() => router.navigate({ to: '/', replace: true }));
+    expect(screen.getByRole('heading', { name: 'Home' })).not.toHaveFocus(); // canonical URL rewrite
+    expect(screen.getByRole('main')).toHaveFocus();
+
+    await act(() => router.navigate({ to: '/orders', search: { page: 0 }, state: { keepFocus: true } }));
+    expect(screen.getByRole('main')).toHaveFocus(); // same-route pager: focus stays on its control
+
+    await act(() => router.navigate({ to: '/' }));
+    expect(screen.getByRole('heading', { name: 'Home' })).toHaveFocus(); // an ordinary path change still moves focus
+  });
 });

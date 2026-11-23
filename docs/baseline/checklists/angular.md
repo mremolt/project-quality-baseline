@@ -15,6 +15,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Feature routes loaded lazily from `app.routes.ts`, not via `index.ts`; another feature's use cases only via its `provide<Feature>Api()`?
 - [ ] Failed chunk load reloads once, guarded by the release version (NG-ARCH-20)?
 - [ ] N+1 check done?
+- [ ] Time from the `CLOCK` token, business date from `businessDate()` in the platform, zone declared once (NG-ARCH-24)?
 
 ## Generated API Clients in Angular
 
@@ -45,6 +46,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] No `no-extraneous-class` or `unbound-method` switched off (NG-TOOL-11)? Bundle budget warning set from the first feature build + 10 %, a warning fixed in the same step, every raise recorded in chapter 10 (NG-TOOL-05)?
 - [ ] `check` and `verify` run through `scripts/verify.mjs` (NG-TOOL-04, TS-TOOL-19)?
 - [ ] `npm run verify` green?
+- [ ] `tsconfig.e2e.json` in `typecheck`, `e2e/**` and `e2e-smoke/**` in `lintFilePatterns` (NG-TOOL-04); wall-clock selectors banned outside `platform.tokens.ts` and specs (NG-TOOL-12)?
 
 ## Angular: Internationalization
 
@@ -103,7 +105,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Only `--mat-sys-*`, `--app-space-*`/`--app-motion-*` and the one `--app-color-*` family (light, dark, high contrast) in styles; runtime values through a host-bound custom property; no `.mat-mdc-*` or `::ng-deep` (NG-UI-05)?
 - [ ] Fixed-colour panels and state-by-background components have a `forced-colors` rule (NG-UI-07)? Shared components never span grid columns themselves (NG-UI-22)?
 - [ ] Date inputs through `provideDateFnsAdapter` with per-locale parse formats, typed-date harness test (NG-UI-36)?
-- [ ] Focusable unavailable buttons bound with `[disabled]` + `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]` (NG-UI-37)?
+- [ ] Focusable unavailable buttons and form controls bound with `[disabled]` + `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]`; an unavailable checkbox or select shows its reason, no value silently ignored (NG-UI-37)?
 - [ ] Works in light, dark and high contrast; density doesn't shrink targets below 24 px?
 - [ ] Labels, errors, icon-button names, dialog focus handled?
 - [ ] Status via visible region or `Announcer`; route `title`; `RouteFocus` only on path changes; snackbar, spinner and table labelled; dialog focus restored when the trigger can vanish?
@@ -122,4 +124,5 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] No DTOs, no HTTP, no other stores, no business rules in the store?
 - [ ] Scoped to component/route unless genuinely app-wide?
 - [ ] Shared store parts as exported `signalStoreFeature` constants (NG-STATE-16); effects track only their triggers, the body in `untracked` (NG-STATE-17)?
+- [ ] Loads through the shared latest-load feature (or `rxMethod` + `switchMap`), aborted on destroy; `patchState` with an updater after an `await`; per-key save queue; store test with an older response resolving last (NG-STATE-18)?
 - [ ] Error and rollback paths tested with mocked use cases; the store holds error keys, not text?

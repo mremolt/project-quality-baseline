@@ -46,6 +46,8 @@ Examples: database/ORM, message producers, object storage (S3), third-party API 
 - **ARCH-ADP-10: Bounded contexts don't share outgoing adapters.** Each context has its own persistence adapter(s). Cross-context access: ARCH-ORG-09.
 - **ARCH-ADP-12: Technology-specific models (ORM entities, API DTOs) stay inside their adapter**, with the narrowest visibility possible.
 - **ARCH-ADP-13: SHOULD: choose the simplest technology that fits.** A full ORM is not mandatory. Use plain SQL or a lighter mapper when it serves the port better.
+- **ARCH-ADP-14: An outgoing adapter does what its port method promises and nothing more.** A port method `save(user)` stores that user. It does not also update another table as a side effect, it applies no business rule (defaults, "if the state changed, rewrite the current period"), and it reads no wall clock (ARCH-UC-20). A value derived from time-versioned facts (the "current" state of a history, a running total) is either computed on read or written by the use case that changes the facts. It is never a denormalised copy that the adapter keeps in sync on every save. A rule that has to happen on save belongs in the use case, where its unit test and its audit entry can see it.
+  *Why:* every caller of `save` runs a hidden rule the use cases cannot see or test. In a reviewed product, a profile save silently rewrote a person's dated history, which changed past and locked figures without an audit entry.
 
 ## Anti-patterns
 

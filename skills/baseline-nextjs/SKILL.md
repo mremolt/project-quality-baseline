@@ -20,6 +20,7 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
 | Login, session, logout, CSRF, cookies | `docs/baseline/08-crosscutting-concepts/security/node-bff.md`, `security/nextjs.md` (NEXT-SEC-01/02) |
 | `proxy.ts`, CSP, nonce, Trusted Types, headers | NEXT-ARCH-11, `security/nextjs.md` (NEXT-SEC-03/05/08/10/11), `security/react.md`, `security/typescript.md` |
 | Slice, query hook, mutation (command), query keys, optimistic update | `docs/baseline/08-crosscutting-concepts/ui/react-state-management.md`, NEXT-ARCH-15/16 |
+| Time, "today", business date; overlapping loads and saves | TS-ARCH-21/22/23, REACT-ARCH-25, REACT-STATE-20, REACT-TOOL-15 (the platform composition files hold the clock) |
 | HTTP adapter, API client, backend data | `docs/baseline/08-crosscutting-concepts/api/typescript-openapi-clients.md`, `api/react-openapi-clients.md`, `api/nextjs-openapi-clients.md`, `api/avoiding-n-plus-one.md`, NEXT-ARCH-09 |
 | Configuration, environment variables, secrets, public config | `docs/baseline/08-crosscutting-concepts/configuration/configuration.md`, `configuration/nextjs.md` |
 | Timeouts, retries, caching, `'use cache'` | `docs/baseline/08-crosscutting-concepts/resilience/resilience.md`, `resilience/nextjs.md` |

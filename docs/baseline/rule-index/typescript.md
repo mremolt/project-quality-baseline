@@ -26,6 +26,9 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-ARCH-15: Batching, request coalescing and caching of backend data live in the outgoing adapter, as a decorator implementing the same port (API-N1-04).
 - TS-ARCH-16: Frontend use cases may return immutable frontend domain types (`readonly Order[]`) instead of use-case specific result models.
 - TS-ARCH-17: Injection tokens (keys) live in `<feature>.tokens.ts`, which imports only the feature's `ports`.
+- TS-ARCH-21: A new load supersedes the previous one, and every async result is applied to the current state.
+- TS-ARCH-22: Frontend code reads the current time only from the platform's clock, and the business date only from one platform function (ARCH-UC-20).
+- TS-ARCH-23: Stores and components catch only the errors they expect.
 
 ## [Generated API Clients (Orval)](../08-crosscutting-concepts/api/typescript-openapi-clients.md)
 
@@ -61,6 +64,8 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TOOL-17: knip reports unused dependencies, exports and files, and `verify` runs it.
 - TS-TOOL-18: `check` is the inner loop, `verify` the gate.
 - TS-TOOL-19: `verify` and `check` run every step, report all failures together and fail at the end.
+- TS-TOOL-20: E2E code is type-checked and linted inside `verify`.
+- TS-TOOL-21: ESLint bans reading the wall clock outside the platform clock (TS-ARCH-22).
 
 ## [TypeScript: Browser Security](../08-crosscutting-concepts/security/typescript.md)
 
@@ -73,6 +78,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-SEC-07: Third-party scripts, tags and fonts are avoided or self-hosted.
 - TS-SEC-08: API data is validated at the adapter (generated zod schemas, TS-API) and never evaluated as code or inserted as HTML.
 - TS-SEC-09: zod runs jitless in the browser.
+- TS-SEC-10: Sign-out posts to the BFF's logout endpoint with the XSRF header, expects `200 {"redirectUri": …}` and then navigates the whole page there with `window.location.assign`.
 
 ## [TypeScript E2E: Matrix, Responsive, Themes, Screen Readers](../08-crosscutting-concepts/testing/typescript-e2e.md)
 

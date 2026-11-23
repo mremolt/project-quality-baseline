@@ -102,6 +102,22 @@ describe('auth route handlers', () => {
     ]);
   });
 
+  it('logout called with fetch answers the end-session URL as JSON, so the browser client can navigate there', async () => {
+    sessions.resolve.calledWith('s-1').mockResolvedValue({ caller: { subject: 'u' }, xsrfToken: 'xt' });
+    sessions.logout.calledWith('s-1').mockResolvedValue(new URL('https://idp.test/logout'));
+
+    const response = await handlers.logout(
+      new Request('https://shop.test/auth/logout', {
+        method: 'POST',
+        headers: { cookie: '__Host-session=s-1; XSRF-TOKEN=xt', 'x-xsrf-token': 'xt', accept: 'application/json' },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ redirectUri: 'https://idp.test/logout' });
+    expect(response.headers.getSetCookie()).toHaveLength(2);
+  });
+
   it('logout still clears both cookies and goes home when the IdP cannot be reached', async () => {
     sessions.resolve.calledWith('s-1').mockResolvedValue({ caller: { subject: 'u' }, xsrfToken: 'xt' });
     sessions.logout.calledWith('s-1').mockResolvedValue(undefined);

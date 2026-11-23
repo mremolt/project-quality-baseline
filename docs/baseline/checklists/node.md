@@ -34,7 +34,7 @@ The agent checklists of the node docs, one section per doc, titled like the doc.
 - [ ] `__Host-session` cookie with all attributes, cleared with the same ones (NODE-BFF-04)?
 - [ ] `XSRF-TOKEN`/`X-XSRF-TOKEN` on every unsafe method incl. logout, header only (NODE-BFF-06)?
 - [ ] Login start never ends a live session; idle and absolute lifetimes, new session id at login, one refresh per session through `compareAndSet` with merge on a lost write (NODE-BFF-02, NODE-BFF-07)?
-- [ ] Logout at the IdP, back-channel logout with full token validation and `sid` index (NODE-BFF-08)?
+- [ ] Logout at the IdP (`200 {redirectUri}` for a JSON request, `303` otherwise), back-channel logout with full token validation and `sid` index (NODE-BFF-08)?
 - [ ] Nonce CSP per response, HTML `no-store`, deep-link 404s, report endpoint limited (NODE-BFF-09)?
 - [ ] Threat model and the tests of NODE-BFF-04..09 in CI (NODE-BFF-10)?
 - [ ] Pre-login state expires within 10 minutes, purged, public routes rate-limited and the limit recorded in chapter 7 (NODE-BFF-11)?

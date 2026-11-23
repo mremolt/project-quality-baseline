@@ -18,7 +18,7 @@
     "angular-material-design": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "62835f49b954925d561c5193a42850a20a459afeb6a4f355018b3ec24274d44d"
+      "computedHash": "5976d3cafcfccff52322bbecbf952b4b9848caa36fc929a38ccdff6abae4b22b"
     },
     "angular-new-app": {
       "source": "angular/skills",
@@ -30,7 +30,7 @@
     "baseline-angular": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "3f617ac9c1c119a0eabc1ee74921d65b203a051bb83da9b784c9935aaf19406d"
+      "computedHash": "22c0a763f0c3efaa530c97ccaf3d27f6b6a89f5cde497d35a3a9cbd0f11fabf7"
     },
     "baseline-codebase-review": {
       "source": "./skills",
@@ -55,22 +55,22 @@
     "baseline-nextjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "997a362dcbfeee75fcc89b9185f2969e235695f7de784004473086b0b21595f2"
+      "computedHash": "5c7f4b1dc3d085838cee29e6f742553d426cc41da53756871b7f9a6c0f609d7c"
     },
     "baseline-react": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "5cccf42204fcac227c376b6e5e72b1fd1b0c95451b16e6355d8ce503e8497af7"
+      "computedHash": "36bc09ff2d112d46df5e1c4f3a577164c209d62c3e675babf754f2afa6441941"
     },
     "baseline-security": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "84fadd550e079edbf5e63a718033e7b0384b13453e25d952a215c0f61ccc2c18"
+      "computedHash": "379228149048c22dc6ee7ec5f2f7e172747fe11b732f8a61e57caff77d7eff28"
     },
     "baseline-spring": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "c534922234f310f8e0b0c060f33954251ed00b4ae8937ffcd3a2a26e98be9dfc"
+      "computedHash": "067061ccb94f22b8c7a6becab7b0526f85a317aff27c6d57f839b48af16d4593"
     },
     "baseline-tdd": {
       "source": "./skills",

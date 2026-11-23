@@ -6,8 +6,8 @@ Rules for every TypeScript frontend, framework-independent. Each frontend stack 
 
 | Doc | Covers | Rule IDs |
 |---|---|---|
-| [05-building-block-view/typescript.md](../05-building-block-view/typescript.md) | Hexagonal architecture in frontends, folder layout, dependency-cruiser, error mapping, feature boundaries | `TS-ARCH-*` |
-| [08-crosscutting-concepts/development/typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) | Supported browsers and `lib`, tsconfig, ESLint, Prettier, npm scripts, npm version, update automation, reproducible builds and SBOM | `TS-TOOL-*` |
+| [05-building-block-view/typescript.md](../05-building-block-view/typescript.md) | Hexagonal architecture in frontends, folder layout, dependency-cruiser, error mapping, feature boundaries, superseded loads, the platform clock and business date, expected errors | `TS-ARCH-*` |
+| [08-crosscutting-concepts/development/typescript-tooling.md](../08-crosscutting-concepts/development/typescript-tooling.md) | Supported browsers and `lib`, tsconfig, ESLint, Prettier, npm scripts, E2E type-check and lint, wall-clock ban, npm version, update automation, reproducible builds and SBOM | `TS-TOOL-*` |
 | [08-crosscutting-concepts/testing/typescript.md](../08-crosscutting-concepts/testing/typescript.md) | Vitest, vitest-mock-extended, Testing Library, MSW, Playwright basics and tiers, axe | `TS-TEST-01..16, 34, 35` |
 | [08-crosscutting-concepts/testing/typescript-e2e.md](../08-crosscutting-concepts/testing/typescript-e2e.md) | Playwright matrix, viewports, themes, responsive, screen reader assertions, flaky tests, time budget, failing on unstubbed calls and page errors | `TS-TEST-17..33` |
 | [08-crosscutting-concepts/security/typescript.md](../08-crosscutting-concepts/security/typescript.md) | Browser storage, DOM and eval bans, redirects, bundle secrets, source maps, third-party scripts; npm supply chain in tooling | `TS-SEC-*`, `TS-TOOL-11..16` |

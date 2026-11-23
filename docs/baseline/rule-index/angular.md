@@ -24,6 +24,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-ARCH-13: `HttpClient`, `httpResource` and generated API services are used only in `adapter/out/http` (TS-ARCH-04, TS-API-03).
 - NG-ARCH-14: Route params arrive as component inputs (`withComponentInputBinding()`).
 - NG-ARCH-20: A failed lazy-chunk load reloads the page once (REL-FE-04).
+- NG-ARCH-24 (implements TS-ARCH-22): Time comes from the `CLOCK` token, the business date from `businessDate()` in `src/platform/domain`.
 - NG-ARCH-15: Every data-loading feature gets an N+1 check (API-N1-01).
 - NG-ARCH-16: New forms use Signal Forms.
 - NG-ARCH-17: New apps are created with `ng new <name> --style=scss --inline-template=false --inline-style=false --ai-config=none` (plus `--ssr` only if the rendering decision says so), then the baseline is synced into the project (08-crosscutting-concepts/development/agent-skills.md).
@@ -60,6 +61,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-TOOL-08: Production builds publish no source maps (TS-SEC-05):
 - NG-TOOL-09: `@angular-eslint/no-developer-preview` and `@angular-eslint/no-experimental` are errors.
 - NG-TOOL-11: Two typescript-eslint rules need an option or a different test style, never `off`.
+- NG-TOOL-12 (implements TS-TOOL-21): The wall-clock ban covers all of `src/` except `platform.tokens.ts` and specs.
 
 ## [Angular: Internationalization](../08-crosscutting-concepts/i18n/angular.md)
 
@@ -157,7 +159,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-UI-32 (implements UI-17): Snackbars (`MatSnackBar`) with an action have no `duration`.
 - NG-UI-33 (implements UI-18, extends NG-UI-14): Dialogs set their label through `mat-dialog-title` (`ariaLabelledBy`), and when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly in `afterClosed()`.
 - NG-UI-36: Date inputs use `provideDateFnsAdapter` with parse formats for every supported locale, never the native date adapter:
-- NG-UI-37: A button that stays focusable while unavailable uses Material's input, `[disabled]` with `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]`.
+- NG-UI-37: A button or form control that stays focusable while unavailable uses Material's input, `[disabled]` with `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]`.
 - NG-UI-35 (implements UI-19): The shared loading, empty and error components in `src/shared/ui` use a labelled `mat-progress-bar` or spinner for loading and a `matButton` for the next action or retry;
 - NG-UI-34: Fonts and icon fonts are self-hosted with the app.
 
@@ -175,6 +177,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-STATE-10: Optimistic updates snapshot state with `getState`, patch, call the use case, and roll back on failure.
 - NG-STATE-16: State and methods shared by several stores are one `signalStoreFeature` exported as a constant (`export const withProjectTime = signalStoreFeature(...)`), never a function returning it:
 - NG-STATE-17: An `effect` tracks only its declared triggers; the rest of its body runs in `untracked`.
+- NG-STATE-18 (implements TS-ARCH-21): A store load aborts the previous one, and results are patched with an updater on the current state.
 - NG-STATE-11: Stores don't cache backend data across screens.
 - NG-STATE-12: Provide stores at component or route level by default (`providers: [OrdersStore]`).
 - NG-STATE-13: The events plugin (`@ngrx/signals/events`) and classic `@ngrx/store` require an ADR.
