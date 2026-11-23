@@ -50,7 +50,7 @@ src/
 
 ### Components and templates
 
-- **NG-ARCH-05: Standalone components, `OnPush`, zoneless**: the defaults of current Angular. No `NgModule`s in new code.
+- **NG-ARCH-05: Standalone components, `OnPush`, zoneless are the defaults, never spelled out**: since Angular 22 `OnPush` is the default change detection, so components carry no `changeDetection: ChangeDetectionStrategy.OnPush` (redundant noise); opting out (`Eager`) needs an ADR. No `NgModule`s in new code. Enforced by `no-restricted-syntax` (NG-TOOL-02).
 - **NG-ARCH-21: Every component keeps its template and its styles in dedicated files**: `templateUrl: './<name>.html'` and, when the component has styles, `styleUrl: './<name>.scss'`, next to `<name>.ts`. Never `template:`, `styles:` or `styleUrls` with inline content, however short; a component without styles has no style file. Enforced by `@angular-eslint/component-max-inline-declarations` at 0 (NG-TOOL-02) and by the CLI defaults (`inlineTemplate`/`inlineStyle` `false`, NG-ARCH-17). Only test host components declared inside a `*.spec.ts` may use an inline `template`.
   *Why:* templates get the HTML tooling (angular-eslint template and accessibility rules on `*.html`, Prettier's Angular parser, editor support) and readable diffs; one layout for every component, independent of size.
 - **NG-ARCH-06: Signal APIs only**: `input()`, `output()`, `model()`, `viewChild()`, `computed()`, `linkedSignal()`; `inject()` instead of constructor injection; built-in control flow (`@if`, `@for`, `@switch`, `@defer`).

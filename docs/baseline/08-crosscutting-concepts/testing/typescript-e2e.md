@@ -92,6 +92,8 @@ export default defineConfig({
   },
   ```
   *Why:* without this, a page can render half-broken (a request that fell through to the dev server, an unhandled rejection) while every assertion passes.
+- **TS-TEST-36: Unattended development (an agent working without a developer watching) runs E2E in Chromium only; the full matrix of TS-TEST-18 is run manually at the end of a longer development cycle.** Unattended runs use `e2e:fast` (the default cell, Chromium) and, where TS-TEST-33 asks for it, `e2e:smoke` in Chromium; they never start the Firefox or WebKit projects, the viewport, theme or forced-colors projects, or `e2e:nightly`. A developer runs the matrix (`e2e`, plus `e2e:smoke` for a stack with a backend) by hand once the cycle is done, before the commit or pull request that closes it; this replaces the "before the commit that closes a part" matrix run of TS-TEST-33 for unattended work, and a failure found there is fixed like any other. The pull-request pipeline (TS-TEST-18, T1) still runs the full matrix.
+  *Why:* an unattended loop re-runs E2E often, and every extra browser or viewport multiplies its time and cost (TS-TEST-29) while Chromium finds most defects; engine, viewport and theme differences need a person to judge the result and are caught by the matrix before merge.
 
 ## Responsive
 

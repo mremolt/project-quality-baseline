@@ -4,12 +4,14 @@ import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import eslintReact from '@eslint-react/eslint-plugin';
 import nextPlugin from '@next/eslint-plugin-next';
 import pluginQuery from '@tanstack/eslint-plugin-query';
+import vitest from '@vitest/eslint-plugin';
 import type { Linter } from 'eslint';
 import { defineConfig } from 'eslint/config';
 import prettier from 'eslint-config-prettier/flat';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import { importX } from 'eslint-plugin-import-x';
 import jsxA11y from 'eslint-plugin-jsx-a11y-x';
+import playwright from 'eslint-plugin-playwright';
 import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import { configs as sonarConfigs } from 'eslint-plugin-sonarjs';
@@ -189,6 +191,17 @@ export default defineConfig(
   {
     files: ['src/platform/config/**/*.ts', 'src/instrumentation.ts', '*.config.ts', 'e2e/**/*.ts'],
     rules: { 'no-restricted-properties': 'off' }, // the only readers of process.env (NEXT-CFG-04)
+  },
+  {
+    // TS-TOOL-22: Vitest rules for unit, component and adapter specs; the Playwright specs under e2e/ have their own block
+    files: ['**/*.spec.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+    ignores: ['e2e/**', 'e2e-smoke/**'],
+    extends: [warnAsError(vitest.configs.recommended)],
+  },
+  {
+    // TS-TOOL-22: Playwright rules for the E2E code (TS-TOOL-20)
+    files: ['e2e/**/*.ts', 'e2e-smoke/**/*.ts'],
+    extends: [warnAsError(playwright.configs['flat/recommended'])],
   },
   {
     files: ['**/*.spec.{ts,tsx}', 'test/**/*.{ts,tsx}', 'e2e/**/*.ts'],

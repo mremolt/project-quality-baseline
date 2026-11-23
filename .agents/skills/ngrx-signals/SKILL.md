@@ -152,7 +152,6 @@ Provide it where the screen lives:
   selector: 'app-orders-page',
   providers: [OrdersStore],
   templateUrl: './orders-page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrdersPage {
   protected readonly store = inject(OrdersStore);

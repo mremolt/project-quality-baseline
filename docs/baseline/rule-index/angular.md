@@ -12,7 +12,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-ARCH-04: `src/platform` is treated like a feature:
 - NG-ARCH-22: Imports across rings use path aliases, never deep relative paths.
 - NG-ARCH-23: A new feature starts from the `baseline-angular` feature generator.
-- NG-ARCH-05: Standalone components, `OnPush`, zoneless:
+- NG-ARCH-05: Standalone components, `OnPush`, zoneless are the defaults, never spelled out:
 - NG-ARCH-21: Every component keeps its template and its styles in dedicated files:
 - NG-ARCH-06: Signal APIs only:
 - NG-ARCH-07: Components render and forward intent (TS-ARCH-02).

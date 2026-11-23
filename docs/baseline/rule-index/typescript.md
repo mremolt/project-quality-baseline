@@ -66,6 +66,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TOOL-19: `verify` and `check` run every step, report all failures together and fail at the end.
 - TS-TOOL-20: E2E code is type-checked and linted inside `verify`.
 - TS-TOOL-21: ESLint bans reading the wall clock outside the platform clock (TS-ARCH-22).
+- TS-TOOL-22: Test code is linted with the test plugins' `recommended` presets, as errors.
 
 ## [TypeScript: Browser Security](../08-crosscutting-concepts/security/typescript.md)
 
@@ -90,6 +91,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TEST-31: Retries only in CI, and a retried test is a defect.
 - TS-TEST-32: A stubbed E2E test fails when the page makes an API call that no stub answers, throws an unhandled error, or reports a missing translation.
 - TS-TEST-33: Run E2E at milestones while building, the full matrix once per delivered part.
+- TS-TEST-36: Unattended development (an agent working without a developer watching) runs E2E in Chromium only; the full matrix of TS-TEST-18 is run manually at the end of a longer development cycle.
 - TS-TEST-19: A shared fixture asserts reflow and text spacing on every `@responsive` screen:
 - TS-TEST-20: Each shell and each list-detail screen has a resize-transition test:
 - TS-TEST-21: Target size (A11Y-10, A11Y-16) is asserted in the browser, and the axe fixture proves that `target-size` ran.

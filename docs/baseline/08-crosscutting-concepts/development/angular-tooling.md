@@ -30,6 +30,8 @@ Angular additions to [08-crosscutting-concepts/development/typescript-tooling.md
 import angular from 'angular-eslint';
 import ngrx from '@ngrx/eslint-plugin';
 import security from 'eslint-plugin-security';
+import vitest from '@vitest/eslint-plugin';
+import playwright from 'eslint-plugin-playwright';
 
 export default defineConfig(
   // … shared TypeScript config (TS-TOOL-04) …
@@ -42,7 +44,14 @@ export default defineConfig(
       '@angular-eslint/directive-selector': ['error', { type: 'attribute', prefix: 'app', style: 'camelCase' }],
       '@angular-eslint/component-class-suffix': 'off', // suffixless naming (NG-ARCH-02)
       '@angular-eslint/directive-class-suffix': 'off',
-      '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+      // NG-ARCH-05: OnPush is the default since Angular 22; spelling it out is redundant (one entry in the shared no-restricted-syntax list, NG-TOOL-07/12)
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "Property[key.name='changeDetection'] > MemberExpression[property.name='OnPush']",
+          message: 'OnPush is the default since Angular 22; remove changeDetection (NG-ARCH-05).',
+        },
+      ],
       // NG-ARCH-21: templates and styles only in dedicated files
       '@angular-eslint/component-max-inline-declarations': ['error', { template: 0, styles: 0, animations: 0 }],
       '@angular-eslint/prefer-signals': 'error',
@@ -73,6 +82,16 @@ export default defineConfig(
   //   files: ['src/platform/adapter/in/ui/preview/<api>.ts'], // <API>: mandated by <rule>, reviewed on Angular <major>
   //   rules: { '@angular-eslint/no-developer-preview': 'off', '@angular-eslint/no-experimental': 'off' },
   // },
+  {
+    // TS-TOOL-22: tests and E2E code
+    files: ['**/*.spec.ts'],
+    ignores: ['e2e/**', 'e2e-smoke/**'],
+    extends: [warnAsError(vitest.configs.recommended)],
+  },
+  {
+    files: ['e2e/**/*.ts', 'e2e-smoke/**/*.ts'],
+    extends: [warnAsError(playwright.configs['flat/recommended'])],
+  },
   {
     // NG-TOOL-07: folders that look up objects by untrusted keys
     files: ['**/adapter/out/http/**/*.ts'],
@@ -110,7 +129,7 @@ Prettier formats the templates with the Angular parser (TS-TOOL-08):
 - **NG-TOOL-05: Bundle budgets in `angular.json` stay enabled** and fail the build when exceeded; raising them is a reviewed change. The mandated stack alone (Angular with router and forms, Angular Material, Transloco with `intl-messageformat`, zod) produces an initial bundle of about 1.06 MB raw and 225 kB transferred, above the CLI defaults (500 kB warning, 1 MB error). A product therefore starts with `initial` at 1.1 MB warning and 1.3 MB error, keeps the CLI defaults for `anyComponentStyle`, and watches the transferred size, which is the number users feel. Once the first feature screen builds, the warning level is reset to that measured build plus 10 % (error about 20 % above the warning). A warning is a task in the same step, not a note for later: split a lazy chunk, defer a shared Material import, or raise the level. Every raise is a reviewed change that records the new value and its reason in the product's chapter 10 (quality requirements).
   *Why:* defaults the baseline's own stack exceeds invite a blanket raise; a stated starting point keeps the budget meaningful.
 - **NG-TOOL-06: Keep Angular current with `ng update`** and apply the official migrations (`ng generate @angular/core:<migration>`), one major version at a time. A product never runs an Angular major outside active or LTS support; by default a new major is adopted within six months of its release (one release cycle). Minor and patch updates of Angular and the other packages come through the update automation (TS-TOOL-15).
-- **NG-TOOL-07: ESLint carries the security rules** for the bans in [angular.md](../security/angular.md) and [typescript.md](../security/typescript.md): `no-restricted-syntax` for `bypassSecurityTrust*`, `innerHTML`/`outerHTML` and `nativeElement` writes, plus `no-eval`, `no-implied-eval`, `no-new-func`. `eslint-plugin-security`'s `detect-object-injection` is `error` in the folders that look up objects by untrusted keys (`adapter/out/http` mappers) and off elsewhere, which keeps the error-or-off policy (TS-TOOL-05); a project adds further folders that handle untrusted keys. Check the exact rule list when adopting.
+- **NG-TOOL-07: ESLint carries the security rules** for the bans in [angular.md](../security/angular.md) and [typescript.md](../security/typescript.md): `no-restricted-syntax` for `bypassSecurityTrust*`, `innerHTML`/`outerHTML` and `nativeElement` writes, and the redundant `changeDetection: ChangeDetectionStrategy.OnPush` (NG-ARCH-05), plus `no-eval`, `no-implied-eval`, `no-new-func`. `eslint-plugin-security`'s `detect-object-injection` is `error` in the folders that look up objects by untrusted keys (`adapter/out/http` mappers) and off elsewhere, which keeps the error-or-off policy (TS-TOOL-05); a project adds further folders that handle untrusted keys. Check the exact rule list when adopting.
 - **NG-TOOL-08: Production builds publish no source maps** (TS-SEC-05): `sourceMap: false`, or, with error reporting, hidden maps that are uploaded and removed before packaging ([NG-OBS-06](../observability/angular.md)); the dev server sends the other security headers through `headers` in `angular.json`. It cannot create a per-request nonce, so the CSP and Trusted Types are asserted against the BFF-served build in E2E (NG-SEC-06/12).
 - **NG-TOOL-09: `@angular-eslint/no-developer-preview` and `@angular-eslint/no-experimental` are errors.** An API that the baseline mandates while it is still in preview goes on a named allow-list in `eslint.config.ts`: one wrapper file per API in `src/platform` that re-declares it (`export const form = previewForm;`, a plain re-export may still be reported), with the rules off for that file only and a comment giving the reason. The allow-list is reviewed on every Angular update and an entry is removed once the API is stable. With Angular 22 it is empty: Signal Forms (`form`, `validateStandardSchema`), `resource` and `httpResource` are stable since v22.0.
 - **NG-TOOL-11: Two typescript-eslint rules need an option or a different test style, never `off`.** `@typescript-eslint/no-extraneous-class` rejects every decorated class without members (the root component, pure-template components), so it runs with `allowWithDecorator: true`. `@typescript-eslint/unbound-method` rejects `expect(mock.method)` on mocks from `vitest-mock-extended`; specs use explicit `vi.fn()` fakes for those collaborators instead. Switching either rule off is a lowering of the lint rules (SEC-REV-02).

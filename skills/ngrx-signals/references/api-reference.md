@@ -325,7 +325,7 @@ withHooks({
 For pure component-local state where a full store is overkill, use `signalState` (NG-STATE-12). It is a smaller version of `withState` you can use directly inside a component.
 
 ```typescript
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { patchState, signalState } from '@ngrx/signals';
 
 interface CounterState {
@@ -338,7 +338,6 @@ interface CounterState {
     <p>Count: {{ state.count() }}</p>
     <button type="button" (click)="increment()">+</button>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Counter {
   protected readonly state = signalState<CounterState>({ count: 0 });
@@ -502,7 +501,6 @@ Component-scoped example:
   selector: 'app-orders-page',
   providers: [OrdersStore], // a fresh store per OrdersPage instance
   templateUrl: './orders-page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OrdersPage {
   protected readonly store = inject(OrdersStore);

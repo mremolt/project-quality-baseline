@@ -209,7 +209,7 @@ Nav rail and bottom bar are worked out in [references/layout-and-navigation.md](
 ## Common patterns
 
 Code follows our Angular conventions: standalone components, signals, built-in control flow (`@if`,
-`@for`), `inject()`, suffixless file and class names (`app-shell.ts`, `AppShell`), OnPush.
+`@for`), `inject()`, suffixless file and class names (`app-shell.ts`, `AppShell`); no explicit `changeDetection` (NG-ARCH-05).
 
 ### Theme file
 
@@ -223,7 +223,7 @@ Compact → modal drawer (or bottom bar), medium → rail, expanded+ → standar
 
 ```ts
 // src/app/shell/app-shell.ts
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -249,7 +249,6 @@ import { NAV_DESTINATIONS } from './nav-destinations';
   ],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppShell {
   private readonly windowSize = inject(WindowSize);

@@ -43,7 +43,7 @@ write(
 );
 write(
   `adapter/in/ui/${name}-page.ts`,
-  `import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { TranslocoPipe } from '@jsverse/transloco';\n\n@Component({\n  selector: 'app-${name}-page',\n  imports: [TranslocoPipe],\n  templateUrl: './${name}-page.html',\n  styleUrl: './${name}-page.scss',\n  changeDetection: ChangeDetectionStrategy.OnPush,\n})\nexport class ${pascal}Page {}\n`,
+  `import { Component } from '@angular/core';\nimport { TranslocoPipe } from '@jsverse/transloco';\n\n@Component({\n  selector: 'app-${name}-page',\n  imports: [TranslocoPipe],\n  templateUrl: './${name}-page.html',\n  styleUrl: './${name}-page.scss',\n})\nexport class ${pascal}Page {}\n`,
 );
 write(`adapter/in/ui/${name}-page.html`, `<h1>{{ '${camel}.page.heading' | transloco }}</h1>\n`);
 write(`adapter/in/ui/${name}-page.scss`, `:host {\n  display: block;\n}\n`);

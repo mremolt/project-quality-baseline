@@ -421,7 +421,7 @@ destinations top-aligned, each with an icon and a **visible label**, active item
 
 ```ts
 // src/shared/ui/nav-rail/nav-rail.ts
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -436,7 +436,6 @@ export interface NavDestination {
   imports: [RouterLink, RouterLinkActive, MatIconModule],
   templateUrl: './nav-rail.html',
   styleUrl: './nav-rail.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavRail {
   readonly destinations = input.required<readonly NavDestination[]>();

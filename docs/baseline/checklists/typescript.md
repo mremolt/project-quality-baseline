@@ -45,6 +45,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] No compiler check or lint rule loosened?
 - [ ] `e2e/` and `e2e-smoke/` type-checked and linted in `verify`; stubs typed with generated types (TS-TOOL-20)?
 - [ ] Wall-clock selectors (`Date.now()`, `new Date()`) banned outside the platform clock and specs (TS-TOOL-21)?
+- [ ] Test code linted with `@vitest/eslint-plugin` and `eslint-plugin-playwright` presets as errors, none of their focused/disabled/assertion/`await` rules switched off (TS-TOOL-22)?
 
 ## TypeScript: Browser Security
 
@@ -68,6 +69,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] Status messages, route title and focus (link, back, query-only change) and form errors asserted (TS-TEST-23/24/26); shell and screen ARIA snapshots (TS-TEST-25)?
 - [ ] No new retries or timeouts to hide a flaky test; a flaky test fixed within a week or quarantined with its ticket; CI `workers` capped (TS-TEST-31); pull-request tier within its time budget?
 - [ ] `e2e:fast` at milestones; `e2e:smoke` at the first call of a new real dependency and after security-chain, session or SPA-serving changes; the full matrix once before the commit that closes a part; the smoke runs against a freshly built image (TS-TEST-33)?
+- [ ] Unattended runs use Chromium only (`e2e:fast`, `e2e:smoke`); the full matrix is run manually at the end of a longer cycle (TS-TEST-36)?
 - [ ] Shared fixture fails on unstubbed API calls, page errors, `console.error` and missing translations (TS-TEST-32)?
 
 ## TypeScript Testing

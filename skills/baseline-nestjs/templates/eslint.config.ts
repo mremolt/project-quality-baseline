@@ -1,6 +1,7 @@
 // eslint.config.ts: TypeScript base (TS-TOOL-04..07) plus the Node backend rules (NODE-TOOL-05)
 import eslint from '@eslint/js';
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
+import vitest from '@vitest/eslint-plugin';
 import type { Linter } from 'eslint';
 import { defineConfig } from 'eslint/config';
 import prettier from 'eslint-config-prettier/flat';
@@ -157,6 +158,11 @@ export default defineConfig(
       'no-restricted-imports': ['error', { paths: noCodeExecution }],
       'security/detect-non-literal-fs-filename': 'off', // mounted secret files, test fixtures
     },
+  },
+  {
+    // TS-TOOL-22: Vitest rules for the tests
+    files: ['**/*.test.ts', 'test/**/*.ts'],
+    extends: [warnAsError(vitest.configs.recommended)],
   },
   {
     files: ['**/*.test.ts', 'test/**/*.ts'],

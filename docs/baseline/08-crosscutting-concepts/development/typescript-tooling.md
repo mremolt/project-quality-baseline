@@ -36,7 +36,7 @@ Compiler, linter and formatter settings for every TypeScript project. Each front
 
 ## ESLint (default TS-D4)
 
-- **TS-TOOL-04: ESLint flat config with this plugin set:** typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, `eslint-plugin-sonarjs`, `eslint-plugin-import-x`, `eslint-plugin-simple-import-sort`, `@eslint-community/eslint-plugin-eslint-comments`, `eslint-config-prettier` (last). Each frontend stack adds its framework plugins, including its accessibility lint rules.
+- **TS-TOOL-04: ESLint flat config with this plugin set:** typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, `eslint-plugin-sonarjs`, `eslint-plugin-import-x`, `eslint-plugin-simple-import-sort`, `@eslint-community/eslint-plugin-eslint-comments`, `@vitest/eslint-plugin` for the Vitest specs (TS-TOOL-22), `eslint-plugin-playwright` for the E2E code (TS-TOOL-22), `eslint-config-prettier` (last). Each frontend stack adds its framework plugins, including its accessibility lint rules.
 - **TS-TOOL-05: Lint errors fail the build. No warnings policy:** a rule is either `error` or `off`.
   *Why:* warnings pile up and train everyone to ignore the linter.
 - **TS-TOOL-06: Disabling a rule inline requires a named rule and a reason** (`// eslint-disable-next-line rule -- reason`), enforced by `@eslint-community/eslint-comments/require-description` and `no-unlimited-disable`; `linterOptions.reportUnusedDisableDirectives: 'error'` removes stale directives. Disabling a rule globally is a reviewed change.
@@ -161,7 +161,7 @@ Two details keep the template valid under TS-TOOL-05, and under TS-TOOL-01 when 
 | `test` | `generate:api`, then Vitest (unit, component, adapter) |
 | `test:coverage` | `test` with the coverage report (REACT-TEST-22, NEST-TEST-13) |
 | `e2e` | Playwright, stubbed tier |
-| `e2e:fast` | Playwright, one cell only: the default cell of TS-TEST-18 (one browser, `expanded`, light theme). For milestones while building (TS-TEST-33) |
+| `e2e:fast` | Playwright, one cell only: the default cell of TS-TEST-18 (one browser, `expanded`, light theme). For milestones while building (TS-TEST-33) and the only E2E script unattended runs use (TS-TEST-36) |
 | `e2e:nightly` | Playwright, stubbed tier plus the nightly viewport and browser projects (TS-TEST-18) |
 | `e2e:smoke` | Playwright, real-backend tier |
 | `verify` | The component's local gate, from a clean checkout: `generate:api`, `format:check`, `lint`, `check:arch`, `check:unused`, `test`, `build`, run through `scripts/verify.mjs` so every finding shows in one run (TS-TOOL-19). No E2E, no security scans |
@@ -197,5 +197,24 @@ Two details keep the template valid under TS-TOOL-05, and under TS-TOOL-01 when 
   ```
 
   *Why:* "today" computed from `new Date()` in a component cannot be pinned in a test and is the usual source of time-zone bugs; a lint rule finds every place, a review finds some.
+- **TS-TOOL-22: Test code is linted with the test plugins' `recommended` presets, as errors.** `@vitest/eslint-plugin` (`configs.recommended`) covers the Vitest specs (`*.spec.ts(x)`, `*.test.ts`, `test/`); `eslint-plugin-playwright` (`configs['flat/recommended']`) covers `e2e/` and `e2e-smoke/` and nothing else, so the Vitest block excludes them. Both presets ship `warn` entries and are wrapped in `warnAsError` (TS-TOOL-05). A rule is switched off only with a reason in the config (TS-TOOL-06); the presets' focused-test, disabled-test, missing-assertion and missing-`await` rules are never switched off (SEC-REV-02).
+
+  ```ts
+  // eslint.config.ts: after the TS-TOOL-04 blocks, before `prettier`
+  import vitest from '@vitest/eslint-plugin';
+  import playwright from 'eslint-plugin-playwright';
+
+  {
+    files: ['**/*.spec.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+    ignores: ['e2e/**', 'e2e-smoke/**'],
+    extends: [warnAsError(vitest.configs.recommended)],
+  },
+  {
+    files: ['e2e/**/*.ts', 'e2e-smoke/**/*.ts'],
+    extends: [warnAsError(playwright.configs['flat/recommended'])],
+  },
+  ```
+
+  *Why:* a committed `.only`, a `test.skip` nobody revisits, a test without an `expect` and a Playwright call without `await` all keep the build green while testing nothing; the plugins find them mechanically.
 
 *Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "TypeScript Tooling".*
