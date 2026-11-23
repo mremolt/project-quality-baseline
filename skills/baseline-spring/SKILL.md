@@ -100,5 +100,7 @@ Follow `docs/baseline/05-building-block-view/spring.md#new-service`. The templat
 | `scripts/new-use-case.mjs` | `tools/new-use-case.mjs` (set the base package and the slice test's security import; generates each new use case, `--with-controller` adds controller and web slice test, SPRING-ARCH-19) |
 | `scripts/verify-all.sh`, `scripts/verify-all.cmd` | `backend/` (all gate findings in one run before the commit, JAVA-TOOL-24) |
 | `test/support/*.java` | `backend/src/test/java/<base>/support/` (`InMemoryRepository`, `People`, `Transactions`; adapt `People.caller(...)` to the `Caller` record, SPRING-TEST-14) |
+| `test/support/RequiredTestProperties.java`, `TestDatabase.java`, `SecuritySlice.java`, `SecuritySliceBeans.java` | same folder (required keys for `@SpringBootTest`, table reset, web slice security imports; SPRING-TEST-15/13/16) |
+| `test/config/*.java` | `backend/src/test/java/<base>/config/` (key-list and binding test skeletons, TEST-CFG-01/04/05) |
 
 Generate the skeleton with start.spring.io using fixed parameters (no piped installers): `type=maven-project`, `language=java`, `javaVersion=25`, `bootVersion=<pinned 4.1.x>`, the dependency ids from the doc, then apply the templates. Check that the repository layout decision was made first (REPO-LAY-02).

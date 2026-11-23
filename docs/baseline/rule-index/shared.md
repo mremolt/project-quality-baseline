@@ -76,6 +76,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - REL-FE-04: During a rolling deployment both releases' chunks can be loaded (REL-ZD-04).
 - REL-FE-05: The frontend embedded in the BFF is part of the BFF's release.
 - REL-FE-06: A BFF that should serve the bundle refuses to start without it.
+- REL-FE-07: Static assets are served compressed; documents and data are not.
 - REL-RUN-01: Containers run without privileges:
 - REL-RUN-02: The root filesystem is read-only.
 - REL-RUN-03: Every container has resource bounds.
@@ -431,6 +432,8 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - RES-JOB-03: Jobs work in bounded batches and are safe to stop at any point:
 - RES-JOB-04: A request that needs one remote call per item of a bulk input commits first and hands the calls to a job.
 - RES-JOB-05: A scheduled job that must act once per business fact claims the fact with a primary-key insert before acting.
+- RES-POL-01: A client that polls the server owns one poll loop per screen, and the loop is well-behaved.
+- RES-POL-02: A poll never undoes the person's own change.
 - RES-CCH-01: A cache is an adapter concern.
 - RES-CCH-02: What may be cached:
 - RES-CCH-03: Every cache has a maximum size and a time to live, and its invalidation is written down:
@@ -502,6 +505,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - TEST-TDD-13: Every bug fix starts with a failing regression test that reproduces the bug (TEST-ARCH-11).
 - TEST-TDD-16: Test data is explicit and deterministic.
 - TEST-TDD-17: Fake-data libraries SHOULD be used only for volume and realism, not for the values a test asserts on.
+- TEST-TDD-18: A test of a concurrency guard is verified by mutation once.
 - TEST-TDD-14: Agents work in visible cycles.
 - TEST-TDD-15: Agents pick the style from the element table and say so when it deviates (e.g. "Chicago here, because the mapper is a pure function").
 

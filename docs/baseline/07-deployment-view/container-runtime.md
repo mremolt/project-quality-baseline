@@ -23,11 +23,13 @@ What every deployable ships as and what it expects from the platform it runs on:
 
   | Request | Response |
   |---|---|
-  | `GET /` and deep links (a `GET` that accepts `text/html` and matches no API, login, actuator or file path) | `index.html` with the per-request CSP nonce (the frontend's CSP rule), `Cache-Control: no-store`. The nonce templating is tested against the `index.html` of a real production build: the build tools already mark tags with the placeholder, and a stub hides duplicates or misses |
+  | `GET /` and deep links (a `GET` that accepts `text/html`, whose first path segment is not a reserved prefix and has no dot) | `index.html` with the per-request CSP nonce (the frontend's CSP rule), `Cache-Control: no-store`. The nonce templating is tested against the `index.html` of a real production build: the build tools already mark tags with the placeholder, and a stub hides duplicates or misses |
   | Hashed files (`*-<hash>.js`, `.css`, fonts, media) | `Cache-Control: public, max-age=31536000, immutable` |
   | Unhashed public files (`favicon.ico`, `/.well-known/security.txt`) | short cache (`max-age` of minutes) |
   | `GET /config.json` | generated per environment, not cached (CFG-11, SPRING-CFG-10, NEST-CFG-11) |
   | A missing file, or an API path that does not exist | `404`, never `index.html` |
+
+  The reserved prefixes are listed once in the BFF's serving controller and never answer the document: `api`, `oauth2`, `login`, `logout`, `actuator`, `livez`, `readyz`, `csp-reports`, plus the product's own asset roots (`media`, `icons`) and any documentation path such as `v3`. Deep links of the product (a `/j/{token}` invitation) are not reserved. Consequence for tests: a request for `/h2-console` or `/swagger-ui.html` that accepts `text/html` gets the SPA document with `200`, so SPRING-SEC-23 asserts non-HTML clients.
 
   *Why:* serving `index.html` for a missing chunk turns a clean load error into a JavaScript syntax error that the reload of REL-FE-04 cannot catch.
 - **REL-FE-04: During a rolling deployment both releases' chunks can be loaded** (REL-ZD-04). An instance of version N cannot serve the hashed files of N-1 by itself, and an old instance cannot serve N's. Therefore:
@@ -35,6 +37,8 @@ What every deployable ships as and what it expects from the platform it runs on:
   - the frontend handles a failed lazy chunk load with one full page reload, guarded against reload loops (for example at most one reload per release version in a session). A browser that reaches an older instance after the reload gets that instance's consistent `index.html`.
 - **REL-FE-05: The frontend embedded in the BFF is part of the BFF's release.** There is one tag for both, in the BFF's format (`backend/v1.4.0`, or `backend-bff/v…` for a separate BFF component, REPO-CI-05); no `frontend/v…` tags exist while the frontend ships only inside the BFF image. The release tool derives the version and changelog from commits in both folders (REL-VER-03), and the changelog lives in the BFF's folder. A frontend delivered on its own (by ADR, REL-FE-01) gets its own tag.
 - **REL-FE-06: A BFF that should serve the bundle refuses to start without it.** In a deployed environment a missing `index.html` in the bundle folder ends the start (exit code 1, the configuration key in the message); a run without a bundle is an explicit setting (an API-only deployment), never the fallback. The image build job also starts the built image once and asserts `GET /` answers `200` with `text/html` and `GET /config.json` answers `200`.
+- **REL-FE-07: Static assets are served compressed; documents and data are not.** Whoever serves the bundle compresses it, in the BFF (`server.compression` with `mime-types` limited to `text/css`, `text/javascript`, `application/javascript`, `image/svg+xml`, or `compression: true` on the static handler) or in front of it (gateway, ingress), and says which in chapter 7. `index.html` (it carries the per-request CSP nonce) and JSON responses with account data (a secret in the body next to attacker-influenced input: BREACH) stay uncompressed. A test against a real server (`RANDOM_PORT`; `MockMvc` has no compression) asserts `Content-Encoding` on the main script and its absence on the document and on an API response.
+  *Why:* a 937 kB main bundle served uncompressed cost 3.5 s LCP on emulated 4G against 2.66 s compressed.
   *Why:* a bundle-less image passes `/livez` and `/readyz` and answers `404` to every user, so only the users notice. A smoke test of the probes alone cannot tell.
 
 ### Runtime contract

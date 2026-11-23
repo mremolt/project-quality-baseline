@@ -18,9 +18,10 @@ if (!cut || !name || !/^[a-z]+$/u.test(cut) || !/^[A-Z][A-Za-z0-9]+$/u.test(name
 }
 const APP_PACKAGE = 'com.example.orders'; // product base package, as in ArchitectureTest
 const BACKEND = 'backend';
-// The product's security configuration (filter chains, Caller argument resolver, problem-details handlers) that a
-// web slice test imports, so 401/403 come from the real chain (SPRING-SEC-10).
-const SLICE_IMPORT = `${APP_PACKAGE}.adapter.in.rest.SecurityConfiguration`;
+// The meta-annotation that imports the product's security configuration (filter chains, Caller argument resolver,
+// problem-details handlers) into a web slice test, so 401/403 come from the real chain (SPRING-SEC-10,
+// SPRING-TEST-16; template test/support/SecuritySlice.java).
+const SLICE_IMPORT = `${APP_PACKAGE}.support.SecuritySlice`;
 
 const pkgPath = APP_PACKAGE.split('.');
 const base = join(BACKEND, 'src', 'main', 'java', ...pkgPath);
@@ -28,7 +29,7 @@ const test = join(BACKEND, 'src', 'test', 'java', ...pkgPath);
 const pkg = APP_PACKAGE;
 const method = name[0].toLowerCase() + name.slice(1);
 const kebab = name.replace(/([a-z0-9])([A-Z])/gu, '$1-$2').toLowerCase();
-const sliceImportSimple = SLICE_IMPORT.slice(SLICE_IMPORT.lastIndexOf('.') + 1);
+
 
 const files = {
   [join(base, 'ports', 'in', `${name}Command.java`)]: `package ${pkg}.ports.in;
@@ -149,14 +150,13 @@ import ${pkg}.ports.in.${name}UseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 // Web slice test (SPRING-SEC-10, SPRING-TEST-12). A resource server authenticates with jwt(); a BFF chain uses
 // oidcLogin() and keeps the CSRF case. The 403 for a missing permission comes from the use case (ARCH-UC-13).
 @WebMvcTest(controllers = ${name}Controller.class)
-@Import(${sliceImportSimple}.class)
+@SecuritySlice
 class ${name}ControllerTest {
 
     private static final String PATH = "/api/v1/${cut}/${kebab}";

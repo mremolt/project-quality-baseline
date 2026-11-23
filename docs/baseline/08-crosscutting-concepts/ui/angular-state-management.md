@@ -61,6 +61,8 @@ The skill's original advice ("the store holds state and orchestration, a service
 ### Tests and enforcement
 
 - **NG-STATE-14: Store tests are adapter integration tests** (TEST-ARCH-03): `TestBed` with the use-case tokens provided as `mock<UseCase>()` from `vitest-mock-extended` (London, TEST-TDD-07). Assert through the store's public signals. Test the error and rollback paths.
+- **NG-STATE-19: Saves of one item run through a per-key queue, and an optimistic change is rolled back only while the screen still shows it.** A store method `queued(key, task)` chains the saves of one key as promises, so quick toggles reach the server in order, and different keys do not wait for each other. On failure, the store restores the previous value only if the item still has the value of the failed action (a later click that already changed it wins), and a `404` on a gone item removes it. The poll of RES-POL-02 uses the same stamp. Tests: order of two quick saves, rollback, rollback skipped after a newer click, `404`.
+- **NG-STATE-20: Route-level stores that show linked numbers stay independent; the page forwards.** A store does not call another store (NG-STATE-03). When one changes what the other displays (the open-item count of a list in the drawer), the component that hosts both forwards the value in an effect to a local patch method of the second store (`setOpenCount`), without an extra request.
 - **NG-STATE-15: Store rules are checked by `@ngrx/eslint-plugin` (`signalsTypeChecked`, [angular-tooling.md](../development/angular-tooling.md)) and dependency-cruiser** (NG-STATE-02).
 
 ## Example

@@ -24,8 +24,9 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
 | Global error handling, error reporting, source maps | `docs/baseline/08-crosscutting-concepts/observability/observability.md`, `observability/angular.md` (NG-OBS-*) |
 | Personal data in the UI, third-party resources, fonts | `docs/baseline/08-crosscutting-concepts/data-protection/data-protection.md` (DP-*), NG-UI-34 |
 | Lint, compiler, scripts | `docs/baseline/08-crosscutting-concepts/development/typescript-tooling.md`, `docs/baseline/08-crosscutting-concepts/development/angular-tooling.md` |
+| Bundle gate | `templates/scripts/check-bundle.mjs` (gzip budgets, NG-TOOL-13) |
 | Scripts `check`, `verify` | runner `templates/scripts/verify.mjs`, copied to `frontend/scripts/` (TS-TOOL-19, NG-TOOL-04) |
-| ICU, session-timeout warning | templates `templates/src/platform/adapter/` (`icu-transpiler.ts` NG-I18N-01, `session-activity.ts` and `activity-interceptor.ts` NG-SEC-13; idle time shared across tabs, A11Y-29; needs the `CLOCK` token of NG-ARCH-24 in `platform.tokens.ts`) |
+| ICU, session-timeout warning, client polling | templates `templates/src/platform/adapter/` (`icu-transpiler.ts` NG-I18N-01, `session-activity.ts` and `activity-interceptor.ts` NG-SEC-13; `poller.ts` and `page-activity.ts` RES-POL-01; idle time shared across tabs, A11Y-29; needs the `CLOCK` token of NG-ARCH-24 in `platform.tokens.ts`) |
 | Time, "today", business date | `CLOCK` token and `businessDate()` (NG-ARCH-24, TS-ARCH-22); never `Date.now()`/`new Date()` outside the platform (NG-TOOL-12) |
 | Async loads and saves in stores | latest-load feature, updater patches, per-key save queue (NG-STATE-18, TS-ARCH-21); catch only expected errors (TS-ARCH-23) |
 | New feature | generate with `templates/scripts/new-feature.mjs` (`.agents/skills/baseline-angular/templates/scripts/` in a project; copy to `frontend/scripts/`, NG-ARCH-23), imports through the aliases of NG-ARCH-22 |

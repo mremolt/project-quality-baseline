@@ -24,6 +24,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] `client: 'angular'` with `provideIn: false` and `urlEncodeParameters: true`; generated services listed in the providers file?
 - [ ] Observables converted with `untilAborted`, never `firstValueFrom` alone or `toPromise`?
 - [ ] Responses parsed with `safeParse`; a malformed body and an unmappable 4xx reported once through `REPORT_ERROR`, errors from a 5xx, status 0 or time-out passed on unreported (TS-API-05, TS-ARCH-18, NG-OBS-04)?
+- [ ] Conditional GET through the generated client's `options`, `304` mapped to unchanged (TS-API-11, NG-API-01)?
 
 ## Angular: Runtime Configuration
 
@@ -47,6 +48,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] `check` and `verify` run through `scripts/verify.mjs` (NG-TOOL-04, TS-TOOL-19)?
 - [ ] `npm run verify` green?
 - [ ] `tsconfig.e2e.json` in `typecheck`, `e2e/**` and `e2e-smoke/**` in `lintFilePatterns` (NG-TOOL-04); wall-clock selectors banned outside `platform.tokens.ts` and specs (NG-TOOL-12)?
+- [ ] `check:bundle` gzip budgets in `verify`; raw budgets reset to measured + 10 %; zod import lever recorded if it dominates the bundle (NG-TOOL-05/13/14)?
 
 ## Angular: Internationalization
 
@@ -60,6 +62,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] `lang`, `dir`, formatting pipes and Material locale follow the active-language signal (NG-I18N-07)?
 - [ ] Formatting pipes impure with a per-locale cache or pure with the locale as an argument; language-switch test (NG-I18N-08, TEST-I18N-08)?
 - [ ] Layout checked in the pseudo-locale; logical properties only (NG-I18N-11)?
+- [ ] `eslint --fix` not run over templates; `ignoreAttributes` lists ids and enums (`aria-labelledby`, `aria-controls`, `aria-describedby`, `mode`, `appearance`) (NG-I18N-05, TOOL-SKL-15)?
 
 ## Angular: Error Reporting and Correlation
 
@@ -114,6 +117,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Framework-neutral UI rules met ([ui-patterns.md](../08-crosscutting-concepts/ui/ui-patterns.md) checklist): layout per size class, `WindowSize` only for structure, logical properties, `dvh`, no hover-only function, zoom not blocked?
 - [ ] Fonts and icons self-hosted, no Google Fonts link (NG-UI-34)?
 - [ ] Route tabs are a `nav` with router links and `ariaCurrentWhenActive`, not `mat-tab-nav-bar` (UI-22)?
+- [ ] Large text (200 %) checked for floating labels, button toggles, drawer width and icon sizes (NG-UI-38)?
 
 ## Angular State Management: NgRx Signal Store
 
@@ -126,3 +130,4 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Shared store parts as exported `signalStoreFeature` constants (NG-STATE-16); effects track only their triggers, the body in `untracked` (NG-STATE-17)?
 - [ ] Loads through the shared latest-load feature (or `rxMethod` + `switchMap`), aborted on destroy; `patchState` with an updater after an `await`; per-key save queue; store test with an older response resolving last (NG-STATE-18)?
 - [ ] Error and rollback paths tested with mocked use cases; the store holds error keys, not text?
+- [ ] Saves per key queued; optimistic rollback only while the item still has the failed click's value; linked counts forwarded by the host component (NG-STATE-19/20)?

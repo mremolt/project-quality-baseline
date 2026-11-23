@@ -78,5 +78,6 @@ export async function untilAborted<T>(source: Observable<T>, signal?: AbortSigna
 |---|---|
 | `angular-query` / TanStack Query clients for Angular with signals | Not used; plain `angular` client behind ports (TS-API-03) |
 | `provideIn: 'root'` for generated services | `provideIn: false`; provided by the feature (TS-API-04) |
+- **NG-API-01: The Angular form of TS-API-11 handles a generated service without an `If-None-Match` parameter, where `HttpClient` turns `304` into an `HttpErrorResponse`.** The adapter passes `observe: 'response'` and `headers` through the generated method's `options`, reads `ETag` from the response and maps status `304` to `{ kind: 'unchanged' }`; a test with MSW covers `200` with `ETag`, `304` and a failure.
 
 *Agent checklist in [checklists/angular.md](../../checklists/angular.md) and sources in [sources.md](../../sources.md), section "Generated API Clients in Angular".*

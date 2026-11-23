@@ -92,6 +92,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Secret read from the config tree, typed `Secret` (SPRING-CFG-07/11, CFG-07)?
 - [ ] New `app.*` key in `configuration-keys.yaml` (CFG-12, TEST-CFG-04)?
 - [ ] `ApplicationContextRunner` test for valid, invalid and missing values?
+- [ ] A link that leaves the system is built from the required public base URL, never from the request (SPRING-CFG-12)?
 
 ## Spring Boot: Data Protection
 
@@ -178,7 +179,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 
 - [ ] New client: built from the injected builder, connect and read timeouts in configuration, values on the timeout ladder; WireMock delay test (SPRING-RES-01/02)?
 - [ ] OIDC login or resource server: JWKS, token and userinfo clients declared with explicit timeouts, not left to Spring Security's defaults (SPRING-RES-01)?
-- [ ] Remote call outside the transaction, database part in a `TransactionTemplate`; `app.resilience.transaction-guard` is `fail` in tests (SPRING-RES-03/04)?
+- [ ] Remote call outside the transaction, database part in a `TransactionTemplate`; `app.resilience.transaction-guard` is `fail` in tests once the first HTTP client adapter exists (SPRING-RES-03/04)?
 - [ ] `maximum-pool-size` and `connection-timeout` (milliseconds) set; pool timeout maps to 503 (SPRING-RES-05)?
 - [ ] `@Retryable` with explicit `includes`, backoff, jitter and `timeout`, on an adapter, not in a Kafka-driven flow (SPRING-RES-08/09)?
 - [ ] `@ConcurrencyLimit` with an explicit limit and `policy = REJECT` for each remote dependency; rejection mapped to 503 or the port's error (SPRING-RES-06)?
@@ -207,6 +208,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Archive limits as ratio or counted caps per entry and in total; hostile files built in memory plus one real-writer fixture per format (SPRING-SEC-26)?
 - [ ] Cross-user test tagged on the method that calls the use case (SPRING-SEC-16)?
 - [ ] Long-open page keeps its work state on the server instead of a longer idle timeout (SPRING-SEC-32)?
+- [ ] Session fixation and cookie attributes of every session type proven in the real tier, not removed from `MockMvc` (SPRING-SEC-45)? Public endpoint inside the API chain declared one by one, CSRF on, limited, threat-modelled; session it creates is short-lived and restored at login (SPRING-SEC-46/47)? Two limits of one filter class set `getAlreadyFilteredAttributeName()` (SPRING-SEC-48)? PKCE on the confidential client asserted (SPRING-SEC-38)?
 
 ## Spring Boot: Security
 
@@ -237,3 +239,5 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] `./mvnw verify` green (unit and integration tests)?
 - [ ] Use case tests use the shared `support` fakes (`InMemoryRepository`, `People`, `Transactions`) instead of new ad-hoc helpers (SPRING-TEST-14)?
 - [ ] Test fakes extend `InMemoryRepository<K, T, S>` with themselves as `S` (SPRING-TEST-14)?
+- [ ] Required keys without default are set in `@RequiredTestProperties`, not per test class; web slices of an authenticated API use `@SecuritySlice` (SPRING-TEST-15/16)?
+- [ ] No `csrf()` post-processor; cookie attributes and session fixation proven in the real tier; concurrency tests mutation-checked once (SPRING-TEST-17, TEST-TDD-18)?

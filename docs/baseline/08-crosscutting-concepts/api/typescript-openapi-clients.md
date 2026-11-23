@@ -167,5 +167,6 @@ Stack-specific rows are in the stack's clients doc.
 | Generated client used directly in components | Only adapters use generated code (TS-ARCH-04/05) |
 | Output key `mocks` for MSW generation | `mock` (singular), as in the configuration above; check the installed Orval's types when upgrading |
 | camelCase zod schema names (`listOrdersResponse.parse`) | Orval 8.47's zod output is PascalCase operationId + `Response` (`ListOrdersResponse`); the naming has changed between Orval versions, so use the names from the generated `*.zod.ts` |
+- **TS-API-11: A conditional GET answers `304` as a result, not an error.** The adapter sends `If-None-Match` with the last `ETag`, maps `304` to an "unchanged" outcome (the screen keeps its snapshot), reads the new `ETag` from a `200`, and never hand-writes a client or DTO for it. If the generated client has no header parameter, the adapter passes the header and the response observation through the client's `options`.
 
 *Agent checklist in [checklists/typescript.md](../../checklists/typescript.md) and sources in [sources.md](../../sources.md), section "Generated API Clients (Orval)".*

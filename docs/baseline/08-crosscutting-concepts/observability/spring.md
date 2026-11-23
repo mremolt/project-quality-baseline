@@ -12,6 +12,11 @@ How a Spring Boot service implements [observability.md](observability.md) (`OBS-
 - **SPRING-OBS-02: Probes stay reachable despite `anyRequest().authenticated()`** (SPRING-SEC-01) through one dedicated `SecurityFilterChain` for actuator and the probe paths, ordered before the API chain, in `adapter.in.rest`. With the management port of SPRING-OBS-01 the chain matches two things: the probe paths on the server port (`EndpointRequest.toAdditionalPaths(WebServerNamespace.SERVER, …)`, equivalent to plain matchers for `/livez` and `/readyz`) and the actuator endpoints on the management port (`EndpointRequest.toAnyEndpoint()`, which never matches on the server port):
 
 ```java
+import org.springframework.boot.actuate.endpoint.web.WebServerNamespace;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
+// InfoEndpoint: org.springframework.boot.actuate.info.InfoEndpoint (Boot 4 package names)
+
 @Bean
 @Order(1)
 SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
@@ -28,7 +33,7 @@ SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
 }
 ```
 
-  Every endpoint in the exposure allow-list (SPRING-SEC-07) has a matching `permitAll()` line here and nothing else does: when the platform pulls Prometheus metrics, `prometheus` joins `management.endpoints.web.exposure.include` and the commented line is switched on in the same change; the management port's network restriction is then the scrape's access control, unless the platform scrapes with credentials. Never `permitAll()` on `/actuator/**`, never `exposure.include=*`. Health details stay hidden (`management.endpoint.health.show-details` keeps its default `never`). Whether the main security filter chain also applies on a separate management port is open (see [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)); the dedicated chain makes the outcome the same either way, and SPRING-OBS-11 tests it.
+  Every endpoint in the exposure allow-list (SPRING-SEC-07) has a matching `permitAll()` line here and nothing else does: when the platform pulls Prometheus metrics, `prometheus` joins `management.endpoints.web.exposure.include` and the commented line is switched on in the same change; the management port's network restriction is then the scrape's access control, unless the platform scrapes with credentials. Never `permitAll()` on `/actuator/**`, never `exposure.include=*`. The chain is its own `@Configuration` (`ActuatorSecurityConfiguration`), because `EndpointRequest` needs the actuator context and cannot be built in a `@WebMvcTest` slice: slice tests import only the API and SPA chains (`@SecuritySlice`, SPRING-TEST-16), and the actuator chain is tested in the full-context IT (SPRING-OBS-11). Health details stay hidden (`management.endpoint.health.show-details` keeps its default `never`). Whether the main security filter chain also applies on a separate management port is open (see [chapter 11](../../11-risks-and-technical-debt/README.md#verify-before-first-use)); the dedicated chain makes the outcome the same either way, and SPRING-OBS-11 tests it.
 - **SPRING-OBS-03: The liveness group keeps its default (`livenessState`) and gets no other contributor** (OBS-02). The readiness group is `readinessState` plus `db` only where OBS-03 says so: `management.endpoint.health.group.readiness.include=readinessState,db`. Custom `HealthIndicator`s live in the adapter they check, answer within a fixed timeout, and are only added to readiness with a stated reason.
 
 ### Graceful shutdown

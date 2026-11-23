@@ -62,6 +62,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Frontend change to serving, routing or caching: deep-link, cache-header and 404 rules kept; previous release's chunks still served (REL-FE-03/04)?
 - [ ] Nonce templating tested against a real build's `index.html`, not a stub (REL-FE-03)?
 - [ ] BFF image: start fails without the bundle, built image answers `GET /` with `200` `text/html` (REL-FE-06)?
+- [ ] Static assets compressed (JS, CSS, SVG), `index.html` and JSON data not, asserted against a real server (REL-FE-07)?
 - [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7; also for a delivered Compose installation (REL-RUN-*)?
 - [ ] Feature needing fonts, AWT, native libraries or locale data: avoided, or exercised against the real image in the smoke tier (REL-RUN-08)?
 
@@ -275,6 +276,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Job that acts once per business fact: primary-key claim with `on conflict do nothing`, concurrency test with one winner (RES-JOB-05)?
 - [ ] New cache: in the adapter, bounded, TTL, invalidation stated, caller in the key where needed (RES-CCH)?
 - [ ] Security-relevant (new outbound call)? Then the threat model note (SEC-TM-02).
+- [ ] Client polling: one loop per screen, no overlap, paused while hidden or offline, backoff, conditional requests, one connection state instead of error spam, stops with its owner; a poll never undoes an own optimistic change (RES-POL-01/02)?
 
 ## Secure Pipeline
 
@@ -327,6 +329,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Expected values independent of the implementation?
 - [ ] Test data from builders; clock and ids fixed in the test (TEST-TDD-16)?
 - [ ] Fakers only for volume or seed data, seeded, never for asserted values (TEST-TDD-17)?
+- [ ] Concurrency tests mutation-checked once: guard removed, test fails (TEST-TDD-18)?
 
 ## Testing by Architecture Element
 

@@ -97,10 +97,6 @@ springdoc:
     enabled: false                    # spec comes from the committed file; on only in application-local.yaml and OpenApiSpecIT (SPRING-API-10)
   writer-with-order-by-keys: true     # deterministic output for the stale-spec check (SPRING-API-08)
 
-app:
-  resilience:
-    transaction-guard: warn           # remote call inside a transaction: warn when deployed; tests set fail (SPRING-RES-04)
-
 ---
 spring:
   config:

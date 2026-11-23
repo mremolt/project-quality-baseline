@@ -36,6 +36,7 @@ Every rule ID of the java docs with its headline, grouped by doc. The headline i
 - JAVA-TOOL-11: Spotless formats Java with palantir-java-format (120 columns, like Prettier in the frontend), removes unused imports and orders the rest.
 - JAVA-TOOL-12: SpotBugs runs with FindSecBugs in `verify` and fails on findings reported at `threshold` `Medium` or higher.
 - JAVA-TOOL-25: XML, XSL-FO, SVG and HTML built in Java are written through a writer API, never by string concatenation, even with escaped values:
+- JAVA-TOOL-26: Known findings of the gates have a fixed fix, never an exclusion (SEC-REV-02):
 - JAVA-TOOL-13: PMD and Checkstyle are not part of the baseline.
 - JAVA-TOOL-14: JaCoCo produces a report, not a gate (D5, TEST-ARCH-09).
 - JAVA-TOOL-15: Mockito is attached as an explicit agent.

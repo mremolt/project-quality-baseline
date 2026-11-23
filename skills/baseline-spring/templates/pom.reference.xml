@@ -21,6 +21,7 @@
 	<name>orders</name>
 	<description>TODO</description>
 	<properties>
+		<springdoc.version>3.2.0</springdoc.version>
 		<java.version>25</java.version>
 		<errorprone.version>2.53.0</errorprone.version>
 		<nullaway.version>0.14.4</nullaway.version>
@@ -46,6 +47,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-flyway</artifactId>
 		</dependency>
+		<!-- only with Kafka (SPRING-MSG-*): drop it if the service has none -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-kafka</artifactId>
@@ -54,9 +56,21 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-opentelemetry</artifactId>
 		</dependency>
+		<!-- only where a non-browser client calls the API (SPRING-SEC-03); a browser-only BFF uses oauth2-client instead: drop it if the service has none -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+		</dependency>
+		<!-- Auto-configured RestClient.Builder: without it the http client floor spring.http.clients.* does nothing (SPRING-RES-01, SPRING-LIB-06) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-restclient</artifactId>
+		</dependency>
+		<!-- OpenAPI spec generation without the UI (SPRING-LIB-05); not managed by Boot -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -118,6 +132,18 @@
 			<artifactId>spring-boot-starter-security-oauth2-resource-server-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- jwt()/csrf()/user post-processors for MockMvc (SPRING-SEC-10) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Awaiting asynchronous behaviour instead of sleeping (SPRING-TEST-09, SPRING-LIB-14) -->
+		<dependency>
+			<groupId>org.awaitility</groupId>
+			<artifactId>awaitility</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation-test</artifactId>
@@ -133,6 +159,7 @@
 			<artifactId>spring-boot-testcontainers</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- only with the observability profile tests: drop it if the service has none -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers-grafana</artifactId>
@@ -143,6 +170,7 @@
 			<artifactId>testcontainers-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- only with Kafka: drop it if the service has none -->
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers-kafka</artifactId>

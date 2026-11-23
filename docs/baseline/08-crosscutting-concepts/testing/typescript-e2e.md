@@ -97,7 +97,7 @@ export default defineConfig({
 
 ## Responsive
 
-- **TS-TEST-19: A shared fixture asserts reflow and text spacing** on every `@responsive` screen: no horizontal overflow of the document (A11Y-13), and no clipped text after the WCAG 1.4.12 spacing is injected (A11Y-14). Elements that are visually hidden on purpose (1 × 1 px) are skipped.
+- **TS-TEST-19: A shared fixture asserts reflow and text spacing** on every `@responsive` screen: no horizontal overflow of the document (A11Y-13), and no clipped text under the WCAG 1.4.12 spacing (A11Y-14). The spacing is installed **before the app starts** (`page.addInitScript`), exactly as a reader's own stylesheet is present from the first render: Material measures the notch of an outlined floating label once, at first render, so a style added later reports false clipping (a label 102 px wide in a 237 px text). Every screen runs twice, as is and scaled (root font size 200 %, TS-TEST-39). Elements that are visually hidden on purpose (1 × 1 px) are skipped; vertical overflow counts as clipping only for `overflow: hidden` or `clip`, never for `auto` or `scroll` (an app shell's scrollable content area is legitimate).
 
 ```ts
 // e2e/fixtures.ts (continued)
@@ -105,13 +105,26 @@ const TEXT_SPACING = `
   * { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; }
   p { margin-block-end: 2em !important; }`;
 
+/** Installs spacing and optional 200 % text before any page script runs; call before page.goto(). */
+export async function scaleText(page: Page, { scaled }: { scaled: boolean }) {
+  await page.addInitScript(
+    ({ css, scaled: big }) => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const style = document.createElement('style');
+        style.textContent = css + (big ? ' html { font-size: 200%; }' : '');
+        document.head.append(style);
+      });
+    },
+    { css: TEXT_SPACING, scaled },
+  );
+}
+
 export async function expectNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow, 'page scrolls horizontally (WCAG 1.4.10)').toBeLessThanOrEqual(0);
 }
 
 export async function expectTextSpacingTolerant(page: Page) {
-  await page.addStyleTag({ content: TEXT_SPACING });
   const clipped = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('body *')]
       .filter((el) => el.clientWidth > 1 && el.clientHeight > 1 && el.textContent?.trim())
@@ -125,9 +138,14 @@ export async function expectTextSpacingTolerant(page: Page) {
 
 - **TS-TEST-20: Each shell and each list-detail screen has a resize-transition test**: resize from `expanded` to `compact` and back with `page.setViewportSize`, and assert that the URL, the selected item and typed form values survive and that focus isn't lost.
   *Why:* UI-05; users rotate devices and resize windows mid-task.
-- **TS-TEST-21: Target size (A11Y-10, A11Y-16) is asserted in the browser, and the axe fixture proves that `target-size` ran.** The rule belongs to the WCAG 2.2 rules, which axe treats separately; after `analyze()`, assert that `target-size` appears in `passes`, `violations` or `incomplete`, and if it doesn't, enable it explicitly. The jsdom helper (TS-TEST-09) disables `target-size`, because without layout it reports a false pass. A bounding-box check (`locator.boundingBox()`) on the screen's main controls at `compact` fails below 24 × 24 px, and below 44 × 44 px unless the control is listed in the conformance notes (A11Y-02).
+- **TS-TEST-21: Target size (A11Y-10, A11Y-16) is asserted in the browser, and the axe fixture proves that `target-size` ran.** The rule belongs to the WCAG 2.2 rules, which axe treats separately; after `analyze()`, assert that `target-size` appears in `passes`, `violations`, `incomplete` or `inapplicable` (a screen without interactive controls reports it as inapplicable, which proves the rule ran; a disabled rule is not listed at all), and if it doesn't, enable it explicitly. The jsdom helper (TS-TEST-09) disables `target-size`, because without layout it reports a false pass. A bounding-box check (`locator.boundingBox()`) on the screen's main controls at `compact` fails below 24 × 24 px, and below 44 × 44 px unless the control is listed in the conformance notes (A11Y-02).
 - **TS-TEST-22: Visual regression is opt-in per project.** A project that adopts it uses Playwright `toHaveScreenshot` for the shell and `shared/ui` components only, at `compact`, `medium` and `expanded`, in one theme. Screenshots are taken in the pinned Playwright Docker image, baselines are updated only by CI, animations are disabled and volatile content is masked. Hosted services (Argos, Chromatic, Percy) need an ADR.
   *Why:* rendering differs between operating systems, so local baselines don't match CI; large screenshot sets are approved without being looked at (same reason as TS-TEST-06).
+- **TS-TEST-37: A target-size requirement above axe's 24 px is asserted by a project helper that measures what the user can hit.** axe `target-size` cannot tell a 40 px icon button with an invisible 48 px touch target from a real 40 px target, and it passes inputs inside a 56 px field. The helper measures Material's `.mat-mdc-button-touch-target` where it exists, the whole form field around an input, and the labelled row around a checkbox or radio, and fails below the product's size (48 px where A11Y-10 is raised to it). The helper is a shared fixture next to `expectReflowAndTextSpacing`.
+- **TS-TEST-38: Focus not obscured (WCAG 2.4.11, A11Y-02) is asserted by walking the page with Tab.** `expectFocusNeverObscured` presses Tab through the screen and, for each focused element, takes `document.elementFromPoint` at its centre; the element, its descendants and, for a form control, an element of the same `mat-form-field` (the floating label lies on its own empty field) do not count as obscuring. Sticky bars, snackbars and cookie banners are what it finds.
+- **TS-TEST-39: The 200 % text size (A11Y-13) is simulated with an init script, and its limits are documented.** Playwright cannot change the browser's default font size; `html { font-size: 200% }` scales `rem` only, while media queries and `px` stay. The scaled pass runs where the combination is meaningful (for example from 768 × 500 px, since 320 px and 200 % are separate conditions of the requirement) and skips smaller windows with a `test.skip` whose reason sits in a comment directly above the call (so `sonarjs/no-skipped-tests` accepts it) and in the conformance notes of `docs/accessibility.md` (A11Y-02).
+- **TS-TEST-40: Playwright actions on optimistic, moving, overlaid and clock-driven controls follow fixed patterns.** (a) `check()`/`uncheck()` are wrong for a control whose state is undone by a rollback or that moves to another container: `check()` clicks again when the optimistic change is reverted (using up a stubbed failure) and hangs when the element leaves the scoped locator; use `click()` plus an explicit state assertion (`toBeChecked`). (b) Under `page.clock.install()`, actionability waits for animation frames and `click()` can hang (seen at 320 px); use `focus()` and the keyboard where the clock is faked. (c) `context.setOffline(true)` has no effect on requests answered by `page.route().fulfill()`: in the stubbed tier make the API unreachable with a later `route.abort('internetdisconnected')` and `page.unroute`; the real tier uses `setOffline`. (d) At 320 px an outlined field's `mat-label` overlays the input centre, so `click()` fails with "intercepts pointer events": use `focus()` in reflow tests. (e) A stubbed `4xx`/`5xx` logs `Failed to load resource` as `console.error`; the test declares it with `expectErrors(/status of 500/)` (TS-TEST-32), never by widening the guard. (f) A screen has one `role="status"` region (the snackbar host); a second status message is visible text plus one announcer message, and tests assert those instead of `getByRole('status')` (A11Y-20).
+- **TS-TEST-41: The performance of an authenticated SPA is measured in the real tier with Playwright, CDP throttling and a `PerformanceObserver`, because Lighthouse cannot sign in through the IdP.** The test signs in once as a seeded person (TS-TEST-10), throttles CPU and network through a CDP session (`Emulation.setCPUThrottlingRate`, `Network.emulateNetworkConditions`, emulated 4G), loads the main screens and reads LCP, CLS, long tasks and event timing (an INP proxy) with `PerformanceObserver` through `page.evaluate`; budgets are the product's (chapter 10). To measure another instance (for example a second container of the same image on another port), share the session through the shared session store (SPRING-SEC-37) and remove the instance afterwards. Compression (REL-FE-07) is part of what it measures. The result is a nightly report, not a merge gate (TS-TEST-29).
 
 ## Screen readers
 

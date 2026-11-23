@@ -15,3 +15,4 @@ Rules removed from the baseline because they were deprecated or only repeated an
 | SPRING-DB-20 | Contradicted API-REST-15: reads that generate reference data write on a safe method, from unbounded input, and starve the pool with a second transaction | API-REST-15, ARCH-ADP-14 |
 | SPRING-MSG-10 | Deprecated; covered by SPRING-RES-09 | SPRING-RES-09 |
 | SPRING-REL-05 | Repeated SPRING-OBS-04, OBS-04 and REL-RUN-06 (shutdown budget, termination grace period) | SPRING-OBS-04, REL-RUN-06 |
+| SPRING-TEST-18 | Repeated TEST-TDD-18 (mutation check of a concurrency test) | TEST-TDD-18 |

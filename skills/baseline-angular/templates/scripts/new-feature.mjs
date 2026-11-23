@@ -4,7 +4,8 @@
 // Creates tokens, providers, routes, index, one lazy page with template/styles/spec and the de/en catalogs with
 // context.json, so a new feature starts compliant (TS-ARCH-09/17/20, NG-ARCH-21/22, NG-I18N-02/03/13).
 // Expects the helpers `@testing/axe` (expectNoAxeViolations, TS-TEST-09) and `@testing/transloco`
-// (provideTestTranslations); adapt LANGS and the page template to the product's shell.
+// (provideTestTranslations), shipped in `templates/src/testing/` (copy to `frontend/src/testing/`); adapt the generated catalogs
+// (the product's languages, not necessarily en and de) and the page template to the product's shell.
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 

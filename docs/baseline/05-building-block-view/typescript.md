@@ -89,7 +89,7 @@ src/
 const COMPOSITION_FILE = '\\.composition\\.tsx?$';
 const ROOT_HTTP_SETUP = '^src/app/providers\\.tsx?$';
 const HTTP_CLIENT_MODULES = 'node_modules/(axios|ky)'; // stacks add their framework HTTP client
-const TEST_FILE = '\\.(spec|test)\\.tsx?$'; // colocated tests import the test libraries: excluded from the core allow-lists
+const TEST_FILE = '\\.(spec|test)\\.tsx?$|^src/testing/'; // colocated tests and the shared test code in src/testing (test shell, test pages, helpers) import the test libraries and, where a platform spec needs a routed page, a feature: excluded from the rules as importer and imported
 
 module.exports = {
   forbidden: [

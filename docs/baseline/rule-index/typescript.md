@@ -42,6 +42,7 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-API-08: A spec change is reviewed together with its effect on the frontend:
 - TS-API-09: `urlEncodeParameters: true` is set in every Orval client output.
 - TS-API-10: Downloads of generated files (exports, reports) go through the outgoing HTTP adapter by default:
+- TS-API-11: A conditional GET answers `304` as a result, not an error.
 
 ## [TypeScript Tooling](../08-crosscutting-concepts/development/typescript-tooling.md)
 
@@ -96,6 +97,11 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TEST-20: Each shell and each list-detail screen has a resize-transition test:
 - TS-TEST-21: Target size (A11Y-10, A11Y-16) is asserted in the browser, and the axe fixture proves that `target-size` ran.
 - TS-TEST-22: Visual regression is opt-in per project.
+- TS-TEST-37: A target-size requirement above axe's 24 px is asserted by a project helper that measures what the user can hit.
+- TS-TEST-38: Focus not obscured (WCAG 2.4.11, A11Y-02) is asserted by walking the page with Tab.
+- TS-TEST-39: The 200 % text size (A11Y-13) is simulated with an init script, and its limits are documented.
+- TS-TEST-40: Playwright actions on optimistic, moving, overlaid and clock-driven controls follow fixed patterns.
+- TS-TEST-41: The performance of an authenticated SPA is measured in the real tier with Playwright, CDP throttling and a `PerformanceObserver`, because Lighthouse cannot sign in through the IdP.
 - TS-TEST-23: Assert accessible name, description and state through accessibility APIs, not ARIA attributes:
 - TS-TEST-24: Status messages are asserted after the triggering action (A11Y-20):
 - TS-TEST-25: The app shell and each main screen have a scoped, partial ARIA snapshot (A11Y-23):

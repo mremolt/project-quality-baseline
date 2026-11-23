@@ -151,7 +151,8 @@ class ArchitectureTest {
                     "org.springframework.transaction..",
                     "org.springframework.security.access.prepost..",
                     "org.slf4j..",
-                    "io.micrometer.observation..");
+                    "io.micrometer.observation..")
+            .allowEmptyShould(true);
 
     // Use cases get language as data (a Language value object in the command), never from the request (SPRING-I18N-04).
     // applicationUsesOnlyAllowedTypes already excludes these types; this rule names them for a precise failure message.
@@ -170,7 +171,8 @@ class ArchitectureTest {
             .haveFullyQualifiedName("org.springframework.context.i18n.LocaleContextHolder")
             .orShould()
             .dependOnClassesThat()
-            .haveFullyQualifiedName("org.springframework.web.servlet.LocaleResolver");
+            .haveFullyQualifiedName("org.springframework.web.servlet.LocaleResolver")
+            .allowEmptyShould(true);
 
     // Locale must not travel through the core (SPRING-I18N-04). Only fields and signatures are checked:
     // Locale.ROOT for case conversion (required by Error Prone's StringCaseLocaleUsage) stays possible.
@@ -278,10 +280,11 @@ class ArchitectureTest {
             .should()
             .notBePublic();
 
-    // Use cases live in application (SPRING-ARCH-04).
+    // Use cases live in application (SPRING-ARCH-04). allowEmptyShould on this rule and on the application rules
+    // above: bootstrap exception, a new service has no application class yet; remove it with the first @UseCase.
     @ArchTest
     static final ArchRule useCasesLiveInApplication =
-            classes().that().areAnnotatedWith(UseCase.class).should().resideInAPackage("..application..");
+            classes().that().areAnnotatedWith(UseCase.class).should().resideInAPackage("..application..").allowEmptyShould(true);
 
     // Outgoing HTTP clients live in adapter.out.http (SPRING-ARCH-04). allowEmptyShould: bootstrap exception as for
     // jpaEntitiesStayInAdapter; remove it with the first @HttpClientAdapter.
@@ -336,7 +339,7 @@ class ArchitectureTest {
     static final ArchRule everyPackageIsNullMarked =
             classes().that().doNotHaveSimpleName("package-info").should(resideInANullMarkedPackage());
 
-    // The current time comes only from the Clock bean in the configuration package (ARCH-UC-20, JAVA-ARCH-14).
+    // The current time comes only from the Clock bean in <base>.config (ARCH-UC-20, JAVA-ARCH-14, SPRING-ARCH-02).
     // now(clock) stays allowed; now(), now(zone), Clock.system*() and System.currentTimeMillis() do not.
     @ArchTest
     static final ArchRule noDirectClockAccess = noClasses()

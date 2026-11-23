@@ -31,6 +31,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] Adapter tests use the generated MSW handlers, including an error and a malformed response?
 - [ ] `urlEncodeParameters: true` in the Orval config (TS-API-09); `@faker-js/faker` a dev dependency when MSW mocks are generated?
 - [ ] File downloads through the adapter, not hand-built URLs in `<a download>`; a `Blob` error body parsed as problem details, tested (TS-API-10)?
+- [ ] Conditional GET: `304` mapped to an unchanged outcome, `ETag` read from `200`, header passed through the generated client's options (TS-API-11)?
 
 ## TypeScript Tooling
 
@@ -71,6 +72,9 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] `e2e:fast` at milestones; `e2e:smoke` at the first call of a new real dependency and after security-chain, session or SPA-serving changes; the full matrix once before the commit that closes a part; the smoke runs against a freshly built image (TS-TEST-33)?
 - [ ] Unattended runs use Chromium only (`e2e:fast`, `e2e:smoke`); the full matrix is run manually at the end of a longer cycle (TS-TEST-36)?
 - [ ] Shared fixture fails on unstubbed API calls, page errors, `console.error` and missing translations (TS-TEST-32)?
+- [ ] Spacing and 200 % text installed before the app starts, screens run as is and scaled; target size above 24 px, focus-not-obscured measured by project helpers; `target-size` `inapplicable` accepted as proof it ran (TS-TEST-19/21/37/38/39)?
+- [ ] No `check()`/`uncheck()` on optimistic or moving controls, `focus()` under a fake clock, stubbed offline through `route.abort`, expected console errors declared per test (TS-TEST-40)?
+- [ ] Performance of the signed-in SPA measured in the real tier (CDP throttling, `PerformanceObserver`), nightly (TS-TEST-41)?
 
 ## TypeScript Testing
 

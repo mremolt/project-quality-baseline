@@ -117,6 +117,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-CFG-09: `/actuator/env` and `/actuator/configprops` stay unexposed (SPRING-SEC-07).
 - SPRING-CFG-11: Secret values in properties records have the type `Secret` (CFG-07), a final class in the support package `<base>.config` (not a record, whose generated `toString()` would print the value).
 - SPRING-CFG-10: The component that serves the SPA (BFF, SPRING-SEC-08) serves `GET /config.json` from a validated `app.frontend.*` properties record, mapped to an explicit response record (never a dump of the `Environment`).
+- SPRING-CFG-12: A link to the application that leaves the system (a share link, an e-mail) is built from a required public base URL, never from the request.
 
 ## [Spring Boot: Data Protection](../08-crosscutting-concepts/data-protection/spring.md)
 
@@ -254,6 +255,10 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-SEC-28: Kafka in non-local environments uses TLS and SASL authentication, ACLs per service for topics and consumer groups, and no auto-created topics.
 - SPRING-SEC-29: The image meets the image requirements as a security capability: OCI, runs as non-root, minimal base pinned by digest, no build tools, sources or secrets in any layer, an SBOM from the build (SEC-CI-03).
 - SPRING-SEC-30: Cryptography follows SEC-CRY-01..05 with platform libraries only:
+- SPRING-SEC-45: Session fixation and the cookie attributes of every session type are proven in the real tier.
+- SPRING-SEC-46: A public endpoint inside the authenticated API chain is declared one by one and stays hardened.
+- SPRING-SEC-47: A session that a public call creates is short-lived and is not kept after login.
+- SPRING-SEC-48: Two rate limits of one filter class on one path set their own "already filtered" name.
 
 ## [Spring Boot: Security](../08-crosscutting-concepts/security/spring.md)
 
@@ -289,3 +294,6 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-TEST-12: An architecture test fails when a `@RestController` in `adapter.in.rest` is not covered by a web slice test.
 - SPRING-TEST-13: Integration tests control background work and reset state in one place.
 - SPRING-TEST-14: Use case tests share three fakes.
+- SPRING-TEST-15: Keys without a deployed default are set once for all `@SpringBootTest` classes, through one meta-annotation.
+- SPRING-TEST-16: Web slice tests of an authenticated API share one `@SecuritySlice` meta-annotation (templates `SecuritySlice` and `SecuritySliceBeans`):
+- SPRING-TEST-17: A `@SpringBootTest` class that shares its context with session assertions sends the CSRF cookie and header itself, not `SecurityMockMvcRequestPostProcessors.csrf()` (which the generated web slice tests may keep):

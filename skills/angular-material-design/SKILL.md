@@ -408,6 +408,7 @@ re-asking for data already entered (NG-UI-12). Signal forms work the same way wi
 - **Placeholder as label**, color-only error state (NG-UI-12, WCAG 1.4.1).
 - **Auto-dismissing snackbar with an action** the user must reach (WCAG 2.2.1, 2.1.1).
 - **Testing Material widgets via CSS classes** instead of harnesses (NG-UI-17).
+- **Ignoring large text**: fixed `height`, `rem` widths beside `px` icons, outlined labels and button-toggle segments clip at 200 % text; fix in the component styles (NG-UI-38).
 
 ## M3 Expressive
 

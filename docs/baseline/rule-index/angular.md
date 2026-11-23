@@ -38,6 +38,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - TS-API-05 and TS-ARCH-18 in Angular: the adapter parses with `safeParse`, maps errors in one mapper and reports the `TechnicalError`s it creates.
 - TS-API-06 in Angular: the adapter converts the generated service's `Observable` with the shared `untilAborted` helper in `src/platform/adapter/out/http`, never with a bare `firstValueFrom` (which ignores the signal) or `toPromise`.
 - TS-API-07 in Angular: Batching and caching decorators are bound to the port token in the providers file (`useFactory` wrapping the plain adapter).
+- NG-API-01: The Angular form of TS-API-11 handles a generated service without an `If-None-Match` parameter, where `HttpClient` turns `304` into an `HttpErrorResponse`.
 
 ## [Angular: Runtime Configuration](../08-crosscutting-concepts/configuration/angular.md)
 
@@ -62,6 +63,8 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-TOOL-09: `@angular-eslint/no-developer-preview` and `@angular-eslint/no-experimental` are errors.
 - NG-TOOL-11: Two typescript-eslint rules need an option or a different test style, never `off`.
 - NG-TOOL-12 (implements TS-TOOL-21): The wall-clock ban covers all of `src/` except `platform.tokens.ts` and specs.
+- NG-TOOL-13: `check:bundle` enforces gzip budgets (template `scripts/check-bundle.mjs`, the Angular counterpart of REACT-TOOL-13):
+- NG-TOOL-14: The zod import form is chosen so that the initial bundle does not carry what it does not use.
 
 ## [Angular: Internationalization](../08-crosscutting-concepts/i18n/angular.md)
 
@@ -160,6 +163,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-UI-33 (implements UI-18, extends NG-UI-14): Dialogs set their label through `mat-dialog-title` (`ariaLabelledBy`), and when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly in `afterClosed()`.
 - NG-UI-36: Date inputs use `provideDateFnsAdapter` with parse formats for every supported locale, never the native date adapter:
 - NG-UI-37: A button or form control that stays focusable while unavailable uses Material's input, `[disabled]` with `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]`.
+- NG-UI-38: Large text (200 %, A11Y-13) is designed for, because several Material defaults ignore the root font size or clip.
 - NG-UI-35 (implements UI-19): The shared loading, empty and error components in `src/shared/ui` use a labelled `mat-progress-bar` or spinner for loading and a `matButton` for the next action or retry;
 - NG-UI-34: Fonts and icon fonts are self-hosted with the app.
 
@@ -182,4 +186,6 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-STATE-12: Provide stores at component or route level by default (`providers: [OrdersStore]`).
 - NG-STATE-13: The events plugin (`@ngrx/signals/events`) and classic `@ngrx/store` require an ADR.
 - NG-STATE-14: Store tests are adapter integration tests (TEST-ARCH-03):
+- NG-STATE-19: Saves of one item run through a per-key queue, and an optimistic change is rolled back only while the screen still shows it.
+- NG-STATE-20: Route-level stores that show linked numbers stay independent; the page forwards.
 - NG-STATE-15: Store rules are checked by `@ngrx/eslint-plugin` (`signalsTypeChecked`, angular-tooling.md) and dependency-cruiser (NG-STATE-02).

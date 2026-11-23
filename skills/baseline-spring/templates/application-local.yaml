@@ -9,10 +9,6 @@ spring:
       # profiles:
       #   active: tools,auth                 # optional Compose profiles, see compose.yaml
 
-app:
-  resilience:
-    transaction-guard: fail           # fail fast on remote calls inside a transaction (SPRING-RES-04)
-
 springdoc:
   api-docs:
     enabled: true                     # local only; deployed it stays off (SPRING-API-10)
