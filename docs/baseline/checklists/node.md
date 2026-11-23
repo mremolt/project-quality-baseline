@@ -13,6 +13,7 @@ The agent checklists of the node docs, one section per doc, titled like the doc.
 - [ ] No blocking call on the request path; no floating promise (NODE-ARCH-10/11)?
 - [ ] dependency-cruiser green and its rules not loosened?
 - [ ] Authorization refusals throw `AccessDeniedError` (403), objects the caller may not know `NotFoundError` (NODE-ARCH-07)?
+- [ ] Mail in `adapter/out/mail`, file writers in one `adapter/out/file` with a folder per format (NODE-ARCH-01)?
 
 ## Node.js Tooling
 
@@ -37,3 +38,4 @@ The agent checklists of the node docs, one section per doc, titled like the doc.
 - [ ] Nonce CSP per response, HTML `no-store`, deep-link 404s, report endpoint limited (NODE-BFF-09)?
 - [ ] Threat model and the tests of NODE-BFF-04..09 in CI (NODE-BFF-10)?
 - [ ] Pre-login state expires within 10 minutes, purged, public routes rate-limited and the limit recorded in chapter 7 (NODE-BFF-11)?
+- [ ] Long-open page keeps its work state on the server instead of a longer idle timeout (NODE-BFF-07)?

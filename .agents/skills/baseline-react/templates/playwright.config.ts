@@ -15,6 +15,7 @@ export default defineConfig({
   testDir: 'e2e',
   forbidOnly: Boolean(process.env['CI']),
   retries: process.env['CI'] ? 1 : 0, // TS-TEST-31
+  workers: process.env['CI'] ? 2 : undefined, // capped in CI: load-dependent timing is not a fix (TS-TEST-31)
   reporter: process.env['CI'] ? 'github' : 'list',
   use: {
     baseURL: smokeBaseUrl ?? 'http://localhost:4173',

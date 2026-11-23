@@ -16,15 +16,15 @@ src/
     application/          ← one use-case class per use case
     ports/in/             ← use-case interfaces, command/query schemas and factories, result types
     ports/out/            ← narrow outgoing ports
-    adapter/in/<tech>/    ← rest/v1, messaging, scheduling
-    adapter/out/<tech>/   ← persistence, http (+ generated/), messaging, metrics
+    adapter/in/<tech>/    ← rest/v1, messaging, scheduling, demo
+    adapter/out/<tech>/   ← persistence, http (+ generated/), messaging, mail, file, metrics
     <context>.tokens.ts   ← injection tokens for the context's ports; imports only ports
     index.ts              ← public API for other contexts
   platform/               ← cross-cutting code in the same rings (platform/domain, platform/adapter/…, platform/config)
 openapi/                  ← committed spec
 ```
 
-- **NODE-ARCH-01: New backends use this layout.** Adapter folders are named after the technology (`adapter/out/persistence`, `adapter/in/messaging`). Versioned REST APIs get one folder per version with their own schemas (ARCH-ORG-03). Tests sit next to the code (`*.test.ts`, container-backed `*.it.test.ts`).
+- **NODE-ARCH-01: New backends use this layout.** Adapter folders are named after the technology (`adapter/out/persistence`, `adapter/in/messaging`): outgoing mail and its outbox in `adapter/out/mail`, writers of generated files (CSV, Excel, PDF) in one `adapter/out/file` with a sub-folder per format, so the formats share helpers without breaking ARCH-DEP-05. Versioned REST APIs get one folder per version with their own schemas (ARCH-ORG-03). Tests sit next to the code (`*.test.ts`, container-backed `*.it.test.ts`).
 - **NODE-ARCH-02: `src/platform` holds what several contexts share**, in the same rings: `platform/domain` (error base classes, `Caller`, shared value objects; entry `platform/domain/index.ts`), `platform/ports` (ports every context uses, such as `TransactionPort`; entry `platform/ports/index.ts`), `platform/adapter` (problem-details filter, auth guard, health, database instance, transaction adapter and migrations), `platform/config` (configuration schemas). A context core imports only these two entry files from the platform.
 - **NODE-ARCH-03: Contexts import each other only through `index.ts`** (ARCH-ORG-09). The index exports the published `ports/in` contracts, their tokens and the context's module; a consuming context calls them from an outgoing adapter.
 

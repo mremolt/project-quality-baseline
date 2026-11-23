@@ -74,6 +74,9 @@ Placement follows the hexagon: timeouts, retries, circuit breakers, concurrency 
 - **RES-JOB-04: A request that needs one remote call per item of a bulk input commits first and hands the calls to a job.** The request budget (RES-TMO-04) bounds the whole request, so a loop of remote calls inside it fails above a few dozen items, after the commit, with the rest never done. The use case stores the work per item (an outbox row or a status column such as `PENDING`), the job processes items in bounded batches (RES-JOB-03) with the retries of RES-RTY, and the request answers with the committed result and the pending count. A repeated run of the same input also schedules the items whose remote state is not final, so a failed half is repaired by running it again.
   *Why:* an import of a few dozen users that provisions each one in an identity provider exceeds a 10 s budget, answers 503 after the commit, and leaves the remaining users unprovisioned for good, because the second upload reports them "unchanged".
 
+- **RES-JOB-05: A scheduled job that must act once per business fact claims the fact with a primary-key insert before acting.** Examples: warn once per budget threshold, remind once per month and person. The claim is `insert … on conflict do nothing` on a table keyed by the fact (budget, threshold) in the same transaction as the action or its outbox row; only the instance whose insert affected a row acts. A concurrency test with many parallel claims proves exactly one winner (ARCH-UC-16).
+  *Why:* a cluster lock prevents parallel runs but not a second run tomorrow; the claim row makes "once" a database fact.
+
 ### Caching
 
 - **RES-CCH-01: A cache is an adapter concern.** It wraps an outgoing port's implementation (or sits in the outgoing adapter), never in `domain`, `ports` or `application`. The core does not know whether an answer came from a cache.

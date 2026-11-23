@@ -23,9 +23,7 @@ export class IcuTranspiler implements TranslocoTranspiler {
     }
     if (Array.isArray(value)) {
       return value.map((item: unknown) =>
-        this.transpile(
-          params ? { value: item, params, translation, key } : { value: item, translation, key },
-        ),
+        this.transpile(params ? { value: item, params, translation, key } : { value: item, translation, key }),
       );
     }
     return value;

@@ -11,6 +11,7 @@ const chromium = 'chromium' as const;
 export default defineConfig({
   testDir: './e2e',
   retries: process.env['CI'] ? 1 : 0, // TS-TEST-31
+  workers: process.env['CI'] ? 2 : undefined, // capped in CI: load-dependent timing is not a fix (TS-TEST-31)
   forbidOnly: Boolean(process.env['CI']),
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {

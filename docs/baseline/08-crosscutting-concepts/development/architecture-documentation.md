@@ -32,6 +32,7 @@ The sync creates these project-owned files from the baseline's templates once; a
 - **DOC-ARC-08: The baseline follows the same structure.** New baseline docs go into the arc42 chapter of their content under `docs/baseline/`; cross-cutting topics get a folder in chapter 8. Moving a doc never changes rule IDs.
 - **DOC-ARC-09: The baseline repository keeps `ARCHITECTURE.md` at its root current.** It is the summary of the baseline's architecture, technologies and decisions for human readers. A change to the baseline that alters any of these updates the file in the same change. It describes the current state only: no changelog, no dates of changes, no superseded or reverted decisions.
   *Why:* a summary that lags behind the rules, or mixes in history, misleads the readers it is written for; history is in git.
+- **DOC-ARC-10: Product business rules live in chapter 8, section "Business rules"; open assumptions in `docs/architecture/open-questions.md`.** Business rules are the agreed answers the code implements (period definitions, crediting rules, the source of holidays), numbered so code, tests and ADRs can cite them. An assumption made while the answer is open goes into the open-questions log with the question, the assumption and who decides; once answered it moves to the business rules.
 
 ## What goes where (product vs. baseline)
 
@@ -44,7 +45,7 @@ The sync creates these project-owned files from the baseline's templates once; a
 | 5 Building block view | Bounded contexts, features, adapters per component | [05-building-block-view](../../05-building-block-view/README.md) |
 | 6 Runtime view | Important business scenarios | [06-runtime-view](../../06-runtime-view/README.md) for the generic flows |
 | 7 Deployment view | Environments, infrastructure, delivery platform mapping, configuration keys and secret sources, rollout, recovery targets | [07-deployment-view](../../07-deployment-view/README.md) |
-| 8 Cross-cutting concepts | Domain concepts, product-specific additions | [08-crosscutting-concepts](../README.md) |
+| 8 Cross-cutting concepts | Domain concepts, business rules (DOC-ARC-10), product-specific additions | [08-crosscutting-concepts](../README.md) |
 | 9 Architecture decisions | ADR index | — |
 | 10 Quality requirements | Product scenarios with numbers | [10-quality-requirements](../../10-quality-requirements/README.md) |
 | 11 Risks and technical debt | Risks, shortcut ADRs, debt | [11-risks-and-technical-debt](../../11-risks-and-technical-debt/README.md) |

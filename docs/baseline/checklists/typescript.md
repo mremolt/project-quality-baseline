@@ -12,7 +12,7 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] Tokens in `<feature>.tokens.ts`; UI injects use-case contracts, never outgoing ports; stores call use cases only (TS-ARCH-03)?
 - [ ] N+1 check done for new data loading?
 - [ ] Component logic limited to rendering + forwarding intent?
-- [ ] Cross-feature imports only via `index.ts`; another feature's use cases only through its published API provider (TS-ARCH-19)?
+- [ ] Cross-feature imports only via `index.ts`; another feature's use cases only through its published API provider, which exports at most pure domain functions besides; another audience's data through an own read use case; multi-feature components in `shared/ui` with a structural input (TS-ARCH-19)?
 - [ ] Routes only in `<feature>.routes.ts`, loaded with a dynamic `import()` from the app routes (TS-ARCH-20)?
 - [ ] HTTP errors mapped to domain errors in the adapter; the `TechnicalError`s it creates reported once, those it receives passed on unreported; no status codes above it (TS-ARCH-18)?
 - [ ] dependency-cruiser green with `tsPreCompilationDeps: true`, rules not loosened?
@@ -60,8 +60,8 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 - [ ] Reflow and text-spacing checks on `@responsive` screens; resize-transition test for shells and list-detail screens?
 - [ ] Target size asserted at `compact`; `target-size` proven to have run?
 - [ ] Status messages, route title and focus (link, back, query-only change) and form errors asserted (TS-TEST-23/24/26); shell and screen ARIA snapshots (TS-TEST-25)?
-- [ ] No new retries or timeouts to hide a flaky test; pull-request tier within its time budget?
-- [ ] `e2e:fast` at milestones; `e2e:smoke` at the first call of a new real dependency and after security-chain, session or SPA-serving changes; the full matrix once before the commit that closes a part (TS-TEST-33)?
+- [ ] No new retries or timeouts to hide a flaky test; a flaky test fixed within a week or quarantined with its ticket; CI `workers` capped (TS-TEST-31); pull-request tier within its time budget?
+- [ ] `e2e:fast` at milestones; `e2e:smoke` at the first call of a new real dependency and after security-chain, session or SPA-serving changes; the full matrix once before the commit that closes a part; the smoke runs against a freshly built image (TS-TEST-33)?
 - [ ] Shared fixture fails on unstubbed API calls, page errors, `console.error` and missing translations (TS-TEST-32)?
 
 ## TypeScript Testing
@@ -70,6 +70,9 @@ The agent checklists of the typescript docs, one section per doc, titled like th
 
 - [ ] Doubles via `mock<Contract>()`; no `vi.mock` of our own modules?
 - [ ] Component tests query by role; every component spec runs axe on its main states?
-- [ ] E2E: axe fixture on new screens/states, keyboard journey, request budget as an upper bound?
+- [ ] E2E: axe fixture on new screens/states, scanning only after animations settled (TS-TEST-12), keyboard journey, request budget as an upper bound, polled, counting catch-all calls and shell reads (TS-TEST-14)?
+- [ ] No `isVisible()` branches; list settled (exact row count) before acting on a row (TS-TEST-15)?
+- [ ] Scenario data unique and looked up by exact name or id; shared state restored in teardown; no empty-table or fresh-stack assumption (TS-TEST-34)?
+- [ ] No waiting out a business rule: state arranged through the API with past timestamps (TS-TEST-35)?
 - [ ] Responsive, theme and screen reader checks as in [typescript-e2e.md](typescript.md)?
 - [ ] Contract change → stubs still compile (typed by `operationId`)?

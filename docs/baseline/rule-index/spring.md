@@ -27,6 +27,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-ARCH-01: New services use the package structure above.
 - SPRING-ARCH-02: `@Configuration` classes never go into a separate configuration package.
 - SPRING-ARCH-03: Business exceptions never extend Spring exceptions (e.g. `ResponseStatusException`).
+- SPRING-ARCH-20: Demo and seed data of a running installation are loaded by an incoming adapter that calls the use cases.
 - SPRING-ARCH-04: Core beans are found by component scanning using custom stereotype annotations that make the architecture visible:
 - SPRING-ARCH-05: Feature annotations go on the adapter's own `@Configuration`, never on the main class (`@EnableJpaRepositories`, `@EntityScan`, `@EnableKafka`, …).
 - SPRING-ARCH-06: Constructor injection only (final fields, single constructor).
@@ -83,6 +84,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-API-12: `LocalDateTime` and `LocalTime` never appear as `format: date-time` in the spec (API-REST-02).
 - SPRING-API-13: The exported spec is independent of the test run: `servers` is fixed and the error schema is declared.
 - SPRING-API-14: Parameters the server resolves itself never appear in the spec.
+- SPRING-API-15: A binary download declares its media type with a `string`/`binary` schema.
 
 ## [Spring Boot: REST and JSON Conventions](../08-crosscutting-concepts/api/spring-rest.md)
 
@@ -158,6 +160,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-MSG-05: One `DefaultErrorHandler` bean with a `DeadLetterPublishingRecoverer`, an explicit DLT name and a bounded exponential backoff.
 - SPRING-MSG-06: Dead letters are counted.
 - SPRING-MSG-07: The outbox is a table plus a relay inside `adapter.out.kafka`.
+- SPRING-MSG-13: A side effect after commit without a broker (an e-mail, a call to an external system) uses the same outbox shape inside its own adapter.
 - SPRING-MSG-08: Consumers deduplicate through an inbox port unless the use case is naturally idempotent (MSG-IDM-02).
 - SPRING-MSG-09: Offsets are committed by the container.
 - SPRING-MSG-11: The AsyncAPI document is generated with Springwolf and committed (MSG-CON-01):
@@ -198,6 +201,7 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-DB-16: Invariants across rows are enforced in PostgreSQL, atomically (ARCH-UC-16).
 - SPRING-DB-17: Every adapter query on a table that grows has an index for its filter and sort columns, and every foreign-key column is indexed (PostgreSQL does not index foreign keys itself).
 - SPRING-DB-18: Constraint violations are mapped by constraint name, never by message text.
+- SPRING-DB-20: Reference data that a read creates lazily is generated in the persistence adapter, in its own `REQUIRES_NEW` transaction and idempotently.
 
 ## [Spring Boot: Resilience and Idempotency](../08-crosscutting-concepts/resilience/spring.md)
 
@@ -251,13 +255,14 @@ Every rule ID of the spring docs with its headline, grouped by doc. The headline
 - SPRING-SEC-01: The `SecurityFilterChain`, CORS configuration and the `Authentication → Caller` conversion live in `adapter.in.rest` (next to what they configure, SPRING-ARCH-02).
 - SPRING-SEC-02: Authorization is plain code on a `Caller`; the REST adapter authenticates, the use case authorizes (ARCH-UC-15).
 - SPRING-SEC-39: `Caller` is a record in `domain`, built in one place per adapter, and never null.
-- SPRING-SEC-03: The backend is an OAuth2 resource server (`spring-boot-starter-security-oauth2-resource-server`, JWT validated through `issuer-uri`).
+- SPRING-SEC-03: The backend API is an OAuth2 resource server as soon as a non-browser client calls it (`spring-boot-starter-security-oauth2-resource-server`, JWT validated through `issuer-uri`):
 - SPRING-SEC-04: Stateless and token-based means CSRF off for that chain; a cookie-authenticated chain keeps CSRF on.
 - SPRING-SEC-05: CORS is one `CorsConfigurationSource` with explicit origins from configuration.
 - SPRING-SEC-06: Secrets: see SEC-INC-01 and CFG-05; nothing sensitive is logged (SPRING-LOG-08).
 - SPRING-SEC-07: Actuator is allow-listed:
 - SPRING-SEC-08: Browser applications authenticate through a backend-for-frontend (BFF) that performs the OIDC login, keeps the tokens server-side and gives the browser a session cookie (CSRF protection on).
 - SPRING-SEC-09: Whether the BFF is its own component (`backend-bff/`, REPO-LAY-03) or an additional filter chain (`spring-boot-starter-security-oauth2-client`) in the backend is decided per project in an ADR.
+- SPRING-SEC-41: Users the product administers are provisioned in the IdP through an outgoing port, never by a second user store with passwords:
 - SPRING-SEC-10: Every endpoint has security tests for 401 (no token), 403 (insufficient permission) and the success case, with the `jwt()` request post-processor from the `*-security-test` starters.
 - SPRING-SEC-11: Authorization rules are unit-tested on `Caller` without a Spring context (use-case tests, London style for the ports, TEST-TDD).
 - SPRING-SEC-12: The forwarded-header strategy is set explicitly per deployment, never left to the default:

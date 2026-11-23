@@ -50,6 +50,8 @@ Kubernetes and Compose examples follow the rules. The product's chapter 7 record
 - **REL-RUN-06: The platform's termination grace period is longer than the application's shutdown budget** plus any pre-stop delay plus a margin (OBS-04, Spring: SPRING-OBS-04; NestJS: NEST-OBS-04).
 - **REL-RUN-07: Images carry OCI labels** `org.opencontainers.image.source` (repository URL), `org.opencontainers.image.revision` (commit SHA) and `org.opencontainers.image.title`. The release version is not a label, because it is attached after the build (REL-CD-01). A creation timestamp only if the build sets it reproducibly (TS-TOOL-16, JAVA-TOOL-23).
 
+- **REL-RUN-08: A feature that depends on what the image provides beyond the runtime (fonts, AWT, native libraries, locale data, CA certificates) is exercised against the real image.** Minimal and distroless images have no fontconfig, no fonts and few native libraries; code that renders files works on every developer machine and in every test and fails only in the container. Prefer libraries that need none of it (embedded fonts, no AWT); otherwise the smoke tier runs one scenario of the feature against the built image (EXP-08).
+
 ### Example: Kubernetes
 
 ```yaml

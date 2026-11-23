@@ -53,6 +53,8 @@ export const test = base.extend<Fixtures>({
   },
   expectAccessible: async ({ page }, use, testInfo) => {
     await use(async (label) => {
+      // Scan a settled page only: a fading state layer or an opening dialog reports false findings (TS-TEST-12)
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
       const results = await new AxeBuilder({ page }).withTags([...AA, ...AAA]).analyze();
       await testInfo.attach(`axe-${label}`, {
         body: JSON.stringify(results.violations, null, 2),

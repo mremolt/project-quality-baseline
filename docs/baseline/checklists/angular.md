@@ -11,7 +11,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Template and styles in dedicated `.html` / `.scss` files, no inline `template:` or `styles:` outside spec test hosts (NG-ARCH-21)?
 - [ ] Use cases plain, wired in `<feature>.providers.ts`; adapters use `inject()` and are bound with `useExisting`; tokens in `<feature>.tokens.ts`?
 - [ ] No `HttpClient`/`httpResource`/generated client outside `adapter/out/http`?
-- [ ] Forms validated with the command's zod schema; the factory typed `z.input<typeof Schema>`?
+- [ ] Forms validated with the command's zod schema, its messages translation codes (NG-ARCH-16); the factory typed `z.input<typeof Schema>`?
 - [ ] Feature routes loaded lazily from `app.routes.ts`, not via `index.ts`; another feature's use cases only via its `provide<Feature>Api()`?
 - [ ] Failed chunk load reloads once, guarded by the release version (NG-ARCH-20)?
 - [ ] N+1 check done?
@@ -42,7 +42,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Template a11y rules green without new disables?
 - [ ] Security lint rules green, `bypassSecurityTrust*` not suppressed?
 - [ ] No developer-preview or experimental API outside the allow-list (NG-TOOL-09)?
-- [ ] No `no-extraneous-class` or `unbound-method` switched off (NG-TOOL-11)? Bundle budgets only raised by a reviewed change (NG-TOOL-05)?
+- [ ] No `no-extraneous-class` or `unbound-method` switched off (NG-TOOL-11)? Bundle budget warning set from the first feature build + 10 %, a warning fixed in the same step, every raise recorded in chapter 10 (NG-TOOL-05)?
 - [ ] `check` and `verify` run through `scripts/verify.mjs` (NG-TOOL-04, TS-TOOL-19)?
 - [ ] `npm run verify` green?
 
@@ -53,6 +53,7 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] ICU through the eval-free `IcuTranspiler`, no `@jsverse/transloco-messageformat` (NG-I18N-01)?
 - [ ] Every new user-visible string, including `aria-label` and `title`, uses a key with context (NG-I18N-03/05)?
 - [ ] Stores and mappers return codes or keys only (NG-I18N-04)? Scope catalogs without a root key, route titles in the shell catalog (NG-I18N-13)?
+- [ ] No `translate()` in a `computed` for a lazy scope; texts built in the template (NG-I18N-14)?
 - [ ] Money, dates and sorting go through the shared pipes or `Intl` with the active locale (NG-I18N-08)?
 - [ ] `lang`, `dir`, formatting pipes and Material locale follow the active-language signal (NG-I18N-07)?
 - [ ] Formatting pipes impure with a per-locale cache or pure with the locale as an argument; language-switch test (NG-I18N-08, TEST-I18N-08)?
@@ -99,7 +100,10 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 [08-crosscutting-concepts/ui/angular-material.md](../08-crosscutting-concepts/ui/angular-material.md)
 
 - [ ] Material component used where one exists; gap components built from CDK/Aria with a keyboard test?
-- [ ] Only `--mat-sys-*` tokens in styles; no `.mat-mdc-*` or `::ng-deep`?
+- [ ] Only `--mat-sys-*`, `--app-space-*`/`--app-motion-*` and the one `--app-color-*` family (light, dark, high contrast) in styles; runtime values through a host-bound custom property; no `.mat-mdc-*` or `::ng-deep` (NG-UI-05)?
+- [ ] Fixed-colour panels and state-by-background components have a `forced-colors` rule (NG-UI-07)? Shared components never span grid columns themselves (NG-UI-22)?
+- [ ] Date inputs through `provideDateFnsAdapter` with per-locale parse formats, typed-date harness test (NG-UI-36)?
+- [ ] Focusable unavailable buttons bound with `[disabled]` + `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]` (NG-UI-37)?
 - [ ] Works in light, dark and high contrast; density doesn't shrink targets below 24 px?
 - [ ] Labels, errors, icon-button names, dialog focus handled?
 - [ ] Status via visible region or `Announcer`; route `title`; `RouteFocus` only on path changes; snackbar, spinner and table labelled; dialog focus restored when the trigger can vanish?
@@ -117,4 +121,5 @@ The agent checklists of the angular docs, one section per doc, titled like the d
 - [ ] Error mapper provided in `<feature>.providers.ts`, not root; no `adapter/out` or deep platform imports?
 - [ ] No DTOs, no HTTP, no other stores, no business rules in the store?
 - [ ] Scoped to component/route unless genuinely app-wide?
+- [ ] Shared store parts as exported `signalStoreFeature` constants (NG-STATE-16); effects track only their triggers, the body in `untracked` (NG-STATE-17)?
 - [ ] Error and rollback paths tested with mocked use cases; the store holds error keys, not text?

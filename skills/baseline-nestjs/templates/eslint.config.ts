@@ -141,6 +141,12 @@ export default defineConfig(
             'VariableDeclarator[id.name=/Request$/] Property[key.name=/^(ownerId|tenantId|role|roles|permissions|createdBy|createdAt)$/]',
           message: 'Set by the server from the Caller, never by the request (NEST-SEC-27).',
         },
+        {
+          selector:
+            "MethodDefinition:has(Decorator > CallExpression[callee.name=/^(Put|Patch)$/]):has(Decorator > CallExpression[callee.name='HttpCode'] > :matches(Literal[value=204], MemberExpression[property.name='NO_CONTENT']))",
+          message:
+            'An update answers 200 with the resource or its new version, never a bare 204 (API-REST-11, NEST-REST-18).',
+        },
       ],
     },
   },

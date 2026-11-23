@@ -111,4 +111,6 @@ Every rule ID of the typescript docs with its headline, grouped by doc. The head
 - TS-TEST-13: Keyboard journeys (A11Y layer L5):
 - TS-TEST-14: Request budgets per main screen (API-N1-06):
 - TS-TEST-15: No fixed waits (`waitForTimeout`).
+- TS-TEST-34: Every E2E scenario arranges its own data and leaves nothing another run depends on.
+- TS-TEST-35: An E2E test never waits out a business rule; it arranges the state through the API.
 - TS-TEST-16: The stubbed tier runs in Chromium, Firefox and WebKit; the smoke tier may use Chromium only.

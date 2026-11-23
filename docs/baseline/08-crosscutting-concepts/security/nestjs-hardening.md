@@ -79,8 +79,10 @@ Hardening for NestJS backends on Node on top of authentication and authorization
   - type detected from the content, not from the extension or the client's `Content-Type`;
   - stored under a server-generated name outside any served directory or in object storage; the client's file name is kept only as escaped metadata;
   - scanned for malware by a capability the product names before anyone else can download the file; quarantined until then;
-  - archives are not unpacked, or only with limits on entry count, total uncompressed size and compression ratio, and entry paths checked (no `..`, no absolute paths, no links);
+  - archives (including Office files, which are ZIPs) are not unpacked, or only with limits on entry count, total uncompressed size and compression ratio, or counted caps on the inflated bytes per entry and in total (a ratio cannot be checked while streaming), and entry paths checked (no `..`, no absolute paths, no links);
   - downloads authorized per object like any read (NEST-SEC-08, NEST-SEC-29), served with `Content-Disposition: attachment`, a safe file name, `X-Content-Type-Options: nosniff` and the content type stored at upload; active content (HTML, SVG, PDF shown inline) only from a separate origin without the session cookie, or not inline at all.
+
+  Tests build hostile files in memory (oversized entries, too many entries, `../` paths, wrong content behind a known extension) and keep at least one fixture per format written by a real producer (an office suite). Importing structured data from an upload follows the bulk-import default (ARCH-UC-19) of [use-cases.md](../../05-building-block-view/use-cases.md).
 
 ## Database, Kafka and image
 

@@ -85,7 +85,7 @@ class ${name}ServiceTest {
     void firstBehaviour() {}
 
     // Cross-user test (SPRING-SEC-16): user B addresses user A's object and gets NotFoundException (SPRING-SEC-36).
-    // Add @Tag("cross-user") when it asserts; until then ArchitectureTest.everyUseCaseHasACrossUserTest stays red,
+    // Add @Tag("cross-user") to this method when it calls the service and asserts; until then ArchitectureTest.everyUseCaseHasACrossUserTest stays red,
     // unless the use case takes no caller-supplied id and is listed in NO_CALLER_SUPPLIED_ID with a reason.
     @Test
     @Disabled("write the cross-user test, tag it, then remove this line")

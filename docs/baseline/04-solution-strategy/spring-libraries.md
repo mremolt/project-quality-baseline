@@ -15,6 +15,8 @@ Which libraries a service uses for which job, and which it does not. Version pol
 | (Flyway came with `flyway-core`) | `spring-boot-starter-flyway` **and** `org.flywaydb:flyway-database-postgresql`. Without the starter, migrations silently do not run |
 | `spring-boot-starter-test` alone | plus one `*-test` starter per technology (`-webmvc-test`, `-data-jpa-test`, `-kafka-test`, …); `spring-boot-testcontainers` |
 
+  The BOM also overrides the *transitive* versions of libraries it manages, and dependency convergence still passes. A library that fails after being added (veraPDF with JAXB 4 instead of the 2.3 it needs: "flavour not supported") is first checked with `./mvnw dependency:tree -Dverbose` against Boot's overrides; the fix is a pin of the affected artifacts in the narrowest scope, with a comment naming the library and the reason.
+
 - **SPRING-LIB-02: Spring MVC with virtual threads** (`spring.threads.virtual.enabled=true`). WebFlux needs an ADR that names the signal (streaming, reactive-only dependency).
 - **SPRING-LIB-03: `spring-boot-starter-validation` is present in every service with request bodies.** Without a validator on the classpath, `@Valid` is silently ignored and invalid bodies are accepted.
 - **SPRING-LIB-04: Jackson 3 (`tools.jackson.*`)** through the Boot starters. Jackson annotations still come from `com.fasterxml.jackson.annotation`. Neither package may appear in `domain` or `ports` (ArchUnit template). `spring-boot-jackson2` is a migration aid, not for new code. springdoc 3.x still brings `jackson-databind` 2 onto the compile classpath, so the ArchUnit rule `noJackson2` forbids `com.fasterxml.jackson.databind..` and `com.fasterxml.jackson.core..` in all production code (annotations stay allowed).

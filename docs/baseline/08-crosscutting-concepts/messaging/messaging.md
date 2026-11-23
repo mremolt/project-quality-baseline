@@ -14,7 +14,7 @@ Placement follows the hexagon (SPRING-ARCH-12; NestJS: [nestjs.md](nestjs.md)): 
 | No duplicates from producer retries (MSG-PUB-03) | Idempotent producer | Service Bus duplicate detection by message id; otherwise the consumer's deduplication (MSG-IDM-02) covers it |
 | Per-consumer dead-letter destination (MSG-DLT-01) | One DLT topic per consumer service | RabbitMQ: dead-letter exchange per consumer queue; Service Bus: the dead-letter subqueue of the consumer's subscription |
 
-**Outboxes without a broker.** MSG-PUB-01..04 apply to every outbox, including one whose relay sends e-mail or calls an HTTP API. A product without a broker (no Kafka, "no messaging" in its ADRs) still follows them for its outboxes; only the broker-specific rules (topics, consumers, dead-letter topics) do not apply.
+**Outboxes without a broker.** MSG-PUB-01..04 apply to every outbox, including one whose relay sends e-mail or calls an HTTP API. A product without a broker (no Kafka, "no messaging" in its ADRs) still follows them for its outboxes; only the broker-specific rules (topics, consumers, dead-letter topics) do not apply. Its relay is a scheduled job (RES-JOB-01..03) that claims due rows from the outbox table under a cluster-wide lock and sends them, the default for e-mail after commit; no broker is introduced for it.
 
 ## Rules
 

@@ -138,7 +138,7 @@ export default defineConfig({
   - any chunk contains `sourceMappingURL` (REACT-OBS-06);
   - `dist/config.json` exists (CFG-02, REACT-CFG-01).
 
-  The budgets are per product; the defaults leave about 10 % headroom over the reference app (initial 206.5 kB, lazy feature chunk 54.1 kB). Raising a budget is a reviewed change with the reason in the commit. A static import of a feature composition into a routes file fails both this check and `check:arch`.
+  The budgets are per product; the defaults leave about 10 % headroom over the reference app (initial 206.5 kB, lazy feature chunk 54.1 kB). Raising a budget is a reviewed change that records the new value and its reason in the product's chapter 10 (quality requirements), as NG-TOOL-05. A static import of a feature composition into a routes file fails both this check and `check:arch`.
   *Why:* the initial bundle decides the first paint, and a single wrong import moves a whole feature into it without any other signal.
 
 ## Updates

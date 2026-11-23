@@ -67,6 +67,7 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-I18N-02: Catalogs are nested JSON, one file per language and scope, next to the feature:
 - NG-I18N-03: Keys are stable semantic ids `<feature>.<screen-or-component>.<element>[.<state>]`, lower-camel segments, never the English sentence.
 - NG-I18N-13: A lazy scope is the key prefix, so its catalog has no root key for it.
+- NG-I18N-14: Texts of a lazy scope are built in the template, never with `transloco.translate()` inside a `computed`.
 - NG-I18N-04: Stores, use cases and mappers return codes or keys, never translated text.
 - NG-I18N-05: No hard-coded user-visible text in templates, TypeScript, `aria-label`, `title`, `placeholder`, `mat-label`, dialog titles, snackbar texts and the document `<title>`.
 - NG-I18N-06: Plural, select and gender use ICU MessageFormat through the ICU transpiler of NG-I18N-01;
@@ -155,8 +156,10 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-UI-31 (implements UI-16): Route title and focus in Angular:
 - NG-UI-32 (implements UI-17): Snackbars (`MatSnackBar`) with an action have no `duration`.
 - NG-UI-33 (implements UI-18, extends NG-UI-14): Dialogs set their label through `mat-dialog-title` (`ariaLabelledBy`), and when the trigger may disappear (opened from a menu, row deleted), focus is restored explicitly in `afterClosed()`.
+- NG-UI-36: Date inputs use `provideDateFnsAdapter` with parse formats for every supported locale, never the native date adapter:
+- NG-UI-37: A button that stays focusable while unavailable uses Material's input, `[disabled]` with `disabledInteractive` or `[aria-disabled]`, never `[attr.aria-disabled]`.
 - NG-UI-35 (implements UI-19): The shared loading, empty and error components in `src/shared/ui` use a labelled `mat-progress-bar` or spinner for loading and a `matButton` for the next action or retry;
-- NG-UI-34: Fonts and icon fonts are self-hosted with the app: Roboto / Roboto Flex and Material Symbols from npm packages (`@fontsource/*`) or files in `public/`, referenced from `src/styles/`.
+- NG-UI-34: Fonts and icon fonts are self-hosted with the app.
 
 ## [Angular State Management: NgRx Signal Store](../08-crosscutting-concepts/ui/angular-state-management.md)
 
@@ -170,6 +173,8 @@ Every rule ID of the angular docs with its headline, grouped by doc. The headlin
 - NG-STATE-08: Async work awaits use cases (they return `Promise`, TS-D1).
 - NG-STATE-09: Errors are mapped in one place per feature (ARCH-ADP-05):
 - NG-STATE-10: Optimistic updates snapshot state with `getState`, patch, call the use case, and roll back on failure.
+- NG-STATE-16: State and methods shared by several stores are one `signalStoreFeature` exported as a constant (`export const withProjectTime = signalStoreFeature(...)`), never a function returning it:
+- NG-STATE-17: An `effect` tracks only its declared triggers; the rest of its body runs in `untracked`.
 - NG-STATE-11: Stores don't cache backend data across screens.
 - NG-STATE-12: Provide stores at component or route level by default (`providers: [OrdersStore]`).
 - NG-STATE-13: The events plugin (`@ngrx/signals/events`) and classic `@ngrx/store` require an ADR.

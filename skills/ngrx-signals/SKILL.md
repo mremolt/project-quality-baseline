@@ -14,7 +14,7 @@ Signal-based view state for Angular, placed inside our hexagonal frontend. This 
 
 ## Baseline rules first
 
-Before generating or reviewing store code, read **`docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md`** (NG-STATE-01..15) and, for layout and wiring, `docs/baseline/05-building-block-view/typescript.md` (TS-ARCH-*). For tests also `docs/baseline/08-crosscutting-concepts/testing/typescript.md` (TS-TEST-*) and `docs/baseline/08-crosscutting-concepts/testing/tdd.md`.
+Before generating or reviewing store code, read **`docs/baseline/08-crosscutting-concepts/ui/angular-state-management.md`** (NG-STATE-01..17) and, for layout and wiring, `docs/baseline/05-building-block-view/typescript.md` (TS-ARCH-*). For tests also `docs/baseline/08-crosscutting-concepts/testing/typescript.md` (TS-TEST-*) and `docs/baseline/08-crosscutting-concepts/testing/tdd.md`.
 
 **If this skill and the docs disagree, the docs win.** Cite rule IDs (`NG-STATE-02`, `TS-ARCH-03`) when explaining a decision instead of restating the rule.
 

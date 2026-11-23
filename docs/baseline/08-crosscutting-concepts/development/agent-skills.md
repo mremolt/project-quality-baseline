@@ -70,6 +70,8 @@ The docs of one stack chain run to 50,000–100,000 words, more than an agent ca
 
 - **TOOL-SKL-14: Agents edit code with the editor tools, or run the formatter before a scripted multi-line replacement.** Prettier, Spotless and `ng lint --fix` rewrite line breaks, quotes and import order, so a `sed`, Python or Node replacement written against the text as the agent last saw it no longer matches and changes nothing, without an error. A scripted replacement runs only on freshly formatted files, and the script fails when a pattern does not match (count the replacements, or assert before writing).
   *Why:* in the first test drive five scripted replacements silently did not apply after a formatter run, and each cost a failed build to find.
+- **TOOL-SKL-15: On a red gate, agents run the autofix commands first and hand-fix only what remains; they never loosen a rule to get green.** Autofix: `npm run format` and `npm run lint:fix` (`prettier --write`, `eslint --fix`; Angular `ng lint --fix`), `./mvnw spotless:apply` (Java). Then re-run the failing stage and fix the remaining findings by hand. The entry skills' "Finish" step says so (SEC-REV-02 for the "never loosen" part).
+  *Why:* editing fixable findings by hand costs a whole read of the report and is reformatted afterwards anyway.
 
 ## Distribution to consuming projects
 
@@ -80,7 +82,7 @@ Products get the baseline by running the sync from the baseline repository again
 | Linux, macOS, Git Bash | `scripts/sync-baseline.sh <project-dir> [--force] [--host <host>]` |
 | Windows CMD, PowerShell | `scripts\sync-baseline.cmd <project-dir> [--force] [--host <host>]` |
 
-`--force` runs despite uncommitted changes in the project (otherwise the sync stops, so its result is a reviewable diff). A project without commits has nothing to diff against: the check is skipped there, and a folder that isn't a git repository yet gets a manual step to run `git init`. `--host` is `github`, `gitlab`, `azure` or `bitbucket` and decides where the pull request template goes; without it the host is detected from the `origin` remote, and if that fails the template is skipped with a manual step. The sync stops without changing anything if `AGENTS.md` or `.gitattributes` has a start marker without its end marker. The required Node.js version is the baseline's `package.json` `engines.node`; the sync checks it.
+`--force` runs despite uncommitted changes in the project (otherwise the sync stops, so its result is a reviewable diff). A project without commits has nothing to diff against: the check is skipped there, and a folder that isn't a git repository yet gets a manual step to run `git init`. `--host` is `github`, `gitlab`, `azure` or `bitbucket` and decides where the pull request template goes; without it the host is detected from the `origin` remote, and if that fails the template goes to `docs/pull-request-template.md` with a manual step to re-run with `--host` once the project has one. The sync stops without changing anything if `AGENTS.md` or `.gitattributes` has a start marker without its end marker. The required Node.js version is the baseline's `package.json` `engines.node`; the sync checks it.
 
 **This table is the one list of what the sync does.** Other docs and the script header point here.
 
@@ -93,12 +95,14 @@ Products get the baseline by running the sync from the baseline repository again
 | `docs/security/{requirements,threat-model,exceptions,incident-runbook}.md` | project | each created once if missing (SEC-REQ-01, SEC-TM-01, SEC-VUL-03, SEC-INC-02) |
 | `docs/data-protection/{processing-record,deletion-concept}.md` | project | each created once if missing (DP-INV-01/02) |
 | `SECURITY.md` | project | created once if missing (SEC-INC-02) |
-| Pull request template, from `templates/pull-request/` | project | created once if missing, at the host's path: GitHub `.github/pull_request_template.md`, GitLab `.gitlab/merge_request_templates/Default.md`, Azure DevOps `.azuredevops/pull_request_template.md`, Bitbucket `docs/pull-request-template.md` (Bitbucket reads no template file; paste it into the repository's default description) (SEC-REV-01, API-N1-02) |
+| `docs/accessibility.md` | project | created once from `templates/accessibility.md` if missing and a TypeScript frontend stack is declared (A11Y-19/26/27) |
+| Pull request template, from `templates/pull-request/` | project | created once if missing, at the host's path: GitHub `.github/pull_request_template.md`, GitLab `.gitlab/merge_request_templates/Default.md`, Azure DevOps `.azuredevops/pull_request_template.md`, Bitbucket `docs/pull-request-template.md` (Bitbucket reads no template file; paste it into the repository's default description); no host known: `docs/pull-request-template.md` as the checklist until there is one (SEC-REV-01, API-N1-02) |
 | `frontend/public/.well-known/security.txt` | project | created once if missing and a `frontend/` folder exists (SEC-INC-02); other web apps copy `templates/well-known/security.txt` into their static folder |
 | `AGENTS.md` | shared | the block between `<!-- baseline:start` and `<!-- baseline:end -->` is replaced, keeping only the lines for the declared stacks; the project notes below it stay. Created if missing; without markers the block is prepended |
 | `CLAUDE.md` | project | created with `@AGENTS.md` if missing; if it exists without that line, a manual step is printed |
 | `.gitattributes` | shared | the block between `# baseline:start` and `# baseline:end` is replaced, or appended if missing |
-| `.baseline.json` | project | created once if missing, from the detected stacks ([declared stacks](#declared-stacks)); never changed afterwards |
+| `.baseline.json` | project | created once if missing, from the detected stacks ([declared stacks](#declared-stacks)); afterwards only `syncedCommit` is updated to the synced baseline commit |
+| Project copies of templates (`templates/`, `skills/<synced skill>/templates/`) | project | never touched; every file changed in the baseline since the `syncedCommit` of the last sync is printed as a manual step, so the project merges it into its copy |
 | `.agents/skills/<name>` for baseline skills | baseline | the shared skills and those of the declared stacks are replaced (never the baseline-only skills, see [declared stacks](#declared-stacks)); skills the baseline dropped, or that belong only to stacks the project does not declare, are removed (tracked in `.agents/skills/.baseline-skills`); the project's own skills stay |
 | `.claude/skills/<name>` | baseline | symlinks recreated (on Windows without symlink rights: junctions, with a manual step) |
 | `skills-lock.json` | shared | baseline entries of the copied skills merged in (baseline wins for its own entries); entries of dropped baseline skills, and of skills that belong only to undeclared stacks, removed; the project's entries stay |

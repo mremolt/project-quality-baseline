@@ -67,7 +67,7 @@ Load these when creating or editing Spring code (the `baseline-spring` skill doe
 | Any skill: `RestClient.create()` | Clients from the auto-configured builder with explicit timeouts (SPRING-RES-01, `noUnconfiguredHttpClients`) |
 | Any skill: `@Value("${…}")` | `@ConfigurationProperties` records, `@Validated` (SPRING-CFG-01/03) |
 | Any skill: `IllegalArgumentException` for invalid input, mapped to 400 | `DomainValidationException` from `domain`, mapped in REST and Kafka (JAVA-ARCH-12, SPRING-ARCH-18) |
-| Any skill: `@Service`, `@Component`, `@Repository` | Stereotypes `@UseCase`, `@WebAdapter`, `@PersistenceAdapter`, `@MessagingAdapter`, `@SchedulingAdapter`, `@MetricsAdapter` (SPRING-ARCH-04) |
+| Any skill: `@Service`, `@Component`, `@Repository` | Stereotypes `@UseCase`, `@WebAdapter`, `@PersistenceAdapter`, `@MessagingAdapter`, `@HttpClientAdapter`, `@MailAdapter`, `@FileAdapter`, `@SchedulingAdapter`, `@MetricsAdapter` (SPRING-ARCH-04) |
 | Any skill: `ResponseEntity<ApiError>` with a custom error body | `ProblemDetail`, business exceptions in `domain` (SPRING-ARCH-03, SPRING-REST-07) |
 | Any skill: `@MockBean`, `spring-boot-starter-web`, Jackson 2 imports | `@MockitoBean`, `spring-boot-starter-webmvc`, `tools.jackson` (SPRING-LIB-01) |
 | Any skill: package by feature, `controller/service/repository` | Ring layout `adapter / application / domain / ports` (SPRING-ARCH-01, ARCH-ORG-01) |

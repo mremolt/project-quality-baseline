@@ -23,3 +23,5 @@ The agent checklists of the java docs, one section per doc, titled like the doc.
 - [ ] New dependency reviewed, version from the BOM or `<properties>` (JAVA-TOOL-05)?
 - [ ] `./mvnw verify` green before finishing?
 - [ ] `verify-all` green before the commit, no failure ignored to collect output (JAVA-TOOL-24)? SpotBugs findings on fixed content fixed in code, not excluded (JAVA-TOOL-12)?
+- [ ] XML, FO, SVG or HTML built through StAX/DOM, never string concatenation; hostile-name test (JAVA-TOOL-25)?
+- [ ] Compile failure under `-Werror` diagnosed without `-q` (JAVA-TOOL-20)?

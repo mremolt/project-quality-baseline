@@ -16,12 +16,14 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
 | Use case, port, command, domain type | `docs/baseline/05-building-block-view/use-cases.md`, `docs/baseline/08-crosscutting-concepts/mapping/mapping-between-boundaries.md` |
 | Controller, DTO, JSON, errors, pagination, sorting, filtering | `docs/baseline/08-crosscutting-concepts/api/rest-conventions.md`, `docs/baseline/08-crosscutting-concepts/api/spring-rest.md`, `docs/baseline/08-crosscutting-concepts/api/spring-openapi.md`, `docs/baseline/08-crosscutting-concepts/api/openapi-contracts.md` |
 | Anything that loads data | `docs/baseline/08-crosscutting-concepts/api/avoiding-n-plus-one.md`, `docs/baseline/08-crosscutting-concepts/persistence/spring.md` |
-| Authentication, authorization, CORS, actuator | `docs/baseline/08-crosscutting-concepts/security/spring.md` |
+| Authentication, authorization, CORS, actuator, user provisioning in the IdP | `docs/baseline/08-crosscutting-concepts/security/spring.md` |
 | Headers, limits, errors, SSRF, JSON, uploads, audit events, DB/Kafka/image hardening | `docs/baseline/08-crosscutting-concepts/security/spring-hardening.md`, `security-review.md` |
 | Database, JPA or `JdbcClient` adapter, migration | `docs/baseline/08-crosscutting-concepts/persistence/spring.md`, `docs/baseline/07-deployment-view/spring-delivery.md` |
 | Library choice | `docs/baseline/04-solution-strategy/spring-libraries.md`, `docs/baseline/05-building-block-view/adapters.md` |
-| Kafka listener, producer, outbox, dead letters, AsyncAPI | `docs/baseline/08-crosscutting-concepts/messaging/spring.md` (shared: `messaging/messaging.md`) |
+| Kafka listener, producer, outbox (also mail after commit without a broker), dead letters, AsyncAPI | `docs/baseline/08-crosscutting-concepts/messaging/spring.md` (shared: `messaging/messaging.md`) |
 | Outbound HTTP client, timeouts, retries, `@ConcurrencyLimit`, `Idempotency-Key`, `@Scheduled` jobs, caching | `docs/baseline/08-crosscutting-concepts/resilience/spring.md` (shared: `resilience/resilience.md`) |
+| CSV, Excel or PDF export, file download | `docs/baseline/08-crosscutting-concepts/exports/file-exports.md`, `api/spring-openapi.md` (SPRING-API-15), `05-building-block-view/spring.md` (`@FileAdapter`) |
+| Demo or seed data | `docs/baseline/05-building-block-view/spring.md` (SPRING-ARCH-20) |
 | Configuration properties, environment variables, secrets | `docs/baseline/08-crosscutting-concepts/configuration/spring.md` (shared: `configuration/configuration.md`) |
 | Health, probes, shutdown, metrics, tracing | `docs/baseline/08-crosscutting-concepts/observability/spring.md` (shared: `observability/observability.md`) |
 | Migrations at deployment, DB roles, release version | `docs/baseline/07-deployment-view/spring-delivery.md` (shared: `delivery-and-release.md`) |
@@ -77,7 +79,7 @@ Full table: `docs/baseline/stacks/spring.md#skill-overrides`.
 5. **Integration**: new outbound client → connect and read timeouts set (SPRING-RES-01); no remote call inside `@Transactional` (SPRING-RES-03); new Kafka consumer → idempotent (SPRING-MSG-08), dead-letter topic named and owned (SPRING-MSG-05).
 6. **Contract**: changed controller → regenerate the spec with `./mvnw verify -Dopenapi.update=true` (`OpenApiSpecIT`) and commit it with the change (SPRING-API-08).
 7. **Shortcuts**: if you need one (e.g. skipping a use case for trivial CRUD), propose it and draft an ADR; never take it silently (ARCH-SC-06).
-8. **Finish** with `cd backend && ./mvnw verify` green, and no architecture test, compiler check, SpotBugs rule or formatter setting loosened.
+8. **Finish** with `cd backend && ./mvnw verify` green, and no architecture test, compiler check, SpotBugs rule or formatter setting loosened. On a red gate run `./mvnw spotless:apply` first and hand-fix only what remains (TOOL-SKL-15).
 9. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New service

@@ -82,7 +82,7 @@ Full tables: the "Skill overrides" sections linked from `docs/baseline/stacks/ne
 6. **Contract**: changed spec → `npm run generate:api` (it copies `../backend/openapi/*.yaml` in first, NEXT-REL-06); both server and browser outputs, adapters, mappers and problem `code`s updated (NEXT-API-01, TS-ARCH-18).
 7. **Configuration**: a new key goes into the schema with `.describe()`, into `configuration-keys.yaml` and, if local, into `.env.development` (NEXT-CFG-02/09, NEXT-DEV-03).
 8. **Shortcuts**: propose and draft an ADR; never take one silently (ARCH-SC-06).
-9. **Finish** with `npm run verify` and `npm run e2e` green, and no dependency-cruiser rule, lint rule, bundle budget, CSP, Trusted Types policy or a11y check loosened.
+9. **Finish** with `npm run verify` and `npm run e2e` green, and no dependency-cruiser rule, lint rule, bundle budget, CSP, Trusted Types policy or a11y check loosened. On a red gate run `npm run format` and `npm run lint:fix` first and hand-fix only what remains (TOOL-SKL-15).
 10. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New app

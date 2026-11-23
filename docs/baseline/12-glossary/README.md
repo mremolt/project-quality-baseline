@@ -55,7 +55,7 @@
 | SLI / SLO | Service level indicator (a measured ratio such as successful requests) and objective (its target over a window), defined per user journey (OBS-16) |
 | Slice | A Redux Toolkit unit of state, reducers and actions; in React frontends the view state of a feature's UI adapter, injected lazily into the one app store ([ui/react-state-management.md](../08-crosscutting-concepts/ui/react-state-management.md)) |
 | Slice test | (Spring) test that starts only one layer of the context (`@WebMvcTest`, `@DataJpaTest`) |
-| Stereotype | Our component annotations (`@UseCase`, `@WebAdapter`, `@PersistenceAdapter`, `@MessagingAdapter`, `@SchedulingAdapter`, `@MetricsAdapter`) (SPRING-ARCH-04) |
+| Stereotype | Our component annotations (`@UseCase`, `@WebAdapter`, `@PersistenceAdapter`, `@MessagingAdapter`, `@SchedulingAdapter`, `@MetricsAdapter`, `@HttpClientAdapter`, `@MailAdapter`, `@FileAdapter`) (SPRING-ARCH-04) |
 | Timeout | Upper bound on how long an outbound call may take; mandatory for every remote call (RES-TMO-01) |
 | Trace context | W3C `traceparent` header carrying trace and span id across hops; the trace id is the correlation id (OBS-10/11) |
 | Trunk-based development | Short-lived branches merged into `main` frequently; `main` is always releasable (REL-BR-01) |

@@ -46,6 +46,10 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Transaction boundary on the service, with no remote call inside it (ARCH-UC-11)?
 - [ ] Every rule that depends on other rows (uniqueness, closed periods, "at least one", process once) enforced by a constraint, a conditional write or a shared lock, with a concurrency test (ARCH-UC-16)?
 - [ ] A refused caller raises the Access denied category (403, security event), not Business rule or a framework exception; an object the caller may not know stays Not found (ARCH-UC-13/15)?
+- [ ] A check against state that may not exist yet uses an advisory lock on the business key, tested in both orders (ARCH-UC-16)?
+- [ ] Commands that may act for someone else carry owner and caller separately, owner = caller by default (ARCH-UC-17)?
+- [ ] Helpers shared within a cut are package-private classes built by each service, not beans (ARCH-UC-18)?
+- [ ] Bulk import parsed in the adapter, rows through one use case, all or nothing, per-row report with codes (ARCH-UC-19)?
 
 ## Container Images, Frontend Delivery and Runtime Contract
 
@@ -57,6 +61,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Nonce templating tested against a real build's `index.html`, not a stub (REL-FE-03)?
 - [ ] BFF image: start fails without the bundle, built image answers `GET /` with `200` `text/html` (REL-FE-06)?
 - [ ] Runtime settings: read-only filesystem, resource bounds, heap from the limit, start-up budget covers migrations, grace period above the shutdown budget; values recorded in chapter 7 (REL-RUN-*)?
+- [ ] Feature needing fonts, AWT, native libraries or locale data: avoided, or exercised against the real image in the smoke tier (REL-RUN-08)?
 
 ## Delivery and Release
 
@@ -69,6 +74,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Release notes: breaking changes, new configuration and long migrations listed (REL-VER-04)?
 - [ ] Pipeline change: image still built once per commit and promoted by digest; version attached without rebuild; approval gate intact; no gate skipped for hotfixes (REL-CD-01/03/07)?
 - [ ] New tool, registry, runtime setting or deployment responsibility: delivery platform mapping in chapter 7 updated (REL-CD-06)?
+- [ ] No pipeline yet: gates and scans run locally, chapter 7 rows "not applicable" with reason and trigger, interim ADR (REL-CD-08)?
 
 ## Repository Layout
 
@@ -88,6 +94,8 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Strategy recommended with tradeoffs and the template filled in?
 - [ ] Frontend batching/caching placed in the outgoing adapter?
 - [ ] Backend endpoint free of persistence N+1?
+- [ ] Data from several ports assembled in the use case ring, one set-based read per port, statement bound asserted (API-N1-08)?
+- [ ] Each read limited to the range its result needs; history-long ranges bounded with a snapshot plan (API-N1-09)?
 - [ ] Request-count or query-count test added?
 
 ## OpenAPI Contracts
@@ -100,6 +108,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Consumer: client generated, not hand-written; generated types confined to the adapter?
 - [ ] Consumer in the same repo: regenerated and adapted in the same pull request as the spec change?
 - [ ] N+1 check done ([08-crosscutting-concepts/api/avoiding-n-plus-one.md](../08-crosscutting-concepts/api/avoiding-n-plus-one.md))?
+- [ ] Schema names unique across the API; several request media types as content entries of one operation; downloads with a binary schema (API-CON-12/13)?
 
 ## REST Conventions (wire format)
 
@@ -108,7 +117,8 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Decimals and money as strings (`format: decimal`), instants in UTC, enums as `UPPER_SNAKE_CASE` strings (API-REST-01..03)?
 - [ ] Errors as problem+json with `code` from the catalogue and `traceId`; status from the table (API-REST-05..07)?
 - [ ] Collection paged or bounded in the query; sort and filter parameters allow-listed in the spec (API-REST-08..10)?
-- [ ] Concurrent updates carry a version or `If-Match` (API-REST-11)?
+- [ ] Concurrent updates carry a version or `If-Match`, and a successful update answers 200 with the resource or its version, never a bare 204 (API-REST-11)?
+- [ ] Singleton state transitions as `POST …/<singleton>/<verb>` only, verbs listed in the API doc; everything else nouns (API-REST-14)?
 - [ ] Removing something: deprecated first, `Deprecation`/`Sunset` headers, consumers migrated (API-REST-12)?
 
 ## Enforcing Architecture Boundaries
@@ -140,6 +150,8 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Export includes soft-deleted records, is never silently truncated, and redacts other people's data (DP-DSR-05)?
 - [ ] No personal data in logs, telemetry, URLs, events beyond IDs (DP-TEL-01/02, DP-MIN-02)?
 - [ ] Only synthetic data in fixtures and non-production environments (DP-ENV-01)?
+- [ ] Demo data loaded through use cases under the `demo` profile only, absent without it (DP-ENV-04)?
+- [ ] A deferred retention period is `TBD (DPO)` with an ADR and no real personal data until it is set (DP-RET-01)?
 - [ ] New external service: listed with DPA status and location; transfer basis decided (DP-PROC-01/02)?
 - [ ] New store for dead letters, inbox or idempotency results: listed in the deletion concept and covered by retention?
 - [ ] Missing legal basis or period written as `TBD (DPO)`, not guessed?
@@ -158,6 +170,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Changed a doc's rules? Its section in `docs/baseline/checklists/` updated (TOOL-SKL-13)?
 - [ ] Changed a rule doc or a stack page? `npm run docs:rule-index` run, `docs:rule-index:check` and `docs:lint` green (TOOL-SKL-11); new rules start with a self-contained bold headline (TOOL-SKL-12)?
 - [ ] Scripted multi-line replacements only on freshly formatted files, failing when a pattern does not match; otherwise the editor tools (TOOL-SKL-14)?
+- [ ] Red gate: autofix commands run first, only the rest fixed by hand, no rule loosened (TOOL-SKL-15)?
 - [ ] Wrote reading instructions in a skill, hook or `AGENTS.md`? They follow the steps of TOOL-SKL-10 and point to the rule index, not to "every doc a stack page lists"?
 
 ## Architecture Documentation (arc42)
@@ -169,6 +182,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Linked to the baseline instead of copying it?
 - [ ] Diagrams as Mermaid in the Markdown file?
 - [ ] In the baseline repository: did the change alter architecture, technology or a decision? Then `ARCHITECTURE.md` is updated in the same change, current state only (DOC-ARC-09).
+- [ ] Agreed business answers recorded in chapter 8 "Business rules", open assumptions in `open-questions.md` (DOC-ARC-10)?
 
 ## IDE Setup: VS Code and IntelliJ IDEA Ultimate
 
@@ -186,6 +200,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] New user-visible string: key, source text and context added; no concatenation or plural logic (I18N-07/08)?
 - [ ] No value formatted on the server; wire formats unchanged (I18N-03)?
 - [ ] `npm run i18n:check` green; non-source catalogs untouched by hand (TOOL-I18N-02/03)?
+- [ ] Translation tool not connected yet: catalogs in the repository with context, agent-written strings marked for review, ADR for the interim (TOOL-I18N-08)?
 - [ ] Locale-sensitive code covered in two locales; a language-switch test re-formats; axe and `lang` asserted per locale (TEST-I18N-02/03/07/08)?
 
 ## Mapping Between Boundaries
@@ -221,6 +236,20 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] No personal data in tags, span attributes or error reports (OBS-08, OBS-14)?
 - [ ] New user-facing journey: SLO and dashboard panel considered (OBS-16/17)?
 
+## File Exports and Generated Documents
+
+[08-crosscutting-concepts/exports/file-exports.md](../08-crosscutting-concepts/exports/file-exports.md)
+
+- [ ] Export classified as for people (localized) or for a machine (one fixed, documented format pinned by a sample-file test) (EXP-01/02)?
+- [ ] CSV for Excel in UTF-8 with BOM; people offered `.xlsx` (EXP-03)?
+- [ ] Formula prefixes neutralised in CSV and spreadsheet cells, hostile-value test (EXP-04)?
+- [ ] XML/FO/SVG/HTML built with a writer or escaping template, never concatenated (EXP-05)?
+- [ ] HTML/SVG rendering without network or file access, tested (EXP-06)?
+- [ ] File adapter in `adapter/out/file/<format>`, binary media type in the spec, `Content-Disposition`, `no-store` for personal data, bounded read (EXP-07)?
+- [ ] No fonts, AWT or native libraries needed from the image, or the feature runs in the smoke tier (EXP-08)?
+- [ ] PDFs for people: PDF/UA-1 validated by veraPDF in tests, manual check in the L6 checklist (EXP-09)?
+- [ ] New export of personal data or new download endpoint: threat model note (SEC-TM-02)?
+
 ## Resilience and Idempotency
 
 [08-crosscutting-concepts/resilience/resilience.md](../08-crosscutting-concepts/resilience/resilience.md)
@@ -233,6 +262,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] New state-changing entry point: idempotency stated; `Idempotency-Key` for retryable `POST`s, stored in the same transaction with a conflict-free insert; remote writes through the outbox or with a derived key (RES-IDM)?
 - [ ] Bulk input with a remote call per item: items stored in the transaction, calls made by a job, a rerun repairs the unfinished (RES-JOB-04)?
 - [ ] New scheduled job: calls an incoming port; cluster lock or concurrency-safe (RES-JOB-02)? Lock time above batch × worst-case per-item time, items claimed in the database (RES-JOB-03)?
+- [ ] Job that acts once per business fact: primary-key claim with `on conflict do nothing`, concurrency test with one winner (RES-JOB-05)?
 - [ ] New cache: in the adapter, bounded, TTL, invalidation stated, caller in the key where needed (RES-CCH)?
 - [ ] Security-relevant (new outbound call)? Then the threat model note (SEC-TM-02).
 
@@ -244,6 +274,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] No gate removed, set to advisory, or filtered by path (REPO-CI-03, SEC-REV-02)?
 - [ ] New release artifact: SBOM, provenance, scan and deploy-time verification covered (SEC-CI-03/06/07)?
 - [ ] Threshold change: made in the gate table, not in a stack rule?
+- [ ] New dependency for untrusted input, or large or young: dependency review table in the ADR (SEC-CI-09)?
 
 ## Security Requirements and Threat Modelling
 
@@ -254,6 +285,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Abuse cases covered by tests?
 - [ ] Architecture change: `docs/security/threat-model.md` updated?
 - [ ] New stored secret, key, token or encrypted field: algorithm, key location and rotation per SEC-CRY-01..05?
+- [ ] IdP password and recovery policy at the SEC-CRY-06 defaults (length, block list, throttling, link lifetimes), recorded in chapter 8?
 
 ## Security Review
 
@@ -292,6 +324,7 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Use case tests verify only the essential interactions?
 - [ ] Persistence tests run against the production DB engine?
 - [ ] Bug fix comes with a regression test?
+- [ ] New persisted enum value or row kind exercised once through the real adapter and migrations (TEST-ARCH-13)?
 - [ ] Main path covered by a system test of its component; critical paths also full-stack?
 
 ## UI Patterns: Responsive Layout, Screen Readers and Screen States
@@ -325,6 +358,10 @@ The agent checklists of the shared docs (all stacks), one section per doc, title
 - [ ] Session timeout warns and can be extended, counted from the last backend answer and the server's idle timeout; legal or financial submits can be reviewed, confirmed or undone; hover and focus content dismissible; `html lang` set?
 - [ ] L6 release checklist run, results recorded; legal applicability recorded (A11Y-26)?
 - [ ] No a11y rule disabled or loosened; every exclusion has a ticket and an expiry date?
+- [ ] Session expiry warns and can be extended; long-open pages keep their work state on the server (A11Y-29)?
+- [ ] Panels with fixed foreground and background colours have a forced-colors variant (A11Y-28)?
+- [ ] Charts named, with a table or text carrying the same figures (A11Y-33); value bars as `meter`/`progressbar` with value text and visible status (A11Y-34)?
+- [ ] No wrapper repeats the accessible name of the group or landmark inside it (A11Y-35)?
 
 ## Taking Shortcuts Consciously
 

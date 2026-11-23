@@ -20,6 +20,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] Transaction through `TransactionPort`; no remote call inside (NEST-ARCH-08)?
 - [ ] Controller only maps; errors by category base class (NEST-ARCH-10/12)?
 - [ ] `npm run check:arch` green and the config unchanged (or the change discussed)?
+- [ ] Demo data loaded by an `adapter/in/demo` provider behind a default-off flag that calls use cases, never by seed SQL (NEST-ARCH-13)?
 
 ## NestJS: Delivery
 
@@ -40,6 +41,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] Local PostgreSQL major equals production; DDL and DML users from `dev/postgres/init.sql`?
 - [ ] New key: throwaway value in `.env.local` if needed locally, entry in `configuration-keys.yaml`, no real secret?
 - [ ] No new start-up script; inspector only on `127.0.0.1`?
+- [ ] A service the app cannot work without (Keycloak for login, Mailpit for mail) starts without a Compose profile (NEST-DEV-02)?
 
 ## NestJS: Producing the OpenAPI Contract (code-first)
 
@@ -52,6 +54,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] No `SwaggerModule.setup()` (NEST-API-11)?
 - [ ] N+1 check done for read endpoints (NEST-API-12)?
 - [ ] Provider with a spec: client generated with Orval into `adapter/out/http/generated/`, responses parsed with the generated zod schemas, timeouts set (NEST-API-13/14)?
+- [ ] Binary download declared with its media type and a binary schema (NEST-API-07)?
 
 ## NestJS: REST and JSON Conventions
 
@@ -63,6 +66,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] Errors from domain base classes, answered by the global filter as problem+json; no message or stack in the body (NEST-REST-14..16)?
 - [ ] Collection paged or bounded; sort and filters allow-listed; update carries a version or `If-Match`; 201 with `Location` (NEST-REST-17..19)?
 - [ ] Controller test with mocked use case, real pipe and filter, error cases included (NEST-REST-21)?
+- [ ] No `@HttpCode(204)` on `@Put`/`@Patch`; updates answer 200 with the new version (NEST-REST-18)?
 
 ## NestJS: Configuration
 
@@ -97,6 +101,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] Locale negotiated in the REST adapter only; `Content-Language` set (NEST-I18N-03/04)?
 - [ ] Outgoing mail or document uses the recipient's stored language and time zone (NEST-I18N-06)?
 - [ ] Per-locale contract test and catalog parity test updated (TEST-I18N-05/06)?
+- [ ] Mail subject is a catalog message with the same arguments as the body (NEST-I18N-06)?
 
 ## NestJS: Logging
 
@@ -122,6 +127,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] Shutdown: abort, `stream.close()`, await the loop, `consumer.close()` without force in `onModuleDestroy` within 20 s; producer in `onApplicationShutdown` (NEST-MSG-12)?
 - [ ] AsyncAPI regenerated, committed, validated; examples updated (NEST-MSG-13, MSG-CON)?
 - [ ] `*.it.test.ts` with the Kafka container covering success, unknown type, validation, invalid JSON, transient retry, stop with a record in progress, outbox commit and rollback, parking, duplicate (NEST-MSG-14)?
+- [ ] Mail or other after-commit side effect without a broker: outbox row in the use case's transaction plus a locked sender in the adapter (NEST-MSG-15)?
 
 ## NestJS: Observability and Operability
 
@@ -146,6 +152,8 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] Rule across rows (overlap, "at least one", uniqueness): constraint, advisory or row lock, and a two-transaction `*.it.test.ts` in a controlled order (NEST-DB-23)?
 - [ ] No query in a loop; statement count asserted; collection queries limited in SQL (NEST-DB-12/13)?
 - [ ] No edit to a migration on `main`; `check-migrations` green (NEST-DB-19)?
+- [ ] Check against state that may not exist yet: shared advisory lock in commands, exclusive in the change, both orders tested (NEST-DB-23)?
+- [ ] Unique violations mapped by `error.constraint`, SQLSTATE alone only where one constraint can fail (NEST-DB-11)?
 
 ## NestJS: Resilience and Idempotency
 
@@ -177,6 +185,7 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] No handler that keeps the process alive after an uncaught error (NEST-SEC-34)?
 - [ ] BFF change: the NODE-BFF checklist in [node-bff.md](../08-crosscutting-concepts/security/node-bff.md) answered, Fastify wiring as in NEST-SEC-44..52?
 - [ ] New dependency reviewed (NEST-SEC-43)?
+- [ ] Archive limits as ratio or counted caps; hostile files built in memory plus one real-writer fixture per format (NEST-SEC-37)?
 
 ## NestJS: Security
 
@@ -189,6 +198,9 @@ The agent checklists of the nestjs docs, one section per doc, titled like the do
 - [ ] CORS origins from configuration, no wildcard with credentials, preflight test?
 - [ ] Nothing sensitive logged; probes public but not routed externally; `trustProxy` explicit?
 - [ ] Hardening checklist ([nestjs-hardening.md](../08-crosscutting-concepts/security/nestjs-hardening.md)) answered?
+- [ ] Token guard present once a non-browser client exists; IdP named in an ADR (NEST-SEC-03)?
+- [ ] Cross-user tag on the block that calls the service (NEST-SEC-08)?
+- [ ] Admin-managed users provisioned through an outgoing port to the IdP admin API (NEST-SEC-53)?
 
 ## NestJS: Testing
 

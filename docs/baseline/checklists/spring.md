@@ -13,6 +13,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Resilience4j only for a circuit breaker (SPRING-LIB-07)?
 - [ ] Image build: Buildpacks, or the platform-dictated method recorded in chapter 7 (SPRING-LIB-13)?
 - [ ] Outgoing HTTP adapter: `spring-boot-starter-restclient` present, client built from the injected `RestClient.Builder` (SPRING-LIB-06)?
+- [ ] A library that fails after being added checked against the versions Boot's BOM overrides; pins narrow and commented (SPRING-LIB-01)?
 
 ## Spring Boot: Hexagonal Architecture
 
@@ -26,7 +27,9 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] No JPA/Kafka/AWS/Jackson types in `domain` or `ports`, and only allowed framework types in `application`?
 - [ ] Test type per [08-crosscutting-concepts/testing/spring.md](../08-crosscutting-concepts/testing/spring.md); DB tests use Testcontainers?
 - [ ] `ArchitectureTest` green and unchanged (or the change discussed)?
-- [ ] Outgoing HTTP client marked `@HttpClientAdapter` in `adapter.out.http`, SMTP `@MessagingAdapter`; `allowEmptyShould` of a template rule removed once its first class exists (SPRING-ARCH-04, ARCH-ENF-02)?
+- [ ] Outgoing HTTP client marked `@HttpClientAdapter` in `adapter.out.http`, SMTP `@MailAdapter` in `adapter.out.mail`, file writers `@FileAdapter` in `adapter.out.file`; `allowEmptyShould` of a template rule removed once its first class exists (SPRING-ARCH-04, ARCH-ENF-02)?
+- [ ] Demo data loaded by an `adapter.in.demo` runner under the `demo` profile that calls use cases, never by seed SQL; no deployed config sets the profile (SPRING-ARCH-20)?
+- [ ] Table without aggregate invariants: `JdbcClient` adapter in `adapter.out.jdbc` is fine; aggregates stay JPA with two-way mapping (SPRING-ARCH-10)?
 
 ## Spring Boot: Delivery
 
@@ -49,6 +52,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] No connection settings or secrets added to the repository for local use?
 - [ ] No new start-up script?
 - [ ] Keycloak issuer `http://keycloak.localhost:8180` everywhere, health check and realm template in place, admin client with `kc-admin-api` (SPRING-DEV-11/12)? `compose.app.yaml` waits for healthy start-up dependencies (SPRING-DEV-10)?
+- [ ] A service the app cannot work without (Keycloak for login, Mailpit for mail) starts without a Compose profile (SPRING-DEV-03)?
 
 ## Spring Boot: Producing the OpenAPI Contract (code-first)
 
@@ -60,6 +64,8 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Breaking change? New version or explicit decision?
 - [ ] N+1 check done for read endpoints?
 - [ ] `servers` fixed to `/`, `ProblemDetail` schema declared, resolved parameters such as `Caller` hidden from the spec (SPRING-API-13/14)?
+- [ ] Binary download declared with its media type and a `string`/`binary` schema; two request media types are one operation with two `@Content` entries (SPRING-API-15)?
+- [ ] No two `*Request`/`*Response` types share a simple name (`restRecordNamesAreUnique`, SPRING-API-02)?
 
 ## Spring Boot: REST and JSON Conventions
 
@@ -71,6 +77,8 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Collection paged or bounded in the query, sort and filters allow-listed; update carries a version (SPRING-REST-11/12)?
 - [ ] Error cases documented as problem+json and tested; 401/403 from the filter chain are problem+json with a code (SPRING-REST-14)?
 - [ ] Absent optional fields omitted, asserted in the slice test; security entry point and handler use the Boot `JsonMapper` bean (SPRING-REST-08/14)?
+- [ ] `PUT`/`PATCH` answers 200 with the resource or its new version, never a bare 204 (`updatesAnswerWithTheResource`, SPRING-REST-12)?
+- [ ] State transition of a singleton modelled as an action sub-resource (SPRING-REST-02)?
 
 ## Spring Boot: Configuration
 
@@ -101,6 +109,8 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] New business error: code in the enum and the OpenAPI spec, `error.<code>.*` in every bundle (SPRING-I18N-02/07)?
 - [ ] Outgoing mail or document uses the recipient's stored language (SPRING-I18N-05)?
 - [ ] Contract test per locale and bundle parity test updated (TEST-I18N-05/06)?
+- [ ] User-visible sorting with collation: id page through `JdbcClient` with `collate`, then one `findAllById`, statement count asserted (SPRING-I18N-08)?
+- [ ] Mail subject is a bundle message with the same arguments as the body (SPRING-I18N-05)?
 
 ## Spring Boot: Logging
 
@@ -122,6 +132,7 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Event tied to a DB change goes through the outbox; relay parks non-retryable rows, exposes age and count, restores the trace context; consumer deduplicates through the inbox or is naturally idempotent (SPRING-MSG-07/08)?
 - [ ] AsyncAPI regenerated and committed; examples updated (SPRING-MSG-11, MSG-CON)?
 - [ ] `*IT` with Kafka container covering success, unknown type, validation → DLT, transient retry; relay parking and trace id (SPRING-MSG-12)?
+- [ ] Mail or other after-commit side effect without a broker: outbox row in the use case's transaction plus a ShedLock sender in the adapter, no direct send after commit (SPRING-MSG-13)?
 
 ## Spring Boot: Observability and Operability
 
@@ -148,6 +159,11 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] New query: index for its filter and sort columns named in the PR; foreign keys indexed (SPRING-DB-17)?
 - [ ] Constraint violations mapped by constraint name, cause kept (SPRING-DB-18)?
 - [ ] Privilege tests on append-only tables run as the non-superuser DML role (SPRING-DB-19)?
+- [ ] Version travels in the domain record; adapter rejects a stale version; a use case that writes one aggregate twice reloads in between (SPRING-DB-10)?
+- [ ] Rare change against many commands with no row to lock: shared advisory lock in the commands, exclusive in the change, both orders tested (SPRING-DB-16)?
+- [ ] Pre-check for the clean error plus the constraint as race guard, both ending in the same code (SPRING-DB-16)?
+- [ ] Constraint name read through Hibernate, driver runtime-only; SQLState mapping only where one constraint can fail, documented (SPRING-DB-18)?
+- [ ] Lazily generated reference data in the adapter, `REQUIRES_NEW`, `on conflict do nothing` (SPRING-DB-20)?
 
 ## Spring Boot: Resilience and Idempotency
 
@@ -180,6 +196,9 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] New upload: name, scan, archive limits, download authorization, separate origin for active content (SPRING-SEC-26)?
 - [ ] New dependency: reviewed (JAVA-TOOL-05)?
 - [ ] Back-channel logout ends exactly the sessions of the token's `sid` through the `idp_sessions` mapping (SPRING-SEC-40)? Admin-assigned role fields listed in `ADMIN_ASSIGNED_FIELDS` with a reason, never renamed to dodge the rule (SPRING-SEC-34)?
+- [ ] Archive limits as ratio or counted caps per entry and in total; hostile files built in memory plus one real-writer fixture per format (SPRING-SEC-26)?
+- [ ] Cross-user test tagged on the method that calls the use case (SPRING-SEC-16)?
+- [ ] Long-open page keeps its work state on the server instead of a longer idle timeout (SPRING-SEC-32)?
 
 ## Spring Boot: Security
 
@@ -192,6 +211,8 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Actuator exposure unchanged (allow-list), every exposed endpoint permitted by name?
 - [ ] New deployment target: forward-headers strategy set explicitly (SPRING-SEC-12)?
 - [ ] Hardening checklist ([spring-hardening.md](../08-crosscutting-concepts/security/spring-hardening.md)) answered for headers, limits, injection, object-level access, sessions, errors?
+- [ ] Resource-server chain present once a non-browser client exists; IdP named in an ADR (Keycloak when the organisation has none) (SPRING-SEC-03)?
+- [ ] Admin-managed users provisioned through an outgoing port to the IdP admin API, no own password store (SPRING-SEC-41)?
 
 ## Spring Boot: Testing
 
@@ -206,3 +227,4 @@ The agent checklists of the spring docs, one section per doc, titled like the do
 - [ ] Scheduling off in ITs, jobs called through their port, one shared database reset (SPRING-TEST-13)?
 - [ ] `./mvnw verify` green (unit and integration tests)?
 - [ ] Use case tests use the shared `support` fakes (`InMemoryRepository`, `People`, `Transactions`) instead of new ad-hoc helpers (SPRING-TEST-14)?
+- [ ] Test fakes extend `InMemoryRepository<K, T, S>` with themselves as `S` (SPRING-TEST-14)?

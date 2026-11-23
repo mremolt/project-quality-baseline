@@ -51,7 +51,7 @@ export function translate(locale: SupportedLocale, key: string, params: Record<s
 ```
 
   Where language is a business input ("send the confirmation in the customer's language") it travels as a `Language` value object in the command.
-- **NEST-I18N-06: Outgoing adapters render emails and documents in the recipient's stored language and time zone,** never the request locale. Consumers get the recipient (or its language) in the event or look it up through a port. Dates are formatted with the stored time zone; amounts stay decimal strings until the ICU message formats them.
+- **NEST-I18N-06: Outgoing adapters render emails and documents in the recipient's stored language and time zone,** never the request locale. The subject is a catalog message that gets the same arguments as the body. Consumers get the recipient (or its language) in the event or look it up through a port. Dates are formatted with the stored time zone; amounts stay decimal strings until the ICU message formats them.
 - **NEST-I18N-07: The API never formats values for display** (I18N-03): decimals as strings, instants in UTC, dates as `yyyy-MM-dd`, enums as strings.
 - **NEST-I18N-08: Server-side sorting that users see uses an explicit ICU collation per locale** in the query (`order by name collate "de-x-icu"`; PostgreSQL images ship the ICU collations), documented per endpoint.
 

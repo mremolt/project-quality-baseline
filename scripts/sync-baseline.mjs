@@ -124,13 +124,19 @@ const projectFiles = [
   ['data-protection/processing-record.md', 'docs/data-protection/processing-record.md', 'fill in with the DPO; DP-INV-01'],
   ['data-protection/deletion-concept.md', 'docs/data-protection/deletion-concept.md', 'fill in with the DPO; DP-INV-02'],
 ];
+// The accessibility record belongs to projects with a UI (a TypeScript frontend stack).
+if (stacks.active.has('typescript')) {
+  projectFiles.push(['accessibility.md', 'docs/accessibility.md', 'fill in legal scope, matrix and inventory; A11Y-19/26/27']);
+}
 if (host) {
   const note = host === 'bitbucket'
     ? 'Bitbucket reads no template file: paste it into the repository\'s default pull request description; SEC-REV-01, API-N1-02'
     : `${host}; SEC-REV-01, API-N1-02`;
   projectFiles.push(['pull-request/pull_request_template.md', PR_TEMPLATE[host], note]);
 } else {
-  log(`MANUAL: pull request template not created: the host could not be detected from the git remote. Re-run with --host ${Object.keys(PR_TEMPLATE).join('|')}`);
+  // Without a host the template still exists as a file, so the SEC-REV-01 and API-N1-02 questions are at hand.
+  projectFiles.push(['pull-request/pull_request_template.md', 'docs/pull-request-template.md', 'no pull request host yet: answer its questions per change; SEC-REV-01, API-N1-02']);
+  log(`MANUAL: no pull request host detected from the git remote: the template is in docs/pull-request-template.md. Once the project has a host, re-run with --host ${Object.keys(PR_TEMPLATE).join('|')} and delete the docs copy`);
 }
 // security.txt is served with the SPA, so it goes into the frontend's static folder (if there is a frontend).
 // Other web apps copy it from templates/well-known/ into their static folder (SEC-INC-02).
@@ -285,6 +291,27 @@ if (settings && typeof settings === 'object') {
   log('.claude/settings.json hooks merged');
 } else {
   log("MANUAL: .claude/settings.json is not plain JSON; add the hooks from the baseline's .claude/settings.json by hand");
+}
+
+// ---------------------------------------------------------------- project-owned templates changed since the last sync
+// Files created once from templates/ and the skills' templates/ folders are project-owned and never updated by the
+// sync. .baseline.json records the baseline commit of each sync, so the next one can list what changed since then.
+const baselineJson = path.join(target, '.baseline.json');
+const head = git(base, 'rev-parse', 'HEAD');
+if (fs.existsSync(baselineJson) && head.ok) {
+  const cfg = readJson(baselineJson);
+  const since = cfg.syncedCommit;
+  if (since && since !== head.out) {
+    if (git(base, 'cat-file', '-e', `${since}^{commit}`).ok) {
+      const scopes = ['templates', ...names.map((n) => `skills/${n}/templates`)];
+      const changed = git(base, 'diff', '--name-only', since, head.out, '--', ...scopes).out.split('\n').filter(Boolean);
+      for (const f of changed) log(`MANUAL: template changed since the last sync (${since.slice(0, 7)}): ${f}; merge the change into your copy if you have one`);
+      if (changed.length === 0) log(`no project-owned template changed since the last sync (${since.slice(0, 7)})`);
+    } else {
+      log(`MANUAL: the last synced baseline commit ${since.slice(0, 7)} is unknown here; compare the project's copies of templates/ and skills/*/templates/ by hand`);
+    }
+  }
+  if (cfg.syncedCommit !== head.out) writeJson(baselineJson, { ...cfg, syncedCommit: head.out });
 }
 
 console.log(`

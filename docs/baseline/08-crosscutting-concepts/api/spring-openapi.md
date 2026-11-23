@@ -28,7 +28,7 @@ class OpenApiConfiguration {
 ### Describing the API
 
 - **SPRING-API-01: `operationId` (API-CON-05) is set with `@Operation(operationId = "cancelOrder", summary = "…")`** on every handler method.
-- **SPRING-API-02: Request and response records have names that are unique per API version** (`CancelOrderRequest`, `OrderHistoryResponse`), or an explicit `@Schema(name = "…")`.
+- **SPRING-API-02: Request and response records have names that are unique per API version** (`CancelOrderRequest`, `OrderHistoryResponse`), or an explicit `@Schema(name = "…")`. springdoc names a schema by the simple name, so two nested `DayResponse` records of different controllers silently become one schema and the regenerated spec hides it; the architecture test `restRecordNamesAreUnique` fails on equal simple names of `*Request`/`*Response` types in `adapter.in.rest`.
   *Why:* springdoc names schemas by simple class name. Two nested `Request` records in different controllers would collide in the spec. The records stay package-private in their controller's package (ARCH-ADP-04).
 - **SPRING-API-03: Required means required.** Mandatory fields carry `@NotNull` (or `@Schema(requiredMode = REQUIRED)`); everything else is optional in the spec. The generated TypeScript types and zod schemas depend on it.
 - **SPRING-API-04: Bean Validation constraints on request records are part of the contract** (`@Size`, `@Pattern`, `@Min`, …) and show up as schema constraints, so clients validate the same way. They still only check mappability (SPRING-ARCH-08); the command validates itself.
@@ -89,6 +89,7 @@ oasdiff breaking /tmp/base.yaml openapi/orders-v1.yaml --fail-on ERR
   *Why:* a spec that changes per run makes the stale-spec check (SPRING-API-08) useless.
 - **SPRING-API-14: Parameters the server resolves itself never appear in the spec.** A `Caller` (or any type filled by a `HandlerMethodArgumentResolver`) would otherwise be published as a query parameter and leak into the generated clients. The OpenAPI configuration hides each such type once: `SpringDocUtils.getConfig().addRequestWrapperToIgnore(Caller.class)` in a static initializer. The stale-spec check and a review of the generated client catch a new leak.
   *Why:* clients would start sending a "caller" parameter that the server must never trust (SPRING-SEC-34).
+- **SPRING-API-15: A binary download declares its media type with a `string`/`binary` schema.** `@ApiResponse(responseCode = "200", content = @Content(mediaType = "application/pdf", schema = @Schema(type = "string", format = "binary")))`, one `@Content` per offered type (`text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`). Without it springdoc publishes a JSON response and Orval generates a JSON client for a file; with it the client returns a `Blob` and the frontend downloads through the generated client (TS-API-10). An operation that accepts two request media types (CSV and `.xlsx` upload) is one operation with two `@Content` entries; the frontend adapter picks the type.
 
 ## ArchUnit
 

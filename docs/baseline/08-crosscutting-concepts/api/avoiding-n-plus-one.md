@@ -33,6 +33,9 @@ There is no single right fix. This doc is the catalogue of strategies and the ru
 - **API-N1-04: Frontend mitigations (S4, S5) live in the outgoing adapter**, typically as a decorator implementing the same port. Never in components, view-state stores or use cases.
   *Why:* one place to reason about caching and batching; use cases stay unaware of HTTP.
 - **API-N1-05: Backend batch and view endpoints MUST NOT reintroduce N+1 in persistence.** Load related data with joins, `IN` queries or entity graphs; assert query counts in persistence tests.
+- **API-N1-08: A view that needs data of several aggregates behind different ports is assembled in the use case ring, with one set-based read per port.** The use case (or a package-private assembler next to it, ARCH-UC-18) collects the ids from the first read and asks each other port once with all of them (`IN` query, bounded list); the persistence adapter test asserts the statement bound for a realistic size (e.g. ≤ 6 selects for 12 entries). Joining across aggregates inside one adapter couples the adapters; a port call per item is N+1.
+- **API-N1-09: A read loads only the range its result needs.** A figure that depends on the whole history (a running balance since the first day) reads one bounded range query per fact, with the bound documented in code, and has a documented plan for when the history outgrows it (a snapshot per closed period). A new read that needs a short range (one week) never reuses a helper that loads the whole history.
+  *Why:* set-based queries do not help when the set is "everything since the start"; the cost then grows with the age of the account, not with the screen.
 - **API-N1-06: Assert with tests.**
   - E2E: a request-count budget per main screen (count API requests while the screen loads; fail when exceeded).
   - Adapter tests: one batch call for N requested items (S4), one call for repeated requests (S5).

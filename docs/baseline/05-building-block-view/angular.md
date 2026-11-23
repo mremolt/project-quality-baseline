@@ -64,7 +64,7 @@ The Angular form of TS-ARCH-09: the feature's composition file is `<feature>.pro
 - **NG-ARCH-09: Use cases are plain classes** (no Angular decorators, TS-ARCH-01), created with `useFactory` in the feature's providers file.
 - **NG-ARCH-10: Adapters are injectable but not auto-provided**: `@Service({ autoProvided: false })` (or `@Injectable()` without `providedIn`), take their dependencies with `inject()`, are listed once in the providers file and bound to each port token with `useExisting` (one instance for all ports it implements). Tokens come from `<feature>.tokens.ts` (TS-ARCH-17). Auto-provided root services (`@Service()`) only for cross-cutting infrastructure in `src/platform`.
   *Why:* auto-provided singletons bypass the composition root, so wiring becomes invisible and architecture tests can't see it.
-- **NG-ARCH-11: Feature providers are attached at route level** (`providers: ordersProviders` in `orders.routes.ts`), so they are lazy and scoped to the feature. `app.routes.ts` loads `orders.routes.ts` with a dynamic `import()`, never through `index.ts` (TS-ARCH-20). A feature whose use cases others may call publishes `provideOrdersApi()` (in `orders.providers.ts`, re-exported by `index.ts`) that wires exactly those use cases; a consuming feature adds it to its own route providers (TS-ARCH-19). A unit test creates an injector with only `provideOrdersApi()` (plus platform providers) and resolves every published token.
+- **NG-ARCH-11: Feature providers are attached at route level** (`providers: ordersProviders` in `orders.routes.ts`), so they are lazy and scoped to the feature. `app.routes.ts` loads `orders.routes.ts` with a dynamic `import()`, never through `index.ts` (TS-ARCH-20). A feature whose use cases others may call publishes `provideOrdersApi()` (in `orders.providers.ts`, re-exported by `index.ts`) that wires exactly those use cases; a consuming feature adds it to its own route providers (TS-ARCH-19). A unit test creates an injector with only `provideOrdersApi()` (plus platform providers) and resolves every published token. Several pages over one set of aggregates (an admin list for people, one for projects) stay one feature with several route sets in its `<feature>.routes.ts`.
 
 ```ts
 // features/orders/orders.tokens.ts (imports only ports)
@@ -143,7 +143,7 @@ export class OrderDetailPage {
 
 ### Forms
 
-- **NG-ARCH-16: New forms use Signal Forms**; existing forms keep their current form API. Validation comes from the zod schema next to the command in `ports/in` (`validateStandardSchema`), and submitting builds the command through its validating factory (TS-ARCH-06, ARCH-UC-05).
+- **NG-ARCH-16: New forms use Signal Forms**; existing forms keep their current form API. Validation comes from the zod schema next to the command in `ports/in` (`validateStandardSchema`), and submitting builds the command through its validating factory (TS-ARCH-06, ARCH-UC-05). Schema messages are translation codes (`required`, `email`), never text; the template shows them through the catalog (`<feature>.validation.<code>`, NG-I18N-05).
 
 ```ts
 // ports/in/cancel-order-command.ts — framework-free

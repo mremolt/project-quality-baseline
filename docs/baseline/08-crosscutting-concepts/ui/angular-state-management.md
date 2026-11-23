@@ -40,6 +40,11 @@ The skill's original advice ("the store holds state and orchestration, a service
 - **NG-STATE-09: Errors are mapped in one place per feature** (ARCH-ADP-05): a feature-level error mapper turns business errors from `domain` into translation keys (`orders.errors.alreadyShipped`). The platform's `TechnicalError` (TS-ARCH-18, already reported where it was created: by the interceptor or the feature's HTTP adapter, NG-OBS-04) becomes a generic key; any other error is a bug, becomes the generic key and goes to `ReportErrorUseCase` (NG-OBS-01/02). The store holds the key, never translated text; the component translates it (NG-I18N-04). Request status uses a shared custom feature (`withRequestStatus`) exported by `src/platform/index.ts`.
   The mapper (`orders-error-keys.ts`, `OrdersErrorKeys`) lives in `adapter/in/ui`, is `@Injectable()` without `providedIn`, and is listed in `<feature>.providers.ts` (NG-ARCH-10). It imports only the feature's `domain`, `src/platform/index.ts` (for `TechnicalError` and the `REPORT_ERROR` token) and nothing from `adapter/out`.
 - **NG-STATE-10: Optimistic updates** snapshot state with `getState`, patch, call the use case, and roll back on failure. The UI shows the error (NG-STATE-09).
+- **NG-STATE-16: State and methods shared by several stores are one `signalStoreFeature` exported as a constant** (`export const withProjectTime = signalStoreFeature(...)`), never a function returning it: the returned type cannot be written out, so `explicit-module-boundary-types` rejects the function.
+- **NG-STATE-17: An `effect` tracks only its declared triggers; the rest of its body runs in `untracked`.** A store method called inside the effect that reads the store's own signals (`ensureOptions()` reading `options()`) otherwise makes the effect re-run, and the load fires twice. The request budget (TS-TEST-14) catches it.
+  ```ts
+  effect(() => { const week = this.week(); untracked(() => void this.store.load(week)); });
+  ```
 - **NG-STATE-11: Stores don't cache backend data across screens.** Shared caching and batching live in the outgoing adapter (TS-ARCH-15, API-N1-04). A store only keeps what its screen shows.
 
 ### Scope

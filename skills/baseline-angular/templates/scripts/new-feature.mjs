@@ -20,14 +20,7 @@ if (existsSync(root)) {
   console.error(`${root} exists already`);
   process.exit(1);
 }
-for (const dir of [
-  'domain',
-  'application',
-  'ports/in',
-  'ports/out',
-  'adapter/in/ui/i18n',
-  'adapter/out/http',
-]) {
+for (const dir of ['domain', 'application', 'ports/in', 'ports/out', 'adapter/in/ui/i18n', 'adapter/out/http']) {
   mkdirSync(join(root, dir), { recursive: true });
 }
 const write = (file, content) => writeFileSync(join(root, file), content);
@@ -52,10 +45,7 @@ write(
   `adapter/in/ui/${name}-page.ts`,
   `import { ChangeDetectionStrategy, Component } from '@angular/core';\nimport { TranslocoPipe } from '@jsverse/transloco';\n\n@Component({\n  selector: 'app-${name}-page',\n  imports: [TranslocoPipe],\n  templateUrl: './${name}-page.html',\n  styleUrl: './${name}-page.scss',\n  changeDetection: ChangeDetectionStrategy.OnPush,\n})\nexport class ${pascal}Page {}\n`,
 );
-write(
-  `adapter/in/ui/${name}-page.html`,
-  `<h1>{{ '${camel}.page.heading' | transloco }}</h1>\n`,
-);
+write(`adapter/in/ui/${name}-page.html`, `<h1>{{ '${camel}.page.heading' | transloco }}</h1>\n`);
 write(`adapter/in/ui/${name}-page.scss`, `:host {\n  display: block;\n}\n`);
 write(
   `adapter/in/ui/${name}-page.spec.ts`,
@@ -66,15 +56,9 @@ write('adapter/in/ui/i18n/en.json', catalog(pascal));
 write('adapter/in/ui/i18n/de.json', catalog(pascal));
 write(
   'adapter/in/ui/i18n/context.json',
-  JSON.stringify(
-    { [`${camel}.page.heading`]: { description: `Heading of the ${name} page` } },
-    null,
-    2,
-  ) + '\n',
+  JSON.stringify({ [`${camel}.page.heading`]: { description: `Heading of the ${name} page` } }, null, 2) + '\n',
 );
 console.log(
   `Created ${root}. Next: add shell.title.${camel} to the shell catalogs, register the route in app.routes.ts,`,
 );
-console.log(
-  `add '${camel}' catalog to src/testing/transloco.ts, then write the use cases test-first.`,
-);
+console.log(`add '${camel}' catalog to src/testing/transloco.ts, then write the use cases test-first.`);

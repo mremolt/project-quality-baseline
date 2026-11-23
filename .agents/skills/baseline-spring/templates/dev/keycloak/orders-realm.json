@@ -37,9 +37,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": [
-        "http://localhost:8080/login/oauth2/code/keycloak"
-      ],
+      "redirectUris": ["http://localhost:8080/login/oauth2/code/keycloak"],
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
@@ -48,14 +46,7 @@
         "backchannel.logout.session.required": "true",
         "backchannel.logout.revoke.offline.tokens": "false"
       },
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "profile",
-        "roles",
-        "basic",
-        "email"
-      ]
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "basic", "email"]
     },
     {
       "clientId": "orders-admin",
@@ -71,11 +62,7 @@
       "serviceAccountsEnabled": true,
       "redirectUris": [],
       "webOrigins": [],
-      "defaultClientScopes": [
-        "basic",
-        "roles",
-        "kc-admin-api"
-      ]
+      "defaultClientScopes": ["basic", "roles", "kc-admin-api"]
     }
   ],
   "users": [
@@ -114,10 +101,7 @@
       "enabled": true,
       "serviceAccountClientId": "orders-admin",
       "clientRoles": {
-        "realm-management": [
-          "manage-users",
-          "view-users"
-        ]
+        "realm-management": ["manage-users", "view-users"]
       }
     }
   ]

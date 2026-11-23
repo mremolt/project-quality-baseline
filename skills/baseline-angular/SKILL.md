@@ -70,5 +70,5 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
    **Responsive as you go**: state the screen's layout for compact, medium and expanded (NG-UI-23); keep `WindowSize` in the UI adapter (NG-UI-19); tag main-screen E2E specs `@responsive` (TS-TEST-18).
 5. **Security as you go**: no `bypassSecurityTrust*`/`innerHTML` with data, no tokens in the browser, relative mutating calls (NG-SEC-01/02/07/08); E2E asserts payload, headers, XSRF (NG-SEC-12).
 6. **Shortcuts**: if you need one (e.g. skipping a use case for trivial CRUD), propose it and draft an ADR; never take it silently (ARCH-SC-06).
-7. **Finish** with `npm run verify` green and `npm run e2e` green for the specs that cover changed screens (axe, keyboard journeys, reflow, request budgets and locale projects run only there), and no architecture test, lint rule or a11y rule loosened.
+7. **Finish** with `npm run verify` green and `npm run e2e` green for the specs that cover changed screens (axe, keyboard journeys, reflow, request budgets and locale projects run only there), and no architecture test, lint rule or a11y rule loosened. On a red gate run `npm run format` and `npm run lint:fix` first and hand-fix only what remains (TOOL-SKL-15).
 8. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).

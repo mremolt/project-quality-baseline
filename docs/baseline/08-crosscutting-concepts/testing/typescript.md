@@ -97,6 +97,8 @@ const acceptedAaaExceptions: string[] = []; // adopted-AAA rule ids listed in th
 export const test = base.extend<{ expectAccessible: (label: string) => Promise<void> }>({
   expectAccessible: async ({ page }, use, testInfo) => {
     await use(async (label) => {
+      // Scan only a settled page: a fading focus layer or an opening dialog reports false contrast findings
+      await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running'));
       const results = await new AxeBuilder({ page }).withTags([...AA, ...AAA, ...LEGAL]).analyze();
       await testInfo.attach(`axe-${label}`, { body: JSON.stringify(results.violations, null, 2), contentType: 'application/json' });
       const failing = results.violations.filter(
@@ -110,19 +112,22 @@ export const test = base.extend<{ expectAccessible: (label: string) => Promise<v
 });
 ```
 
-  AA violations always fail. Violations of the adopted AAA rules fail unless the rule is listed in the project's accessibility conformance notes (A11Y-02). Other AAA findings (criteria the baseline does not adopt) are reported without failing. All violations are attached to the report.
+  AA violations always fail. Violations of the adopted AAA rules fail unless the rule is listed in the project's accessibility conformance notes (A11Y-02). Other AAA findings (criteria the baseline does not adopt) are reported without failing. All violations are attached to the report. The fixture waits until no animation runs before it scans (transitions, Material state layers, dialogs opening), so a measurement mid-animation cannot fail or pass a state by chance.
 - **TS-TEST-13: Keyboard journeys** (A11Y layer L5): each main path also exists as a keyboard-only test (`page.keyboard.press('Tab')`, assert `toBeFocused()`, Escape closes overlays, focus returns to the trigger).
-- **TS-TEST-14: Request budgets per main screen** (API-N1-06): a fixture counts API requests while the screen loads and fails when the budget is exceeded. The assertion is an upper bound, so a screen that gets cheaper still passes.
+- **TS-TEST-14: Request budgets per main screen** (API-N1-06): a fixture counts API requests while the screen loads and fails when the budget is exceeded. The assertion is an upper bound, so a screen that gets cheaper still passes. The counter sees every request, including those the catch-all route of TS-TEST-32 answers, never only the ones a stub records. The budget is polled (`expect.poll`) until the screen's last request has arrived, because a request that follows the first paint makes a one-shot assertion racy. Reads the shell makes on every screen (a menu badge, the current user) are listed in the budget of every screen of the roles that trigger them, with the moment they refresh named in the shell's code.
 
 ```ts
 const apiCalls: string[] = [];
-page.on('request', (r) => { if (new URL(r.url()).pathname.startsWith('/api/')) apiCalls.push(r.url()); });
+page.on('request', (r) => { if (new URL(r.url()).pathname.startsWith('/api/')) apiCalls.push(new URL(r.url()).pathname); });
 await page.goto('/orders');
 await expect(page.getByRole('table', { name: 'Orders' })).toBeVisible();
+await expect.poll(() => apiCalls, { message: 'orders screen requests' }).toEqual(['/api/v1/me', '/api/v1/orders']);
 expect(apiCalls.length, 'orders screen request budget').toBeLessThanOrEqual(2);
 ```
 
-- **TS-TEST-15: No fixed waits** (`waitForTimeout`). Use web-first assertions (`await expect(locator).toBeVisible()`).
+- **TS-TEST-15: No fixed waits** (`waitForTimeout`). Use web-first assertions (`await expect(locator).toBeVisible()`). A test branches only on an auto-waiting assertion or on `locator.or()` (wait for one of the expected states), never on `isVisible()`, which answers at once and silently skips half a scenario. After an action that re-renders a list (filter, search, sort), wait for the list's settled state (its exact row count or the expected first row) before acting on a row; a menu opened on a row that re-renders detaches.
+- **TS-TEST-34: Every E2E scenario arranges its own data and leaves nothing another run depends on.** Data a scenario creates gets a unique, exact name or id (a run suffix), and lookups use that exact name or the id, never a prefix such as "Dev User" that matches what other scenarios created in the shared database. A scenario that changes shared state (deactivates a person, locks a month) restores it in `finally`/teardown, so a failure halfway does not make the next run fail for a different reason. Tests never assume an empty table or a fresh stack.
+- **TS-TEST-35: An E2E test never waits out a business rule; it arranges the state through the API.** When a rule needs time to pass (a minimum duration, an expired deadline, a past period), the test creates the data with past timestamps through the API (or the stub returns it) and then exercises the screen. A real wait is the last resort, with its own `test.setTimeout` and a comment naming the rule, and is reported as debt.
 - **TS-TEST-16: The stubbed tier runs in Chromium, Firefox and WebKit; the smoke tier may use Chromium only.** WebKit stands in for Safari, which on iOS and iPadOS also underlies every other browser; it differs from Chromium in ways these tests assert (keyboard focus on click and Tab order, cookie handling for the BFF session, form controls, CSS support). Playwright's WebKit is not Safari itself; the manual release check with real browsers and screen readers (A11Y-24, L6 release checklist) stays the backstop. Which browser runs at which viewport, theme and tier is defined once, by the matrix in TS-TEST-18.
 
 Rules TS-TEST-17..27 and the matrix rules from TS-TEST-28 on are in [typescript-e2e.md](typescript-e2e.md): viewports and the tiered matrix, themes, reflow and text spacing, resize transitions, target size, visual regression, screen reader assertions, flaky tests and the time budget.

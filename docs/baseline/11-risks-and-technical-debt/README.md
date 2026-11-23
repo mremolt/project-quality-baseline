@@ -26,7 +26,7 @@ A product's chapter 11 lists its shortcut ADRs and known technical debt (DOC-ARC
 | React and Next.js skills | Deferred: an own `react-mui-design` skill (adapted from `angular-material-design`; the REACT-UI rules carry the content), an own Redux Toolkit skill adapted from the official RTK skills (TOOL-SKL-05), `material-ui-nextjs` with the first Next.js product, a tool review of the MUI MCP server, TanStack Router skills once they support code-based routing ([agent-skills.md](../08-crosscutting-concepts/development/agent-skills.md#skill-catalogue)) |
 | Team workflow | No single Definition of Done yet (the PR template's "Done" list is the interim entry point); PR size and review rules. Commit convention: REL-BR-03 |
 | API lifecycle | Deprecation headers are defined (API-REST-12); the removal timeline for an old major and consumer notification are not written; events: MSG-CON. Cursor paging has no shared cursor encoding yet (API-REST-08) |
-| Smaller gaps | Multi-tenancy beyond SPRING-SEC-35 (if a product needs it), `Clock` injection in production code (assumed by SPRING-DP-01; tests: TEST-TDD-16), audit logging of business events |
+| Smaller gaps | Multi-tenancy beyond SPRING-SEC-35 (if a product needs it), `Clock` injection in production code (assumed by SPRING-DP-01; tests: TEST-TDD-16). Business change log (who changed which field from what to what): left to a product ADR, not a baseline rule; the ADR settles its separation from the security event log (SEC-AUD), its transaction, its retention and erasure (DP-RET-04) |
 
 ## Verify before first use
 

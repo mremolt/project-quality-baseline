@@ -71,7 +71,7 @@ Full tables: the "Skill overrides" sections linked from `docs/baseline/stacks/re
 5. **Security and data as you go**: no HTML writes, URLs through the helper, mutating calls through the mutator (REACT-SEC-01..06); error UI generic (REACT-SEC-08); new personal data → inventory and deletion concept (DP-INV-03).
 6. **Contract**: changed spec → `npm run generate:api`, adapter and mapper updated, problem `code`s mapped (REACT-API-10, TS-ARCH-18).
 7. **Shortcuts**: propose and draft an ADR; never take one silently (ARCH-SC-06).
-8. **Finish** with `npm run verify` green and `npm run build && npm run e2e` green for changed screens, and no dependency-cruiser rule, lint rule, bundle budget, CSP or a11y check loosened.
+8. **Finish** with `npm run verify` green and `npm run build && npm run e2e` green for changed screens, and no dependency-cruiser rule, lint rule, bundle budget, CSP or a11y check loosened. On a red gate run `npm run format` and `npm run lint:fix` first and hand-fix only what remains (TOOL-SKL-15).
 9. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New app

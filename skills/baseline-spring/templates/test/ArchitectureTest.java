@@ -10,13 +10,16 @@ import static com.tngtech.archunit.core.domain.properties.HasOwner.Predicates.Wi
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.codeUnits;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noCodeUnits;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.example.orders.stereotype.FileAdapter;
 import com.example.orders.stereotype.HttpClientAdapter;
+import com.example.orders.stereotype.MailAdapter;
 import com.example.orders.stereotype.MessagingAdapter;
 import com.example.orders.stereotype.MetricsAdapter;
 import com.example.orders.stereotype.PersistenceAdapter;
@@ -28,6 +31,7 @@ import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaCodeUnit;
 import com.tngtech.archunit.core.domain.JavaField;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.properties.HasAnnotations;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -45,10 +49,17 @@ import java.net.http.HttpClient;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 
@@ -253,6 +264,10 @@ class ArchitectureTest {
             .or()
             .areAnnotatedWith(HttpClientAdapter.class)
             .or()
+            .areAnnotatedWith(MailAdapter.class)
+            .or()
+            .areAnnotatedWith(FileAdapter.class)
+            .or()
             .areAnnotatedWith(PersistenceAdapter.class)
             .or()
             .areAnnotatedWith(SchedulingAdapter.class)
@@ -274,6 +289,24 @@ class ArchitectureTest {
             .areAnnotatedWith(HttpClientAdapter.class)
             .should()
             .resideInAPackage("..adapter.out.http..")
+            .allowEmptyShould(true);
+
+    // Outgoing mail (SMTP) lives in adapter.out.mail, adapters that write files (CSV, Excel, PDF) in adapter.out.file
+    // (SPRING-ARCH-04). allowEmptyShould: bootstrap exception; remove it with the first adapter of the kind.
+    @ArchTest
+    static final ArchRule mailAdaptersLiveInAdapterOutMail = classes()
+            .that()
+            .areAnnotatedWith(MailAdapter.class)
+            .should()
+            .resideInAPackage("..adapter.out.mail..")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule fileAdaptersLiveInAdapterOutFile = classes()
+            .that()
+            .areAnnotatedWith(FileAdapter.class)
+            .should()
+            .resideInAPackage("..adapter.out.file..")
             .allowEmptyShould(true);
 
     // Every class lives in a ring, an adapter package adapter.<in|out>.<technology>, the composition root or a
@@ -352,6 +385,39 @@ class ArchitectureTest {
             .orShould()
             .haveRawType(Float.class);
 
+    // A successful update answers 200 with the resource or at least its new version, never a bare 204 (API-REST-11,
+    // SPRING-REST-12): no void PUT/PATCH handler, no @ResponseStatus(NO_CONTENT), no ResponseEntity.noContent().
+    // allowEmptyShould: bootstrap exception; remove it with the first PUT or PATCH endpoint.
+    @ArchTest
+    static final ArchRule updatesAnswerWithTheResource = methods()
+            .that()
+            .areAnnotatedWith(PutMapping.class)
+            .or()
+            .areAnnotatedWith(PatchMapping.class)
+            .should(answerWithTheResource())
+            .allowEmptyShould(true);
+
+    // Request and response records have unique simple names: springdoc names schemas by simple name and silently
+    // merges two records of the same name into one schema (SPRING-API-02).
+    @ArchTest
+    static void restRecordNamesAreUnique(JavaClasses productionClasses) {
+        Map<String, List<String>> bySimpleName = productionClasses.stream()
+                .filter(record -> resideInAPackage("..adapter.in.rest..").test(record))
+                .filter(record -> record.getSimpleName().endsWith("Request")
+                        || record.getSimpleName().endsWith("Response"))
+                .collect(Collectors.groupingBy(
+                        JavaClass::getSimpleName,
+                        TreeMap::new,
+                        Collectors.mapping(JavaClass::getName, Collectors.toList())));
+        List<String> duplicates = bySimpleName.values().stream()
+                .filter(names -> names.size() > 1)
+                .map(String::valueOf)
+                .toList();
+        if (!duplicates.isEmpty()) {
+            throw new AssertionError("REST records with the same simple name (SPRING-API-02): " + duplicates);
+        }
+    }
+
     // Mass assignment (SPRING-SEC-34): request records never carry fields that only the server may set.
     // Adjust the suffix if request records are named differently. An admin endpoint that legitimately assigns
     // such a field (roles of another user) is listed with its reason; its use case authorizes with an admin
@@ -388,7 +454,9 @@ class ArchitectureTest {
             .orShould()
             .callMethod(Runtime.class, "exec", String[].class);
 
-    // Every use case that takes an id from the caller is referenced by a test tagged "cross-user" (SPRING-SEC-16/35).
+    // Every use case that takes an id from the caller is called by a test method tagged "cross-user" (SPRING-SEC-16/35):
+    // the tagged method (or any method of a tagged class) calls the use case or its incoming port. A tagged method
+    // elsewhere in the same test class does not cover the use cases the class only mentions.
     // A use case that takes no caller-supplied id is listed here with a reason. Typical entries: use cases that
     // create a new aggregate, act only on the caller's own row, or run without a caller (scheduled jobs, start-up
     // jobs, provider-initiated calls such as back-channel logout). Commas between entries, none after the last.
@@ -400,15 +468,18 @@ class ArchitectureTest {
     @ArchTest
     static void everyUseCaseHasACrossUserTest(JavaClasses productionClasses) {
         JavaClasses withTests = new ClassFileImporter().importPackages("com.example.orders");
-        Set<String> covered = withTests.stream()
+        Set<String> called = withTests.stream()
+                .flatMap(test -> test.getMethods().stream())
                 .filter(ArchitectureTest::isCrossUserTest)
-                .flatMap(test -> test.getDirectDependenciesFromSelf().stream())
-                .map(dependency -> dependency.getTargetClass().getName())
+                .flatMap(method -> method.getCallsFromSelf().stream())
+                .map(call -> call.getTargetOwner().getName())
                 .collect(Collectors.toSet());
         List<String> missing = productionClasses.stream()
                 .filter(useCase -> useCase.isAnnotatedWith(UseCase.class))
+                .filter(useCase -> !called.contains(useCase.getName())
+                        && useCase.getRawInterfaces().stream().noneMatch(port -> called.contains(port.getName())))
                 .map(JavaClass::getName)
-                .filter(name -> !covered.contains(name) && !NO_CALLER_SUPPLIED_ID.contains(name))
+                .filter(name -> !NO_CALLER_SUPPLIED_ID.contains(name))
                 .sorted()
                 .toList();
         if (!missing.isEmpty()) {
@@ -449,15 +520,47 @@ class ArchitectureTest {
 
     private static final String WEB_MVC_TEST = "org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest";
 
-    private static boolean isCrossUserTest(JavaClass javaClass) {
+    private static boolean isCrossUserTest(JavaMethod method) {
+        JavaClass owner = method.getOwner();
+        if (hasCrossUserTag(method) || isCrossUserClass(owner)) {
+            return true;
+        }
+        // Calls inside a lambda are compiled into lambda$<method>$<n> of the same class.
+        return method.getName().startsWith("lambda$")
+                && owner.getMethods().stream()
+                        .anyMatch(tagged -> hasCrossUserTag(tagged)
+                                && method.getName().startsWith("lambda$" + tagged.getName() + "$"));
+    }
+
+    private static boolean isCrossUserClass(JavaClass javaClass) {
         return hasCrossUserTag(javaClass)
-                || javaClass.getMethods().stream().anyMatch(ArchitectureTest::hasCrossUserTag);
+                || javaClass.getEnclosingClass().map(ArchitectureTest::isCrossUserClass).orElse(false);
     }
 
     private static boolean hasCrossUserTag(HasAnnotations<?> element) {
         return element.tryGetAnnotationOfType(Tag.class)
                 .map(tag -> "cross-user".equals(tag.value()))
                 .orElse(false);
+    }
+
+    private static ArchCondition<JavaMethod> answerWithTheResource() {
+        return new ArchCondition<>("answer with the resource or its new version, never a bare 204") {
+            @Override
+            public void check(JavaMethod method, ConditionEvents events) {
+                boolean bare = method.getRawReturnType().isEquivalentTo(void.class)
+                        || method.tryGetAnnotationOfType(ResponseStatus.class)
+                                .map(status -> status.value() == HttpStatus.NO_CONTENT
+                                        || status.code() == HttpStatus.NO_CONTENT)
+                                .orElse(false)
+                        || method.getMethodCallsFromSelf().stream()
+                                .anyMatch(call -> call.getTargetOwner().isEquivalentTo(ResponseEntity.class)
+                                        && "noContent".equals(call.getName()));
+                if (bare) {
+                    events.add(SimpleConditionEvent.violated(
+                            method, method.getFullName() + " answers without the resource (API-REST-11)"));
+                }
+            }
+        };
     }
 
     private static DescribedPredicate<JavaField> notListedIn(Set<String> allowed) {

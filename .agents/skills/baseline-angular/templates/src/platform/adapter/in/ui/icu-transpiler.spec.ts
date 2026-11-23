@@ -22,9 +22,9 @@ describe('IcuTranspiler', () => {
     expect(transpile('en', message, { count: 0 })).toBe('No entries');
     expect(transpile('en', message, { count: 1 })).toBe('1 entry');
     expect(transpile('en', message, { count: 1500 })).toBe('1,500 entries');
-    expect(
-      transpile('de', '{count, plural, one {# Eintrag} other {# Einträge}}', { count: 1500 }),
-    ).toBe('1.500 Einträge');
+    expect(transpile('de', '{count, plural, one {# Eintrag} other {# Einträge}}', { count: 1500 })).toBe(
+      '1.500 Einträge',
+    );
   });
 
   it('never compiles code at runtime (the CSP forbids it, NG-SEC-05)', () => {

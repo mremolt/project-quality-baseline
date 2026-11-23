@@ -67,6 +67,7 @@ A complete, validated configuration is in `.agents/skills/baseline-spring/templa
 ## Bug and security analysis (default JAVA-D6)
 
 - **JAVA-TOOL-12: SpotBugs runs with FindSecBugs in `verify`** and fails on findings reported at `threshold` `Medium` or higher. SpotBugs' threshold is the *confidence* of a finding, not its severity (that is the separate bug rank), so a high-severity bug with low confidence is not reported. The threshold comes from the gate table in [secure-pipeline.md](../security/secure-pipeline.md) (SEC-CI-01). Exclusions live in one `spotbugs-exclude.xml` per component, each with a reason in a comment; no `@SuppressFBWarnings` without a reason. The template excludes only `EI_EXPOSE_REP`/`EI_EXPOSE_REP2` (records and constructor-injected collaborators). Findings on code that writes fixed content are fixed in the code, not excluded: `SPRING_CSRF_PROTECTION_DISABLED` on the probe chain is resolved by leaving CSRF enabled (the chain serves only `GET`, so CSRF costs nothing), and `XSS_SERVLET` on the BFF's `index.html` or problem-details writers by writing bytes through the response's `OutputStream` instead of its `Writer`.
+- **JAVA-TOOL-25: XML, XSL-FO, SVG and HTML built in Java are written through a writer API, never by string concatenation**, even with escaped values: StAX (`XMLStreamWriter`, which escapes text and attribute values) or a DOM, with a small element-tree helper for layouts. FindSecBugs reports every concatenated document as `POTENTIAL_XML_INJECTION`, and the fix is the writer, not an exclusion (JAVA-TOOL-12, SEC-REV-02). A test feeds a hostile name (`<b>&"'`) through the renderer and asserts it arrives as text.
 - **JAVA-TOOL-13: PMD and Checkstyle are not part of the baseline.** They would duplicate Spotless, Error Prone, SpotBugs and ArchUnit. A project may add one with an ADR.
 - **JAVA-TOOL-14: JaCoCo produces a report, not a gate** (D5, TEST-ARCH-09). Use version 0.8.14 or newer for Java 25.
 - **JAVA-TOOL-15: Mockito is attached as an explicit agent** (`dependency:properties` plus `-javaagent:${org.mockito:mockito-core:jar}` in the Surefire and Failsafe `argLine`, after `@{argLine}`). Without it, JDK 25 prints dynamic-agent warnings, and later JDKs will refuse self-attaching.
@@ -102,6 +103,8 @@ SAST next to FindSecBugs: JAVA-TOOL-21 under [Security tooling](#security-toolin
 | `./mvnw verify -Dopenapi.update=true` | Regenerate the committed OpenAPI spec (`OpenApiSpecIT`, SPRING-API-08) |
 | `./mvnw spring-boot:run -Dspring-boot.run.profiles=local` | Run with the `local` profile against the services in `compose.yaml` (SPRING-DEV-02, [07-deployment-view/spring-local-development.md](../../07-deployment-view/spring-local-development.md)) |
 | `./mvnw versions:display-dependency-updates` | Update overview |
+
+`-q` hides the compiler's warning text: under `-Werror` a quiet run fails with only "warnings found", so diagnose a compile failure without `-q`.
 
 `./mvnw verify` is what the component's CI job runs (REPO-CI-01); the security job and the E2E tiers are separate pipeline jobs, listed in the pipeline jobs table ([REPO-CI](../../07-deployment-view/repository-layout.md#ci)).
 

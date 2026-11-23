@@ -58,6 +58,9 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - ARCH-UC-14: Domain events are immutable types in `domain`, named in the past tense (`OrderPlaced`), raised by the aggregate or the use case, and handed to an outgoing port by the use case inside its transaction.
 - ARCH-UC-15: The use case authorizes; the incoming adapter authenticates.
 - ARCH-UC-16: A rule that depends on other rows or on concurrent requests is enforced atomically, never by check-then-write alone.
+- ARCH-UC-17: A command that may act on someone else's data carries the owner separately from the caller.
+- ARCH-UC-18: Logic shared by several use cases of one cut lives in package-private final helper classes that each service builds, not in a shared bean.
+- ARCH-UC-19: A bulk import of structured data (CSV, spreadsheet) follows four defaults, deviation stated in an ADR.
 - ARCH-UC-12 (default D2): Use a rich domain model for logic-heavy domains.
 
 ## [Container Images, Frontend Delivery and Runtime Contract](../07-deployment-view/container-runtime.md)
@@ -78,6 +81,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - REL-RUN-05: The JVM heap is derived from the container's memory limit, as a percentage, never a fixed `-Xmx` chosen without the limit in view.
 - REL-RUN-06: The platform's termination grace period is longer than the application's shutdown budget plus any pre-stop delay plus a margin (OBS-04, Spring:
 - REL-RUN-07: Images carry OCI labels `org.opencontainers.image.source` (repository URL), `org.opencontainers.image.revision` (commit SHA) and `org.opencontainers.image.title`.
+- REL-RUN-08: A feature that depends on what the image provides beyond the runtime (fonts, AWT, native libraries, locale data, CA certificates) is exercised against the real image.
 
 ## [Delivery and Release](../07-deployment-view/delivery-and-release.md)
 
@@ -98,6 +102,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - REL-CD-05: Where the customer deploys, each release is delivered as a handover package instead of a deployment:
 - REL-CD-06: Pipeline rules name capabilities; the product records its tools.
 - REL-CD-07: The pipeline is fast enough for roll-forward, and there is only one (SHOULD for the numbers).
+- REL-CD-08: A product without a pipeline yet (no SCM host or CI chosen, a local demo installation as deliverable) runs the gates locally and records the gap.
 - REL-DB-01: Migrations run before the new version takes traffic, with a separate DDL role.
 - REL-DB-02: Every migration is compatible with the previous release still running (expand/contract, REL-ZD-03;
 - REL-DB-03: Several instances, or a retried job, may start the migration at once.
@@ -144,6 +149,8 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - API-N1-03: Default order of preference:
 - API-N1-04: Frontend mitigations (S4, S5) live in the outgoing adapter, typically as a decorator implementing the same port.
 - API-N1-05: Backend batch and view endpoints MUST NOT reintroduce N+1 in persistence.
+- API-N1-08: A view that needs data of several aggregates behind different ports is assembled in the use case ring, with one set-based read per port.
+- API-N1-09: A read loads only the range its result needs.
 - API-N1-06: Assert with tests.
 - API-N1-07: Unbounded lists are not allowed.
 
@@ -155,6 +162,8 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - API-CON-04: CI checks for breaking changes against the target branch (e.g. with `oasdiff breaking`).
 - API-CON-05: The spec is designed, not just emitted.
 - API-CON-06: Every new or changed endpoint is checked for N+1 usage by its consumers (08-crosscutting-concepts/api/avoiding-n-plus-one.md).
+- API-CON-12: Schema names are unique across the API.
+- API-CON-13: One operation that accepts several request media types declares one content entry per media type; one that returns a file declares its media type with a binary schema.
 - API-CON-07: Consumers MUST NOT hand-write low-level HTTP calls or DTO types for an API that has a spec.
 - API-CON-08: The consumer pins the spec it was generated from.
 - API-CON-09: Generated code lives inside the outgoing adapter for that API and never leaves it (ARCH-ADP-12).
@@ -173,7 +182,8 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - API-REST-08: Every collection endpoint is bounded: paged, or limited by a documented hard upper bound that the query enforces (API-N1-07).
 - API-REST-09: Sorting uses a repeatable `sort` parameter, `sort=<field>,<asc|desc>` (`sort=createdAt,desc&sort=id,asc`).
 - API-REST-10: Filtering uses one query parameter per filterable field, named after the response field.
-- API-REST-11: Updates to resources that users change concurrently use optimistic concurrency, either a `version` field in the request body or `ETag`/`If-Match`;
+- API-REST-11: Updates to resources that users change concurrently use optimistic concurrency, and a successful update answers `200` with the resource or its new version, never a bare `204`.
+- API-REST-14: A state transition of a singleton resource MAY be an action sub-resource `POST …/<singleton>/<verb>`; everything else uses nouns.
 - API-REST-12: An operation, parameter or field that will be removed is deprecated first.
 - API-REST-13: Checks answer in a fixed order: 401, then request-shape errors that need no data (400 for malformed input, 428 for a missing `If-Match`), then 403/404 decided by the use case, then 409/412 from the current state.
 
@@ -228,6 +238,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - DP-ENV-01: Production personal data never enters non-production environments, local machines, CI, test fixtures, tickets, chat or prompts to AI tools (like SEC-INC-01 for secrets).
 - DP-ENV-02: Pseudonymised production copies are personal data and fall under DP-ENV-01.
 - DP-ENV-03: Debugging production issues uses production tooling with logged, role-based access, not data exports.
+- DP-ENV-04: Demo data of a running installation is loaded by an incoming adapter that calls the use cases, active only under the `demo` profile (CFG-04).
 - DP-PROC-01: Every external service that receives personal data is listed in the inventory before it goes live:
 - DP-PROC-02: Transfers outside the EU/EEA need a documented basis (adequacy decision under Art.
 - DP-PROC-03: The browser loads no third-party resources that transmit user data without need.
@@ -255,6 +266,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - TOOL-SKL-12: Every rule starts with a bold headline that states the rule on its own as one sentence:
 - TOOL-SKL-13: Agent checklists and sources live outside the rule docs.
 - TOOL-SKL-14: Agents edit code with the editor tools, or run the formatter before a scripted multi-line replacement.
+- TOOL-SKL-15: On a red gate, agents run the autofix commands first and hand-fix only what remains; they never loosen a rule to get green.
 
 ## [Architecture Documentation (arc42)](../08-crosscutting-concepts/development/architecture-documentation.md)
 
@@ -267,6 +279,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - DOC-ARC-07: Lean beats complete (SHOULD).
 - DOC-ARC-08: The baseline follows the same structure.
 - DOC-ARC-09: The baseline repository keeps `ARCHITECTURE.md` at its root current.
+- DOC-ARC-10: Product business rules live in chapter 8, section "Business rules"; open assumptions in `docs/architecture/open-questions.md`.
 
 ## [IDE Setup: VS Code and IntelliJ IDEA Ultimate](../08-crosscutting-concepts/development/ide-setup.md)
 
@@ -277,6 +290,18 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - TOOL-IDE-05: Use the workspace TypeScript version (`node_modules/typescript` of the frontend component) in both IDEs, so editor errors match the build.
 - TOOL-IDE-06: Settings IntelliJ only stores per user (e.g. "Reformat code" for Java under Actions on Save) are listed in the project README as a one-time step;
 - TOOL-IDE-07: In a product repository with component folders (D12), the IDE opens the repository root and the shared settings live there.
+
+## [File Exports and Generated Documents](../08-crosscutting-concepts/exports/file-exports.md)
+
+- EXP-01: Every export is either for people or for a machine, and the product's docs say which.
+- EXP-02: A machine format is written down and pinned by a test.
+- EXP-03: A CSV meant to be opened in Excel is UTF-8 with a byte order mark; spreadsheets for people are preferably `.xlsx`.
+- EXP-04: Export cells that start with a formula character are neutralised.
+- EXP-05: XML, FO, SVG and HTML are built with a writer or a templating engine that escapes by context, never by string concatenation, even with manual escaping.
+- EXP-06: Server-side rendering of HTML or SVG to PDF or images has no network access.
+- EXP-07: Exports are produced by an outgoing file adapter behind a port and delivered as a binary download.
+- EXP-08: Generated documents need no fonts, AWT or native libraries from the image.
+- EXP-09: PDFs for people meet PDF/UA-1 and are checked automatically, plus once per release by hand.
 
 ## [Internationalization (i18n)](../08-crosscutting-concepts/i18n/i18n.md)
 
@@ -296,6 +321,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - TOOL-I18N-05: Release rule.
 - TOOL-I18N-06: Machine translation is a draft source only.
 - TOOL-I18N-07: Translator context is kept in a sidecar `context.json` next to each catalog and pushed to Weblate by CI (descriptions, max lengths, screenshot names).
+- TOOL-I18N-08: Until the translation tool is connected, non-source catalogs are written in the repository, with context, and every string written by an agent or machine translation is marked for human review.
 - TEST-I18N-01: Component tests render with the real source-locale catalog so role-and-name queries stay readable (TS-TEST-07);
 - TEST-I18N-02: Playwright has locale projects:
 - TEST-I18N-03: axe (TS-TEST-12) runs per locale project and asserts `html[lang]` and `dir` after a switch (WCAG 3.1.1):
@@ -395,6 +421,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - RES-JOB-02: In a deployment with more than one instance, every scheduled job either runs under a cluster-wide lock or is proven safe to run concurrently on all instances.
 - RES-JOB-03: Jobs work in bounded batches and are safe to stop at any point:
 - RES-JOB-04: A request that needs one remote call per item of a bulk input commits first and hands the calls to a job.
+- RES-JOB-05: A scheduled job that must act once per business fact claims the fact with a primary-key insert before acting.
 - RES-CCH-01: A cache is an adapter concern.
 - RES-CCH-02: What may be cached:
 - RES-CCH-03: Every cache has a maximum size and a time to live, and its invalidation is written down:
@@ -410,6 +437,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - SEC-CI-06: Container images are scanned at three points:
 - SEC-CI-07: Before a deployment the digest's provenance and signature are verified by the delivery platform (admission policy) or by a pipeline step;
 - SEC-CI-08: One scheduled job checks the security dates:
+- SEC-CI-09: A new dependency that parses untrusted input (files, archives, markup, documents), or that is large or young, gets a written dependency review before it is added.
 
 ## [Security Requirements and Threat Modelling](../08-crosscutting-concepts/security/security-requirements.md)
 
@@ -423,6 +451,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - SEC-CRY-03: Data at rest is encrypted according to its class (SEC-REQ-01).
 - SEC-CRY-04: Keys live in a key management service or the secret manager, never next to the data they protect and never in git or images (SEC-INC-01).
 - SEC-CRY-05: Security-relevant random values (tokens, ids that must not be guessed, nonces, salts) come from a cryptographically secure generator:
+- SEC-CRY-06: The IdP's password and recovery policy has baseline defaults (ASVS 5.0 V6, NIST SP 800-63B), recorded in chapter 8 as IdP configuration.
 - SEC-TM-01: A system-level threat model is kept in `docs/security/threat-model.md`:
 - SEC-TM-02: A feature that adds an external entry point, an outbound call, a role, or personal data gets a short threat model in its pull request, answering four questions:
 - SEC-TM-03: Abuse cases are written next to the use cases and become tests.
@@ -472,6 +501,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - TEST-ARCH-02: Use cases (application services) → unit tests with mocked/faked outgoing ports.
 - TEST-ARCH-03: Incoming adapters → integration tests inside the real framework (routing, serialization, validation, error mapping), with the incoming port mocked.
 - TEST-ARCH-04: Outgoing adapters → integration tests against the real technology.
+- TEST-ARCH-13: Every new value of a persisted enum, and every new kind of row in an existing table, is exercised once through the real adapter and the real migrations.
 - TEST-ARCH-05: Main user paths → system tests.
 - TEST-ARCH-06: Tests are written while implementing, not afterwards.
 - TEST-ARCH-07: Narrow ports make mocking easy.
@@ -527,6 +557,8 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - A11Y-30: Submissions with legal or financial effect, or that change or delete user data, are reversible, checked, or confirmed (WCAG 3.3.4):
 - A11Y-31: Content shown on hover or focus is dismissible, hoverable and persistent (WCAG 1.4.13):
 - A11Y-32: Every page states its language in `<html lang>` (WCAG 3.1.1), also in a single-language product, and passages in another language carry their own `lang` (3.1.2).
+- A11Y-33: Every chart has an accessible name and an equivalent in text with the same figures (WCAG 1.1.1, 1.3.1).
+- A11Y-34: A read-only value within a known range (usage, quota, rating) is `role="meter"`; progress towards completion is `progressbar`.
 - A11Y-13: Content reflows at 320 CSS px width without two-dimensional scrolling (WCAG 1.4.10).
 - A11Y-14: Text-spacing overrides cause no clipped or overlapping text (WCAG 1.4.12):
 - A11Y-15: No orientation lock (WCAG 1.3.4).
@@ -538,6 +570,7 @@ Every rule ID of the shared docs (all stacks) with its headline, grouped by doc.
 - A11Y-21: Every route has a unique, descriptive title (2.4.2), and focus moves to the new page's main heading when the path changes:
 - A11Y-22: Input errors are identified in text and linked to the field programmatically.
 - A11Y-23: Each main screen has a landmark and heading contract:
+- A11Y-35: A wrapper never repeats the accessible name of the group, region or landmark it contains.
 - A11Y-24: The screen reader protocol of the L6 release checklist runs once per release for every pair in the A11Y-19 matrix (tier T3, TS-TEST-18).
 - A11Y-25: Real screen reader automation is optional and supplementary:
 

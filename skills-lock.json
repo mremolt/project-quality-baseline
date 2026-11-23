@@ -18,7 +18,7 @@
     "angular-material-design": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "0e9c19ed0dd9de09d2587cd1a8395be0fe912c2472eefcdba721b9f3a65d8938"
+      "computedHash": "62835f49b954925d561c5193a42850a20a459afeb6a4f355018b3ec24274d44d"
     },
     "angular-new-app": {
       "source": "angular/skills",
@@ -30,7 +30,7 @@
     "baseline-angular": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "4158916c5cf875dd97c9fb8c8514afb97a5381ee597e99ac92693ed9d01b7122"
+      "computedHash": "3f617ac9c1c119a0eabc1ee74921d65b203a051bb83da9b784c9935aaf19406d"
     },
     "baseline-codebase-review": {
       "source": "./skills",
@@ -40,7 +40,7 @@
     "baseline-i18n": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "8eca72d83bd195484a53494f00505d2833db981579f19f655e2246be5113e1e4"
+      "computedHash": "6a846993c4bf90d835649bf311f21fd102ca9b21d5347bd8286c5e7df841fe29"
     },
     "baseline-ide-setup": {
       "source": "./skills",
@@ -50,32 +50,32 @@
     "baseline-nestjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "7c3701c410c85d67d6c1a8927a3f7c5772e7b9e83a3631563d382d86b8626839"
+      "computedHash": "e4d45d8bd5b3a8fb7efa7f56d2a153becc7f32191e784eff5a7335049503ae52"
     },
     "baseline-nextjs": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "c244641159ac200121c28b2afde9f367bdea9aa9023c8f078ea8ffeb7cf8843e"
+      "computedHash": "997a362dcbfeee75fcc89b9185f2969e235695f7de784004473086b0b21595f2"
     },
     "baseline-react": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "36eaf2335cf6541b4118958678fa53bf4c4cd804f3d65126df970478769e65e0"
+      "computedHash": "5cccf42204fcac227c376b6e5e72b1fd1b0c95451b16e6355d8ce503e8497af7"
     },
     "baseline-security": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "cba05868a04cb1e2bb185898d29699f08eb6c019b0cb78e8618ff6abe396b8a1"
+      "computedHash": "84fadd550e079edbf5e63a718033e7b0384b13453e25d952a215c0f61ccc2c18"
     },
     "baseline-spring": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "e36b00ab082f7da70b5fca1487e542351c730db11e71e4d4b1369799fea358c0"
+      "computedHash": "c534922234f310f8e0b0c060f33954251ed00b4ae8937ffcd3a2a26e98be9dfc"
     },
     "baseline-tdd": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "613ca15e64b75f0126b01dfa6dbe6f7ee3f0cf64e04a74be5e3d80565e4e2170"
+      "computedHash": "ce413a513c537610381021fb6bd73358c44f62fd4b7f847e390dceac133ea832"
     },
     "java-hibernate-jpa": {
       "source": "github/awesome-copilot",
@@ -101,7 +101,7 @@
     "ngrx-signals": {
       "source": "./skills",
       "sourceType": "local",
-      "computedHash": "9a785e15381b3c01ade17f6908a5abd2ea5bab62a3f053d85e37ba107927c278"
+      "computedHash": "fd9eb799cffc7794cb21cfe6ca1cc90e7d46b264a26c346958fafe06acdc800e"
     },
     "orval": {
       "source": "orval-labs/orval",

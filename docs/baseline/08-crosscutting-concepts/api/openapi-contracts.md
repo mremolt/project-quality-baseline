@@ -38,6 +38,8 @@ Which case applies is decided per consumer by [07-deployment-view/repository-lay
   - Errors are documented as RFC 9457 `application/problem+json` with their `code` values (API-REST-05/07).
   - Schemas carry examples, so generated mocks are realistic.
 - **API-CON-06: Every new or changed endpoint is checked for N+1 usage** by its consumers ([08-crosscutting-concepts/api/avoiding-n-plus-one.md](avoiding-n-plus-one.md)).
+- **API-CON-12: Schema names are unique across the API.** Code-first generators derive a schema from the simple class name and silently merge two different types with the same name (two nested `DayResponse` records), which changes existing clients without a breaking-change warning. Name request and response types after their use case (`WeekDayResponse`), and let the architecture tests reject two DTO types with the same simple name.
+- **API-CON-13: One operation that accepts several request media types declares one content entry per media type; one that returns a file declares its media type with a binary schema.** A JSON-or-CSV import is one operation with two content entries, and the consumer's adapter picks the media type. A download declares `application/octet-stream` (or the concrete type, `text/csv`, `application/pdf`) with `type: string, format: binary`, so the generated client returns a `Blob` instead of parsing JSON (EXP-07).
 
 ### Consumers
 

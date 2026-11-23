@@ -9,14 +9,16 @@ import java.util.function.Predicate;
 
 /**
  * Base of in-memory fakes for outgoing ports that are pure collections (Chicago style, TEST-TDD-10; SPRING-TEST-14).
- * A fake extends it and implements the port: {@code final class InMemoryOrders extends InMemoryRepository<UUID, Order>
- * implements OrderPort}. Query methods filter {@link #all()}; rules the database enforces (unique keys) are repeated
+ * A fake extends it with itself as the last type argument and implements the port: {@code final class InMemoryOrders
+ * extends InMemoryRepository<UUID, Order, InMemoryOrders> implements OrderPort}. Query methods filter {@link #all()}; rules the database enforces (unique keys) are repeated
  * in the fake only where a use case reacts to them, and the adapter's IT proves the real constraint.
  *
  * @param <K> id type
  * @param <T> aggregate type
+ * @param <S> the fake itself, so {@link #with} chains without a cast at the call site (a return-only type parameter
+ *     fails Error Prone's TypeParameterUnusedInFormals)
  */
-public abstract class InMemoryRepository<K, T> {
+public abstract class InMemoryRepository<K, T, S extends InMemoryRepository<K, T, S>> {
 
     private final Map<K, T> byId = new LinkedHashMap<>();
     private final Function<T, K> idOf;
@@ -26,10 +28,10 @@ public abstract class InMemoryRepository<K, T> {
     }
 
     /** Arranges stored state: {@code orders.with(order)}. Returns this for chaining. */
-    @SuppressWarnings("unchecked")
-    public <R extends InMemoryRepository<K, T>> R with(T aggregate) {
+    @SuppressWarnings("unchecked") // S is the subclass by construction
+    public S with(T aggregate) {
         byId.put(idOf.apply(aggregate), aggregate);
-        return (R) this;
+        return (S) this;
     }
 
     /** Asserts on stored state after the use case ran. */

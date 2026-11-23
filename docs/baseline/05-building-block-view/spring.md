@@ -19,13 +19,15 @@ Below the application's base package (where the `@SpringBootApplication` class l
 |   +- jpa
 |   +- jdbc
 |   +- http
+|   +- mail
+|   +- file
 |   +- metrics
 +- application   // business logic; sub-packages by a sensible functional cut
 +- domain        // domain objects, including business exceptions
 +- ports
 | +- in
 | +- out
-+- stereotype    // @UseCase, @WebAdapter, @PersistenceAdapter, @MessagingAdapter, @SchedulingAdapter, @MetricsAdapter
++- stereotype    // @UseCase, @WebAdapter, @PersistenceAdapter, @MessagingAdapter, @HttpClientAdapter, @MailAdapter, @FileAdapter, @SchedulingAdapter, @MetricsAdapter
 +- config        // support types for configuration only (Secret, SPRING-CFG-11); no @Configuration classes
 ```
 
@@ -42,14 +44,17 @@ Below the application's base package (where the `@SpringBootApplication` class l
 | `adapter.in.rest.v1` | `@RestController`s sliced per use case, package-private request/response records, mapping | `ports.in`, `domain` |
 | `adapter.in.rest` | `@RestControllerAdvice` mapping business exceptions to `ProblemDetail` (shared by all versions) | `domain` |
 | `adapter.in.kafka` | `@KafkaListener`s: deserialize → map to command → call `ports.in`; error/DLT handling | `ports.in`, `domain` |
+| `adapter.in.demo` | Demo-data loader under the `demo` profile, calling `ports.in` (SPRING-ARCH-20) | `ports.in`, `domain` |
 | `adapter.in.scheduling` | `@Scheduled` jobs (retention, purges, polling) that call `ports.in`, under a cluster lock (SPRING-RES-12, SPRING-DP-01) | `ports.in`, `domain` |
 | `adapter.out.kafka` | Producers implementing `ports.out`; message schemas/DTOs stay here | `ports.out`, `domain` |
 | `adapter.out.s3` | S3 client adapter implementing `ports.out`; no AWS SDK types leave the package | `ports.out`, `domain` |
 | `adapter.out.http` | REST client adapters implementing `ports.out`; generated client and DTOs in `generated` (SPRING-LIB-06) | `ports.out`, `domain` |
 | `adapter.out.jpa` | `@Entity` classes, Spring Data JPA repositories, mapper, adapter class implementing `ports.out`; may also run `JdbcClient` queries for the same aggregate | `ports.out`, `domain` |
 | `adapter.out.jdbc` | Persistence adapters built only on `JdbcClient` (read models, reporting, bulk updates; SPRING-DB-15), row mappers | `ports.out`, `domain` |
+| `adapter.out.mail` | Outgoing mail: the port implementation writes the mail outbox, a sender job delivers over SMTP (SPRING-MSG-13); templates rendered in the recipient's language (SPRING-I18N-05) | `ports.out`, `domain` |
+| `adapter.out.file` | Writers of generated files (CSV, Excel, PDF) implementing `ports.out`, one sub-package per format (`file.pdf`) | `ports.out`, `domain` |
 | `adapter.out.metrics` | Business metrics: implements a metrics port from `ports.out` with Micrometer's `MeterRegistry` (SPRING-OBS-06) | `ports.out`, `domain` |
-| `stereotype` | The seven stereotype annotations (SPRING-ARCH-04); contains nothing else | Spring only |
+| `stereotype` | The nine stereotype annotations (SPRING-ARCH-04); contains nothing else | Spring only |
 | `config` | Support types shared by the properties records of several adapters (`Secret`, SPRING-CFG-11); contains nothing else | nothing |
 | base package | `@SpringBootApplication` class = composition root | everything |
 
@@ -62,10 +67,12 @@ Below the application's base package (where the `@SpringBootApplication` class l
 - **SPRING-ARCH-01: New services use the package structure above.** Adapter sub-packages are named after the technology. Versioned REST APIs get one package per version (`v1`, `v2`) with their own DTOs (ARCH-ORG-03).
 - **SPRING-ARCH-02: `@Configuration` classes never go into a separate configuration package.** They live next to what they configure (e.g. `adapter.out.jpa.JpaConfiguration`, `adapter.in.kafka.KafkaConsumerConfiguration`), so they can reach package-private classes. The `config` support package holds only shared types such as `Secret` (SPRING-CFG-11).
 - **SPRING-ARCH-03: Business exceptions never extend Spring exceptions** (e.g. `ResponseStatusException`). Placement and categories: ARCH-ORG-05, ARCH-UC-13; translation: ARCH-ADP-05, in Spring by SPRING-REST-07 and SPRING-ARCH-18.
+- **SPRING-ARCH-20: Demo and seed data of a running installation are loaded by an incoming adapter that calls the use cases.** An `ApplicationRunner` in `adapter.in.demo`, registered by a `@Bean` with `@Profile("demo")` in that package's `@Configuration`, acts as a named system caller and goes through the incoming ports (master data through the product's bulk-import use case where one exists), so validation, business rules and the audit trail apply; it never writes tables directly. It skips when its data is already present, the data is synthetic (DP-ENV-01), and no deployed configuration sets the `demo` profile (a context test without the profile asserts the runner bean is absent).
+  *Why:* seed SQL bypasses the rules the demo is meant to show and breaks with every migration.
 
 ### Wiring
 
-- **SPRING-ARCH-04: Core beans are found by component scanning using custom stereotype annotations** that make the architecture visible: `@UseCase` (in `application`), `@WebAdapter` / `@MessagingAdapter` (Kafka listeners and producers, and outgoing mail over SMTP in `adapter.out.mail`: mail is outbound messaging) / `@HttpClientAdapter` (outgoing HTTP clients in `adapter.out.http`, SPRING-LIB-06) / `@PersistenceAdapter` / `@SchedulingAdapter` (`adapter.in.scheduling`, SPRING-RES-12) / `@MetricsAdapter` (`adapter.out.metrics`, SPRING-OBS-06) (in `adapter`), each meta-annotated with `@Component`. The annotations live in `<base>.stereotype` (templates in `.agents/skills/baseline-spring/templates/stereotype/`). Scanned classes stay **package-private** (Spring instantiates them reflectively); the architecture test checks it (`stereotypedClassesArePackagePrivate`).
+- **SPRING-ARCH-04: Core beans are found by component scanning using custom stereotype annotations** that make the architecture visible: `@UseCase` (in `application`), `@WebAdapter` / `@MessagingAdapter` (Kafka listeners and producers) / `@HttpClientAdapter` (outgoing HTTP clients in `adapter.out.http`, SPRING-LIB-06) / `@MailAdapter` (outgoing mail over SMTP and its outbox in `adapter.out.mail`, SPRING-MSG-13) / `@FileAdapter` (adapters that write files such as CSV, Excel or PDF in `adapter.out.file`, one technology package with sub-packages per format, so the formats can share helpers without breaking ARCH-DEP-05) / `@PersistenceAdapter` / `@SchedulingAdapter` (`adapter.in.scheduling`, SPRING-RES-12) / `@MetricsAdapter` (`adapter.out.metrics`, SPRING-OBS-06) (in `adapter`), each meta-annotated with `@Component`. The annotations live in `<base>.stereotype` (templates in `.agents/skills/baseline-spring/templates/stereotype/`). Scanned classes stay **package-private** (Spring instantiates them reflectively); the architecture test checks it (`stereotypedClassesArePackagePrivate`).
 - **SPRING-ARCH-05: Feature annotations go on the adapter's own `@Configuration`, never on the main class** (`@EnableJpaRepositories`, `@EntityScan`, `@EnableKafka`, …).
   *Why:* test slices and partial contexts can start without pulling in every infrastructure piece.
 - **SPRING-ARCH-06: Constructor injection only** (final fields, single constructor). No field injection.
@@ -79,7 +86,7 @@ Below the application's base package (where the `@SpringBootApplication` class l
 ### Persistence
 
 - **SPRING-ARCH-09: JPA entities and Spring Data repositories are package-private inside `adapter.out.jpa`** and never appear in a port signature.
-- **SPRING-ARCH-10: The JPA entity is never the domain model; persistence always uses two-way mapping** (tightens D3 and ARCH-MAP-02/03 of [08-crosscutting-concepts/mapping/mapping-between-boundaries.md](../08-crosscutting-concepts/mapping/mapping-between-boundaries.md)). The *no mapping* strategy is not available in Spring services, for CRUD contexts neither. For simple CRUD keep the domain type a small record and the mapper trivial; read-only queries may project straight into port result records in the adapter (JPQL constructor expressions, `JdbcClient` row mappers), so no entity crosses the port.
+- **SPRING-ARCH-10: The JPA entity is never the domain model; persistence always uses two-way mapping** (tightens D3 and ARCH-MAP-02/03 of [08-crosscutting-concepts/mapping/mapping-between-boundaries.md](../08-crosscutting-concepts/mapping/mapping-between-boundaries.md)). The *no mapping* strategy is not available in Spring services, for CRUD contexts neither. For simple CRUD keep the domain type a small record and the mapper trivial; read-only queries may project straight into port result records in the adapter (JPQL constructor expressions, `JdbcClient` row mappers), so no entity crosses the port. A table without aggregate invariants (reference rows, markers, dated rows) may have a `JdbcClient` adapter in `adapter.out.jdbc` whose row mapper builds the domain type directly; there is no entity to map from (SPRING-DB-15). JPA with two-way mapping stays the default for aggregates with invariants and concurrent updates.
   *Why:* JPA's needs (no-arg constructor, mutable fields, proxies, lazy loading) are exactly the persistence concerns that trigger the switch in ARCH-MAP-02, and they are present from the first entity. The architecture test forbids `jakarta.persistence` in `domain`/`ports` and keeps entities in the adapter (SPRING-ARCH-09), so a shared entity model could not pass it anyway.
 - **SPRING-ARCH-11: Keep JPA simple: no bidirectional associations or cascades the domain doesn't need, one persistence adapter per aggregate.** (Database rules: [08-crosscutting-concepts/persistence/spring.md](../08-crosscutting-concepts/persistence/spring.md).) Use plain SQL (`JdbcClient`) for ports where JPA adds nothing (ARCH-ADP-13, SPRING-DB-15). Bounded data loading: API-N1-05, SPRING-TEST-06.
 
@@ -124,12 +131,15 @@ Copy `.agents/skills/baseline-spring/templates/test/ArchitectureTest.java` into 
 | `stereotypedClassesArePackagePrivate` | Classes with a stereotype annotation are not public (JAVA-ARCH-01, SPRING-ARCH-04) |
 | `useCasesLiveInApplication` | `@UseCase` only in `application` (SPRING-ARCH-04) |
 | `httpClientAdaptersLiveInAdapterOutHttp` | `@HttpClientAdapter` only in `adapter.out.http` (SPRING-ARCH-04); `allowEmptyShould(true)` until the first one |
+| `mailAdaptersLiveInAdapterOutMail` / `fileAdaptersLiveInAdapterOutFile` | `@MailAdapter` only in `adapter.out.mail`, `@FileAdapter` only in `adapter.out.file` (SPRING-ARCH-04); `allowEmptyShould(true)` until the first one |
+| `updatesAnswerWithTheResource` | No `PUT`/`PATCH` handler returns `void`, carries `@ResponseStatus(NO_CONTENT)` or calls `ResponseEntity.noContent()` (API-REST-11, SPRING-REST-12); `allowEmptyShould(true)` until the first one |
+| `restRecordNamesAreUnique` | No two `*Request`/`*Response` types in `adapter.in.rest` share a simple name, which springdoc would merge into one schema (SPRING-API-02) |
 | `everyClassHasAHome` | Every class is in a ring, an `adapter.<in\|out>.<technology>` package, the composition root, `stereotype` or `config` (ARCH-ORG-01, SPRING-ARCH-01). `package-info` is ignored, so container packages (`adapter`, `adapter.in`, `ports`) can be `@NullMarked` too (JAVA-TOOL-08) |
 | `noFieldInjection`, `noStandardStreams`, `noJavaUtilLogging` (`GeneralCodingRules`) | SPRING-ARCH-06, SPRING-LOG-01 |
 | `noJackson2` | No Jackson 2 databind/core anywhere in production code; springdoc brings it transitively (SPRING-LIB-04) |
 | `noRestTemplate` | `RestClient` / HTTP Service Clients only (SPRING-LIB-06) |
 | `noServerOwnedFieldsInRequests` | No owner, tenant, role, permission or audit field in `*Request` records of `adapter.in.rest`, except the reviewed `ADMIN_ASSIGNED_FIELDS` list (SPRING-SEC-34); `allowEmptyShould(true)` until the first request record |
-| `everyUseCaseHasACrossUserTest` | Every `@UseCase` is referenced by a `cross-user` test or listed in `NO_CALLER_SUPPLIED_ID` with a reason (scheduled and start-up jobs, own-row use cases, provider-initiated calls) (SPRING-SEC-16) |
+| `everyUseCaseHasACrossUserTest` | Every `@UseCase` (or its incoming port) is called by a test method tagged `cross-user` (or a method of a tagged class) or listed in `NO_CALLER_SUPPLIED_ID` with a reason (scheduled and start-up jobs, own-row use cases, provider-initiated calls) (SPRING-SEC-16) |
 | `noRawNumbersInRestRecords` | No `BigDecimal`, `double` or `float` fields in `adapter.in.rest` records except the `ApiDecimal` type (API-REST-01, SPRING-REST-04) |
 
 > `onionArchitecture()` lets adapters see `application`. `adaptersCallPortsNotServices` closes that gap, so adapters reach the core only through `ports.in` (ARCH-SC-07).

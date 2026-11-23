@@ -16,13 +16,15 @@ Never read every doc of the stack up front (TOOL-SKL-10). At the start: the rule
 | Use case, port, command, domain type, error | `docs/baseline/05-building-block-view/use-cases.md`, `docs/baseline/08-crosscutting-concepts/mapping/mapping-between-boundaries.md` |
 | Controller, request/response schema, errors, paging | `docs/baseline/08-crosscutting-concepts/api/rest-conventions.md`, `api/nestjs-rest.md`, `api/nestjs-openapi.md`, `api/openapi-contracts.md` |
 | Anything that loads data | `docs/baseline/08-crosscutting-concepts/api/avoiding-n-plus-one.md`, `persistence/nestjs.md` |
-| Authentication, authorization, CORS | `docs/baseline/08-crosscutting-concepts/security/nestjs.md` |
+| Authentication, authorization, CORS, user provisioning in the IdP | `docs/baseline/08-crosscutting-concepts/security/nestjs.md` |
 | Headers, limits, injection, prototype pollution, audit events | `docs/baseline/08-crosscutting-concepts/security/nestjs-hardening.md`, `security/security-review.md` |
 | BFF login, session, CSRF, logout, serving the SPA | `docs/baseline/08-crosscutting-concepts/security/node-bff.md`, `security/nestjs-hardening.md` (NEST-SEC-44..52) |
 | Database adapter, transaction, migration | `docs/baseline/08-crosscutting-concepts/persistence/nestjs.md`, `docs/baseline/07-deployment-view/nestjs-delivery.md` |
 | Library choice | `docs/baseline/04-solution-strategy/nestjs-libraries.md` |
-| Kafka consumer, producer, outbox, dead letters | `docs/baseline/08-crosscutting-concepts/messaging/nestjs.md` (shared: `messaging/messaging.md`) |
+| Kafka consumer, producer, outbox (also mail after commit without a broker), dead letters | `docs/baseline/08-crosscutting-concepts/messaging/nestjs.md` (shared: `messaging/messaging.md`) |
 | Outbound HTTP, timeouts, retries, idempotency, scheduled jobs, worker threads, caching | `docs/baseline/08-crosscutting-concepts/resilience/nestjs.md` (shared: `resilience/resilience.md`) |
+| CSV, Excel or PDF export, file download | `docs/baseline/08-crosscutting-concepts/exports/file-exports.md`, `api/nestjs-openapi.md` |
+| Demo or seed data | `docs/baseline/05-building-block-view/nestjs.md` (NEST-ARCH-13) |
 | Configuration, environment variables, secrets | `docs/baseline/08-crosscutting-concepts/configuration/nestjs.md` (shared: `configuration/configuration.md`) |
 | Health, probes, shutdown, metrics, tracing | `docs/baseline/08-crosscutting-concepts/observability/nestjs.md` (shared: `observability/observability.md`) |
 | Logging | `docs/baseline/08-crosscutting-concepts/logging/nestjs.md` |
@@ -71,7 +73,7 @@ Full table: `docs/baseline/stacks/nestjs.md#skill-overrides`.
 5. **Integration**: new outbound call → explicit timeouts (RES-TMO-01); no remote call inside `runInTransaction`; new consumer → idempotent (MSG-IDM-01), dead-letter topic named.
 6. **Contract**: changed controller or schema → `npm run openapi` and commit the spec with the change.
 7. **Shortcuts**: propose and draft an ADR; never take one silently (ARCH-SC-06).
-8. **Finish** with `cd backend && npm run verify` green, and no dependency-cruiser rule, compiler check, lint rule or security check loosened.
+8. **Finish** with `cd backend && npm run verify` green, and no dependency-cruiser rule, compiler check, lint rule or security check loosened. On a red gate run `npm run format` and `npm run lint:fix` first and hand-fix only what remains (TOOL-SKL-15).
 9. **Self-review** against the agent checklist sections of the docs you used (`docs/baseline/checklists/`, TOOL-SKL-13).
 
 ## 5. New service

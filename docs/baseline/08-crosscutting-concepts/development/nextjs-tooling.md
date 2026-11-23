@@ -97,7 +97,7 @@ import nextPlugin from '@next/eslint-plugin-next';
   - the largest chunk exceeds its budget (default 150 KiB gzip; reference 70 KiB);
   - any chunk contains `sourceMappingURL` (TS-SEC-05).
 
-  The App Router writes no `index.html`, so the script cannot tell initial from lazy chunks the way REACT-TOOL-13 does; the total and the largest chunk are the signals. The budgets are per product; raising one is a reviewed change with the reason in the commit. The template's script also fails when a `.map` file would be served.
+  The App Router writes no `index.html`, so the script cannot tell initial from lazy chunks the way REACT-TOOL-13 does; the total and the largest chunk are the signals. The budgets are per product; raising one is a reviewed change that records the new value and its reason in the product's chapter 10 (quality requirements), as NG-TOOL-05. The template's script also fails when a `.map` file would be served.
 
 ## Telemetry and agents
 
